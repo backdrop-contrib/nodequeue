@@ -1,0 +1,15 @@
+Requirements
+------------
+
+This module requires Drupal 4.6.0.
+
+Installation
+------------
+
+1. untar the nodequeue module into /modules, or copy this directory there.
+2. Run the nodequeue.mysql file to create the necessary database table.
+   mysql -u YOURMYSQLUSER -p YOURMYSLQPASS < nodequeue.mysql
+   (You can also use phpmyadmin to run this file)
+3. Activate the module on the admin/modules page
+4. Create a node queue on administer->node queue
+
