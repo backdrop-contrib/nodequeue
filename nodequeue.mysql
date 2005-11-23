@@ -1,0 +1,21 @@
+CREATE TABLE if not exists nodequeue_queue (
+  qid int(10) unsigned NOT NULL PRIMARY KEY,
+  title varchar(255) NOT NULL,
+  size int(3) unsigned default '0'
+);
+
+CREATE TABLE if not exists nodequeue_roles (
+  qid int(10) unsigned NOT NULL,
+  rid int(10) unsigned
+);
+
+CREATE TABLE if not exists nodequeue_types (
+  qid int(10) unsigned NOT NULL,
+  type varchar(255)
+);
+
+CREATE TABLE if not exists nodequeue_nodes (
+  qid int(10) unsigned NOT NULL,
+  nid int(10) unsigned,
+  position int(3) unsigned
+);
