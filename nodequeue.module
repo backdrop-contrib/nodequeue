@@ -31,7 +31,7 @@ function nodequeue_menu($may_cache) {
     // administrative items
     $items[] = array(
       'path' => 'admin/nodequeue',
-      'title' => t('nodequeue'),
+      'title' => t('node queue'),
       'access' => user_access('administer nodequeue'),
       'callback' => 'nodequeue_admin',
       'type' => MENU_NORMAL_ITEM
