@@ -544,7 +544,7 @@ function nodequeue_node_titles($qid, $title = '', $backward = true) {
   return node_title_list($result, $title);
 }
 
-function nodequeue_nodes($qid, $backward = true, $teasers = true, $links = true, $from = 0, $count = 0) {
+function nodequeue_nodes($qid, $backward = true, $teaser = true, $links = true, $from = 0, $count = 0) {
   $orderby = ($backward ? "DESC" : "ASC");
   $sql = db_rewrite_sql("SELECT n.nid FROM {node} n LEFT JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.qid = $qid ORDER BY nn.position $orderby");
   if ($count)
@@ -559,18 +559,18 @@ function nodequeue_nodes($qid, $backward = true, $teasers = true, $links = true,
   return $output;
 }
 
-function nodequeue_fetch_front($qid, $teasers = true, $links = true) {
-  return nodequeue_nodes($qid, false, $teasers, $links, 0, 1);
+function nodequeue_fetch_front($qid, $teaser = true, $links = true) {
+  return nodequeue_nodes($qid, false, $teaser, $links, 0, 1);
 }
 
-function nodequeue_fetch_back($qid, $teasers = true, $links = true) {
+function nodequeue_fetch_back($qid, $teaser = true, $links = true) {
   $size = db_result(db_query("SELECT size FROM {nodequeue_queue} WHERE qid = $qid"));
-  return nodequeue_nodes($qid, false, $teasers, $links, $size - 1, 1);
+  return nodequeue_nodes($qid, false, $teaser, $links, $size - 1, 1);
 }
 
-function nodequeue_fetch_random($qid, $teasers = true, $links = true) {
+function nodequeue_fetch_random($qid, $teaser = true, $links = true) {
   $count = db_result(db_query("SELECT count(*) FROM {nodequeue_nodes} WHERE qid = $qid"));
-  return nodequeue_nodes($qid, false, $teasers, $links, rand(0, $count - 1), 1);
+  return nodequeue_nodes($qid, false, $teaser, $links, rand(0, $count - 1), 1);
 }
 
 function nodequeue_queue_add($qid, $nid) {
