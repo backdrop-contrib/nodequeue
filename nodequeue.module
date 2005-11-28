@@ -276,7 +276,7 @@ function nodequeue_admin_view($qid, $op, $pos) {
         . l("down", "admin/nodequeue/view/$qid/down/$node->position") . " | "
         . l("top", "admin/nodequeue/view/$qid/front/$node->position") . " | "
         . l("bottom", "admin/nodequeue/view/$qid/back/$node->position");
-      $list[] = array(l($node->title, "node/$node->position"), format_name($node), format_date($node->created), $buttons);
+      $list[] = array(l($node->title, "node/$node->nid"), format_name($node), format_date($node->created), $buttons);
     }
     $output .= theme('table', array("Node", "Author", "Date", "Operation"), $list, array('width' => '100%'));
     $output .= "<p>" . l(t("Empty this queue"), "admin/nodequeue/view/$qid/clear") . "</p>";
