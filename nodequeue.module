@@ -342,7 +342,9 @@ function _nodequeue_save($queue, $nodes = false) {
     $sql = "UPDATE {nodequeue_queue} set size = $queue->size, title = '$title' WHERE qid = $queue->qid";
     db_query("DELETE FROM {nodequeue_roles} WHERE qid = $queue->qid");
     db_query("DELETE FROM {nodequeue_types} WHERE qid = $queue->qid");
-    db_query("DELETE FROM {nodequeue_nodes} WHERE qid = $queue->qid");
+    if ($nodes) {
+      db_query("DELETE FROM {nodequeue_nodes} WHERE qid = $queue->qid");
+    }
   }
 
   db_query($sql);
