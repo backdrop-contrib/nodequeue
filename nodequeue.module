@@ -51,12 +51,19 @@ function nodequeue_menu($may_cache) {
       'callback' => 'nodequeue_admin_edit',
       'type' => MENU_LOCAL_TASK
     );
+    $items[] = array(
+      'path' => 'admin/nodequeue/delete',
+      'title' => t('add'),
+      'access' => user_access('administer nodequeue'),
+      'callback' => 'nodequeue_admin_delete',
+      'type' => MENU_LOCAL_TASK
+    );
   }
   else {
 		global $user;
 		$arg1 = arg(1);
     if ($user && arg(0) == 'node' && is_numeric($arg1)) {
-      $node = node_load(array('nid' => $arg1));
+      $node = node_load($arg1);
       $items[] = array(
         'path' => 'node/' . arg(1) . '/nodequeue',
         'title' => t('nodequeue'),
@@ -93,7 +100,7 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
 
   $output = "";
 
-  $node = node_load(array('nid' => $nid));
+  $node = node_load($nid);
 
   // Determine which queues are appropriate for this nodetype.
   global $user;
@@ -145,7 +152,7 @@ function nodequeue_admin($arg = "", $arg2 = "", $arg3 = "", $arg4 = "") {
         array("data" => $queue->title),
         array("data" => $queue->size, "align" => "right"),
         array("data" => $queue->nodes, "align" => "right"),
-        array("data" => l(t('edit'), "admin/nodequeue/edit/$queue->qid") . " | " . l(t('view'), "admin/nodequeue/view/$queue->qid"))
+        array("data" => theme('links', array(l(t('edit'), "admin/nodequeue/edit/$queue->qid"), l(t('view'), "admin/nodequeue/view/$queue->qid"), l(t('delete'), "admin/nodequeue/delete/$queue->qid"))))
       );
   }
 
@@ -158,7 +165,7 @@ function nodequeue_admin($arg = "", $arg2 = "", $arg3 = "", $arg4 = "") {
     $rows[] = array(array("data" => $pager, "colspan" => "4"));
   }
 
-  $output = theme('table', $header, $rows);
+  return theme('table', $header, $rows);
 //  print theme('page', $output, t('Node Queues'));
 }
 
@@ -166,9 +173,6 @@ function nodequeue_admin($arg = "", $arg2 = "", $arg3 = "", $arg4 = "") {
 // render queue add or edit page, and/or handle results
 //
 function nodequeue_admin_edit($qid = 0) {
-  $edit = $_POST['edit'];
-  $op = $_POST['op'];
-
   $which = arg(2);
   if ($which == 'edit' && (!is_numeric($qid) || $qid == 0))  {
     return drupal_access_denied();
@@ -176,66 +180,137 @@ function nodequeue_admin_edit($qid = 0) {
 
   $output = '';
 
-  switch($op)
-  {
-    case t('Delete'):
-      $output .= t("This action can not be undone. Are you sure?");
-      $output .= form(form_submit(t('Confirm')) . form_submit(t('Cancel')));
-      break;
-    case t('Confirm'):
-      _nodequeue_delete($qid);
-      drupal_set_message('The queue has been deleted.');
-      drupal_goto('admin/nodequeue');
-      return;
-    case t('Submit'):
-      $queue = array2object($edit);
-      _nodequeue_save($queue);
-      if ($queue->size) // 0 means "don't care"
-        _nodequeue_check_queuesize($queue);
-      drupal_set_message(t('The queue has been updated.'));
-      drupal_goto('admin/nodequeue');
-      return;
-    default:
-      if ($which == 'edit') {
-        $output = nodequeue_queue_form(_nodequeue_load($qid));
-      }
-      else {
-        $output = nodequeue_queue_form();
-      }
+  if ($which == 'edit') {
+    $output = nodequeue_queue_form(_nodequeue_load($qid));
+  }
+  else {
+    $output = nodequeue_queue_form();
   }
 
-  print theme('page', $output);
+//  print theme('page', $output);
+  return $output;
 }
 
 //
 // display add/edit queue form
 //
 function nodequeue_queue_form($queue = array()) {
-  $form = form_textfield(t('Title'), 'title', $queue->title, 50, 64, t('Enter the name of the queue'));
-  $form .= form_textfield(t('Queue Size'), 'size', $queue->size, 2, 2, t('The maximum number of nodes will appear in the queue. Enter 0 for no limit'));
+
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#default_value' => $queue->title,
+    '#size' => 50,
+    '#maxlength' => 64,
+    '#description' => t('Enter the name of the queue'),
+  );
+
+  $form['size'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Queue Size'),
+    '#default_value' => $queue->size,
+    '#size' => 2,
+    '#maxlength' => 2,
+    '#description' => t('The maximum number of nodes will appear in the queue. Enter 0 for no limit'),
+  );
 
   $result = db_query("SELECT * FROM {role} ORDER BY name");
   while ($role = db_fetch_object($result)) {
     $roles[$role->rid] = $role->name;
   }
-  $form .= form_checkboxes(t('Roles'), 'roles', $queue->roles, $roles, t('Check each role that can add nodes to the queue.'));
 
-  foreach (node_list() as $type) {
-    $node_type = node_invoke($type, 'node_name');
-    $nodes[$type] = $node_type ? $node_type : $type;
+  $form['roles'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Roles'),
+    '#default_value' => $queue->roles,
+    '#options' => $roles,
+    '#description' => t('Check each role that can add nodes to the queue.'),
+  );
+
+  foreach (node_get_types() as $type => $name) {
+    $nodes[$type] = $name;
   }
-  $form .= form_checkboxes(t('Types'), 'types', $queue->types, $nodes, t('Check each node type that can be added to this queue.'));
+  $form['types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Types'),
+    '#default_value' => $queue->types,
+    '#options' => $nodes,
+    '#description' => t('Check each node type that can be added to this queue.'),
+  );
 
 
-  $form .= form_submit(t('Submit'));
-  
+  $form[] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit'),
+  );
+
   if ($queue->qid) {
-    $form .= form_submit(t('Delete'));
-    $form .= form_hidden('qid', $queue->qid);
-    $form .= form_hidden('count', $queue->count);
+    $form[] = array(
+      '#type' => 'submit',
+      '#value' => t('Delete'),
+    );
+    $form['qid'] = array(
+      '#type' => 'value',
+      '#value' => $queue->qid,
+    );
+    $form['count'] = array(
+      '#type' => 'value',
+      '#value' => $queue->count,
+    );
   }
 
-  return form($form);
+  return drupal_get_form('nodequeue_edit', $form);
+}
+
+function nodequeue_edit_submit($formid, $form) {
+  if ($form['op'] == t('Delete')) {
+    return drupal_goto('views/admin/delete/$form[qid]');
+  }
+
+  $queue = array2object($form);
+  // fix checkboxes; sigh
+  foreach ($queue->roles as $role => $value) {
+    if ($value) {
+      $roles[] = $role;
+    }
+  }
+  $queue->roles = $roles;
+
+  foreach ($queue->types as $type => $value) {
+    if ($value) {
+      $types[] = $type;
+    }
+  }
+  $queue->types = $types;
+
+  _nodequeue_save($queue);
+  if ($queue->size) // 0 means "don't care"
+    _nodequeue_check_queuesize($queue);
+  drupal_set_message(t('The queue has been updated.'));
+  drupal_goto('admin/nodequeue');
+}
+
+function nodequeue_delete_page() {
+  $nodequeue = _nodequeues_load($vid);
+
+  if (!$nodequeue)
+    return drupal_goto('admin/nodequeue');
+
+  $form['qid'] = array('#type' => 'value', '#value' => $nodequeue->qid);
+  return confirm_form('nodequeues_delete_confirm', $form,
+    t('Are you sure you want to delete %title?', array('%title' => $nodequeue->name)), 
+    $_GET['destination'] ? $_GET['destination'] : 'admin/nodequeues', 
+    t('This action cannot be undone.'),
+    t('Delete'), t('Cancel')  
+  );
+}
+
+function nodequeues_delete_confirm_submit($formid, $form) {
+  if ($form['confirm']) {
+    _nodequeues_delete($form['qid']);
+    drupal_set_message("The queue has been deleted.");
+    drupal_goto('admin/nodequeue');
+  }
 }
 
 // View a node queue and move items up or down.
@@ -267,8 +342,8 @@ function nodequeue_admin_view($qid, $op, $pos) {
   if ($op == 'clear') {
     $output = "<p>Clearing this queue is irreversible. You sure?</p>";
     $output .= l("Yes, I am sure", "admin/nodequeue/view/$qid/reallyclear") . " | " . l("Nevermind!", "admin/nodequeue/view/$qid");
-    print theme('page', $output);
-    return;
+//    print theme('page', $output);
+    return $output;
   }
   if ($op == 'reallyclear') {
     nodequeue_queue_clear($qid);
@@ -287,11 +362,12 @@ function nodequeue_admin_view($qid, $op, $pos) {
 
   if (db_num_rows($result) > 0) {
     while ($node = db_fetch_object($result)) {
-      $buttons = l("up", "admin/nodequeue/view/$qid/up/$node->position") . " | "
-        . l("down", "admin/nodequeue/view/$qid/down/$node->position") . " | "
-        . l("top", "admin/nodequeue/view/$qid/front/$node->position") . " | "
-        . l("bottom", "admin/nodequeue/view/$qid/back/$node->position");
-      $list[] = array(l($node->title, "node/$node->nid"), format_name($node), format_date($node->created), $buttons);
+      $buttons = "<a href='admin/nodequeue/view/$qid/up/$node->position' title='move up', alt='move up'><img src='modules/nodequeue/go-up.png'/>"
+        . "<a href='admin/nodequeue/view/$qid/down/$node->position' title='move down', alt='move down'><img src='modules/nodequeue/go-down.png'/>"
+        . "<a href='admin/nodequeue/view/$qid/front/$node->position' title='move to front', alt='move to front'><img src='modules/nodequeue/go-top.png'/>"
+        . "<a href='admin/nodequeue/view/$qid/back/$node->position' title='move to back', alt='move to back'><img src='modules/nodequeue/go-bottom.png'/>"
+        . "<a href='admin/nodequeue/view/$qid/remove/$node->position' title='remove from queue', alt='remove from queue'><img src='modules/nodequeue/user-trash.png'/>";
+      $list[] = array(l($node->title, "node/$node->nid"), theme('username', $node), format_date($node->created), $buttons);
     }
     $output .= theme('table', array("Node", "Author", "Date", "Operation"), $list, array('width' => '100%'));
     $output .= "<p>" . l(t("Empty this queue"), "admin/nodequeue/view/$qid/clear") . "</p>";
@@ -300,8 +376,8 @@ function nodequeue_admin_view($qid, $op, $pos) {
     $output .= t('<p>Queue is empty!</p>');
   }
 
-  print theme('page', $output);
-
+//  print theme('page', $output);
+  return $output;
 }
 
 
@@ -415,13 +491,19 @@ function nodequeue_queue_down($queue, $position) {
 function nodequeue_queue_front($queue, $position) {
   if ($position < 2 || $position > $queue->count)
     return;
-  nodequeue_queue_swap($queue, 1, $position);
+  $entry = db_fetch_object(db_query("SELECT * FROM {nodequeue_nodes} WHERE qid=$queue->qid AND position = $position"));
+  db_query("DELETE FROM {nodequeue_nodes} WHERE qid=$queue->qid AND position = $position");
+  db_query("UPDATE {nodequeue_nodes} SET position=position + 1 WHERE position < $position");
+  db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES ($queue->qid, $entry->nid, 1)");
 }
 
 function nodequeue_queue_back($queue, $position) {
   if ($position < 1 || $position >= $queue->count)
     return;
-  nodequeue_queue_swap($queue, $queue->count, $position);
+  $entry = db_fetch_object(db_query("SELECT * FROM {nodequeue_nodes} WHERE qid=$queue->qid AND position = $position"));
+  db_query("DELETE FROM {nodequeue_nodes} WHERE qid=$queue->qid AND position = $position");
+  db_query("UPDATE {nodequeue_nodes} SET position=position - 1 WHERE position > $position");
+  db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES ($queue->qid, $entry->nid, $queue->count)");
 }
 
 function _nodequeue_queue_remove(&$queue, $start, $end = 0) {
@@ -491,9 +573,13 @@ function action_nodequeue_add($op, $edit = array(), $node) {
         $queues[$obj->qid] = $obj->title;
 
       // add form components
-      $output = form_select(t("Queue"), 'qid', $edit['qid'], $queues);
-      return $output;
-      break;
+      $form['qid'] = array(
+        '#type' => 'select',
+        '#title' => t("Queue"),
+        '#default_value' => $edit['qid'],
+        '#options' => $queues,
+      );
+      return $form;
      
      // validate the HTML form
      
@@ -533,8 +619,13 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
         $queues[$obj->qid] = $obj->title;
 
       // add form components
-      $output = form_select(t("Queue"), 'qid', $edit['qid'], $queues);
-      return $output;
+      $form['qid'] = array(
+        '#type' => 'select',
+        '#title' => t("Queue"),
+        '#default_value' => $edit['qid'],
+        '#options' => $queues,
+      );
+      return $form;
       break;
      
      // validate the HTML form
@@ -567,7 +658,7 @@ function nodequeue_nodes($qid, $backward = true, $teaser = true, $links = true, 
     $result = db_query($sql);
 
   while ($nid = db_fetch_object($result)) {
-    $node = node_load(array('nid' => $nid->nid));
+    $node = node_load($nid->nid);
     $output .= node_view($node, $teaser, false, $links);
   }
   return $output;
