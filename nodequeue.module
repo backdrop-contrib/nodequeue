@@ -96,22 +96,37 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
   $node = node_load(array('nid' => $nid));
 
   // Determine which queues are appropriate for this nodetype.
+  global $user;
+  $roles = "'" . implode("','", array_keys($user->roles)) . "'";
+  $result = db_query("SELECT distinct(qid) FROM {nodequeue_roles} WHERE rid IN ($roles)");
+  while ($res = db_fetch_object($result)) {
+    $qidlist[] = $res->qid;
+  }
+  
+  $qids = implode(',', $qidlist);
 
-  $result = db_query("SELECT nq.qid, nq.title FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_types} nt ON nt.qid = nq.qid WHERE nt.type = '$node->type'");
+  $result = db_query("SELECT nq.qid, nq.title, nq.size, count(nqn.nid) AS numnodes FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_types} nt ON nt.qid = nq.qid LEFT JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid WHERE nt.type = '$node->type' AND nq.qid IN ($qids) GROUP BY nqn.qid ORDER BY nq.title");
 
   $items = array();
   while ($queue = db_fetch_object($result)) {
+    $item = array(
+      $queue->title,
+      $queue->size,
+      $queue->numnodes . ($queue->size == $queue->numnodes ? " QUEUE FULL" : ''),
+    );
+    $ops = array(l('view queue', "admin/nodequeue/view/$queue->qid"));
     if ($pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE nid = $nid AND qid = $queue->qid")))
-      $items[] = l(t("Remove from queue '%s'", array('%s' => $queue->title)), "node/$nid/nodequeue/remove/$queue->qid/$pos");
+      $ops[] = l(t("remove from queue"), "node/$nid/nodequeue/remove/$queue->qid/$pos");
     else
-      $items[] = l(t("Add to queue '%s'", array('%s' => $queue->title)), "node/$nid/nodequeue/add/$queue->qid");
+      $ops[] = l(t("add to queue"), "node/$nid/nodequeue/add/$queue->qid");
+    $item[] = theme('links', $ops);
+    $items[] = $item;
   }
 
   if ($items)
-    $output = theme('item_list', $items);
+    $output = theme('table', array('Queue', 'Max', 'In Queue', 'Operations'), $items);
   else
     $output = "No valid queues for this node? You shouldn't even be here if this is true.";
-//    $output = "SELECT nq.qid, nq.title FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_types} nt ON nt.qid = nq.qid WHERE nt.type = '$nid'";
 
   print theme("page", $output);
 }
@@ -144,7 +159,7 @@ function nodequeue_admin($arg = "", $arg2 = "", $arg3 = "", $arg4 = "") {
   }
 
   $output = theme('table', $header, $rows);
-  print theme('page', $output, t('Node Queues'));
+//  print theme('page', $output, t('Node Queues'));
 }
 
 //
@@ -301,10 +316,7 @@ function nodequeue_node_access($type) {
   $roles = "'" . implode("','", array_keys($user->roles)) . "'";
   $sql = "SELECT DISTINCT(nq.qid) FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_roles} nr ON nr.qid = nq.qid LEFT JOIN {nodequeue_types} nt ON nt.qid = nq.qid WHERE nr.rid IN ($roles) AND nt.type = '$type'";
   $result = db_query($sql);
-  while ($obj = db_fetch_object($result))
-    $qids[] = $obj->qid;
-
-  return $qids;
+  return db_num_rows($result);
 }
 
 function _nodequeue_load($qid, $nodes = false) {
