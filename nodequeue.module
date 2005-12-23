@@ -56,7 +56,7 @@ function nodequeue_menu($may_cache) {
       'title' => t('add'),
       'access' => user_access('administer nodequeue'),
       'callback' => 'nodequeue_admin_delete',
-      'type' => MENU_LOCAL_TASK
+      'type' => MENU_CALLBACK
     );
   }
   else {
@@ -119,7 +119,7 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
     $item = array(
       $queue->title,
       $queue->size,
-      $queue->numnodes . ($queue->size == $queue->numnodes ? " QUEUE FULL" : ''),
+      $queue->numnodes . ($queue->size && $queue->size == $queue->numnodes ? " QUEUE FULL" : ''),
     );
     $ops = array(l('view queue', "admin/nodequeue/view/$queue->qid"));
     if ($pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE nid = $nid AND qid = $queue->qid")))
@@ -669,7 +669,9 @@ function nodequeue_fetch_front($qid, $teaser = true, $links = true) {
 }
 
 function nodequeue_fetch_back($qid, $teaser = true, $links = true) {
-  $size = db_result(db_query("SELECT size FROM {nodequeue_queue} WHERE qid = $qid"));
+  $size = db_result(db_query("SELECT max(position) FROM {nodequeue_nodes} WHERE qid = $qid"));
+  if (!$size)
+    return;
   return nodequeue_nodes($qid, false, $teaser, $links, $size - 1, 1);
 }
 
