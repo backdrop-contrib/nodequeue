@@ -56,7 +56,7 @@ function nodequeue_menu($may_cache) {
       'title' => t('add'),
       'access' => user_access('administer nodequeue'),
       'callback' => 'nodequeue_admin_delete',
-      'type' => MENU_LOCAL_TASK
+      'type' => MENU_CALLBACK
     );
   }
   else {
@@ -119,7 +119,7 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
     $item = array(
       $queue->title,
       $queue->size,
-      $queue->numnodes . ($queue->size == $queue->numnodes ? " QUEUE FULL" : ''),
+      $queue->numnodes . ($queue->size && $queue->size == $queue->numnodes ? " QUEUE FULL" : ''),
     );
     $ops = array(l('view queue', "admin/nodequeue/view/$queue->qid"));
     if ($pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE nid = $nid AND qid = $queue->qid")))
@@ -362,11 +362,11 @@ function nodequeue_admin_view($qid, $op, $pos) {
 
   if (db_num_rows($result) > 0) {
     while ($node = db_fetch_object($result)) {
-      $buttons = "<a href='admin/nodequeue/view/$qid/up/$node->position' title='move up', alt='move up'><img src='modules/nodequeue/go-up.png'/>"
-        . "<a href='admin/nodequeue/view/$qid/down/$node->position' title='move down', alt='move down'><img src='modules/nodequeue/go-down.png'/>"
-        . "<a href='admin/nodequeue/view/$qid/front/$node->position' title='move to front', alt='move to front'><img src='modules/nodequeue/go-top.png'/>"
-        . "<a href='admin/nodequeue/view/$qid/back/$node->position' title='move to back', alt='move to back'><img src='modules/nodequeue/go-bottom.png'/>"
-        . "<a href='admin/nodequeue/view/$qid/remove/$node->position' title='remove from queue', alt='remove from queue'><img src='modules/nodequeue/user-trash.png'/>";
+      $buttons = "<a href='admin/nodequeue/view/$qid/up/$node->position' title='move up', alt='move up'><img src='". drupal_get_path('module', 'nodequeue') ."/go-up.png'/>"
+        . "<a href='admin/nodequeue/view/$qid/down/$node->position' title='move down', alt='move down'><img src='". drupal_get_path('module', 'nodequeue') ."/go-down.png'/>"
+        . "<a href='admin/nodequeue/view/$qid/front/$node->position' title='move to front', alt='move to front'><img src='". drupal_get_path('module', 'nodequeue') ."/go-top.png'/>"
+        . "<a href='admin/nodequeue/view/$qid/back/$node->position' title='move to back', alt='move to back'><img src='". drupal_get_path('module', 'nodequeue') ."/go-bottom.png'/>"
+        . "<a href='admin/nodequeue/view/$qid/remove/$node->position' title='remove from queue', alt='remove from queue'><img src='". drupal_get_path('module', 'nodequeue') ."/user-trash.png'/>";
       $list[] = array(l($node->title, "node/$node->nid"), theme('username', $node), format_date($node->created), $buttons);
     }
     $output .= theme('table', array("Node", "Author", "Date", "Operation"), $list, array('width' => '100%'));
