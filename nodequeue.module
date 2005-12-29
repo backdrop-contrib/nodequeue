@@ -56,7 +56,7 @@ function nodequeue_menu($may_cache) {
       'title' => t('add'),
       'access' => user_access('administer nodequeue'),
       'callback' => 'nodequeue_admin_delete',
-      'type' => MENU_CALLBACK
+      'type' => MENU_LOCAL_TASK
     );
   }
   else {
@@ -119,7 +119,7 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
     $item = array(
       $queue->title,
       $queue->size,
-      $queue->numnodes . ($queue->size && $queue->size == $queue->numnodes ? " QUEUE FULL" : ''),
+      $queue->numnodes . ($queue->size == $queue->numnodes ? " QUEUE FULL" : ''),
     );
     $ops = array(l('view queue', "admin/nodequeue/view/$queue->qid"));
     if ($pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE nid = $nid AND qid = $queue->qid")))
@@ -669,9 +669,7 @@ function nodequeue_fetch_front($qid, $teaser = true, $links = true) {
 }
 
 function nodequeue_fetch_back($qid, $teaser = true, $links = true) {
-  $size = db_result(db_query("SELECT max(position) FROM {nodequeue_nodes} WHERE qid = $qid"));
-  if (!$size)
-    return;
+  $size = db_result(db_query("SELECT size FROM {nodequeue_queue} WHERE qid = $qid"));
   return nodequeue_nodes($qid, false, $teaser, $links, $size - 1, 1);
 }
 
@@ -695,4 +693,92 @@ function nodequeue_queue_remove($qid, $start, $end = 0) {
 function nodequeue_queue_remove_node($qid, $nid) {
   $pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE qid = $qid AND nid = $nid"));
   nodequeue_queue_remove($qid, $pos);
+}
+
+// ---------------------------------------------------------------------------
+// Views support
+
+function nodequeue_views_tables() {
+  $tables['nodequeue_nodes'] = array(
+    "name" => "nodequeue_nodes", 
+    "join" => array(
+      "left" => array(
+        "table" => "node",
+        "field" => "nid"
+      ), 
+      "right" => array(
+        "field" => "nid"
+      ), 
+    ),
+    "filters" => array(
+      "qid" => array(
+        'name' => "NodeQueue: Queue", 
+        'list' => 'nodequeue_handler_queuelist',
+        'operator' => 'views_handler_operator_andor',
+        'help' => "Filter the view to a specific Node Queue.",
+      ),
+    ),
+    "sorts" => array(
+      "position" => array(
+        'name' => "NodeQueue: Queue Position",
+        'field' => 'position',
+        'help' => "When sorting by queue position, be sure the view is filtered to a single queue or the sort will not work very well.",
+      ),
+    ),
+  );
+  $tables['nodequeue_queue'] = array(
+    "name" => "nodequeue_queue", 
+    "join" => array(
+      "left" => array(
+        "table" => "nodequeue_nodes",
+        "field" => "qid"
+      ), 
+      "right" => array(
+        "field" => "qid"
+      ), 
+    ),
+  );
+  return $tables;
+}
+
+function nodequeue_views_arguments() {
+  $arguments = array(
+    'nodequeue_qid' => array(
+      'name' => t("NodeQueue: Queue ID"), 
+      'handler' => "nodequeue_handler_arg_qid",
+      'help' => "The Queue ID argument allows users to filter a view by specifying a Node Queue ID.",
+    ),
+  );
+  return $arguments;
+}
+
+function nodequeue_handler_queuelist() {
+  $result = db_query("SELECT * FROM {nodequeue_queue} ORDER BY title");
+  while ($queue = db_fetch_object($result)) {
+    $items[$queue->qid] = $queue->title;
+  }
+  return $items;
+}
+
+function nodequeue_handler_arg_qid($op, &$query, $argtype, $arg = '') {
+  switch($op) {
+    case 'summary':
+      $query->ensure_table('nodequeue_queue', true);
+      $query->add_field('title', 'nodequeue_queue');
+      $query->add_field('qid', 'nodequeue_queue');
+      $query->add_where('nodequeue_queue.qid IS NOT NULL');
+      $fieldinfo['field'] = "nodequeue_queue.title";
+      return $fieldinfo;
+      break;
+    case 'filter':
+      $qid = intval($arg);
+      $query->ensure_table('nodequeue_queue', true);
+      $query->add_where("nodequeue_queue.qid = $qid");
+      break;
+    case 'link':
+      return l($query->title, "$arg/" . intval($query->qid));
+    case 'title':
+      $queue = db_fetch_object(db_query("SELECT title FROM {nodequeue_queue} WHERE qid = '%d'", $query));
+      return $queue->title;
+  }
 }
