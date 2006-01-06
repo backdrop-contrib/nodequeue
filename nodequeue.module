@@ -353,7 +353,7 @@ function nodequeue_admin_view($qid, $op, $pos) {
   drupal_set_title("Nodequeue '$queue->title'");
   $output = '';
 
-  $sql = "SELECT DISTINCT(n.nid), n.title, n.uid, u.name, u.created, nq.position FROM {node} n LEFT JOIN {users} u on n.uid = u.uid LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.qid = $qid ORDER BY nq.position";
+  $sql = "SELECT DISTINCT(n.nid), n.title, n.uid, u.name, n.created, nq.position FROM {node} n LEFT JOIN {users} u on n.uid = u.uid LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.qid = $qid ORDER BY nq.position";
 
   // Don't rewrite because a queue manager has to be able to move items up
   // and down in the queue even if they can't be viewed.
