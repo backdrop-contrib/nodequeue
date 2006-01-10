@@ -1,7 +1,7 @@
 Requirements
 ------------
 
-This module requires Drupal 4.6.0.
+This module requires Drupal 4.7.0.
 
 Installation
 ------------
