@@ -267,7 +267,7 @@ function nodequeue_edit_submit($formid, $form) {
     return drupal_goto('views/admin/delete/$form[qid]');
   }
 
-  $queue = array2object($form);
+  $queue = (object) $form;
   // fix checkboxes; sigh
   foreach ($queue->roles as $role => $value) {
     if ($value) {
