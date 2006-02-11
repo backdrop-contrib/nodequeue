@@ -166,7 +166,6 @@ function nodequeue_admin($arg = "", $arg2 = "", $arg3 = "", $arg4 = "") {
   }
 
   return theme('table', $header, $rows);
-//  print theme('page', $output, t('Node Queues'));
 }
 
 //
@@ -187,7 +186,6 @@ function nodequeue_admin_edit($qid = 0) {
     $output = nodequeue_queue_form();
   }
 
-//  print theme('page', $output);
   return $output;
 }
 
@@ -297,17 +295,17 @@ function nodequeue_delete_page() {
     return drupal_goto('admin/nodequeue');
 
   $form['qid'] = array('#type' => 'value', '#value' => $nodequeue->qid);
-  return confirm_form('nodequeues_delete_confirm', $form,
+  return confirm_form('nodequeue_delete_confirm', $form,
     t('Are you sure you want to delete %title?', array('%title' => $nodequeue->name)), 
-    $_GET['destination'] ? $_GET['destination'] : 'admin/nodequeues', 
+    $_GET['destination'] ? $_GET['destination'] : 'admin/nodequeue', 
     t('This action cannot be undone.'),
     t('Delete'), t('Cancel')  
   );
 }
 
-function nodequeues_delete_confirm_submit($formid, $form) {
+function nodequeue_delete_confirm_submit($formid, $form) {
   if ($form['confirm']) {
-    _nodequeues_delete($form['qid']);
+    _nodequeue_delete($form['qid']);
     drupal_set_message("The queue has been deleted.");
     drupal_goto('admin/nodequeue');
   }
@@ -340,14 +338,13 @@ function nodequeue_admin_view($qid, $op, $pos) {
     return drupal_goto("admin/nodequeue/view/$qid");
   }
   if ($op == 'clear') {
-    $output = "<p>Clearing this queue is irreversible. You sure?</p>";
-    $output .= l("Yes, I am sure", "admin/nodequeue/view/$qid/reallyclear") . " | " . l("Nevermind!", "admin/nodequeue/view/$qid");
-//    print theme('page', $output);
-    return $output;
-  }
-  if ($op == 'reallyclear') {
-    nodequeue_queue_clear($qid);
-    return drupal_goto("admin/nodequeue/view/$qid");
+    $form['qid'] = array('#type' => 'value', '#value' => $queue->qid);
+    return confirm_form('nodequeue_clear_confirm', $form,
+      t('Clearing queue "%s" is irreversible. You sure?', array('%s' => $queue->title)),  
+      $_GET['destination'] ? $_GET['destination'] : "admin/nodequeue/$qid/clear", 
+      t('This action cannot be undone.'),
+      t('Clear Queue'), t('Cancel')  
+    );
   }
 
   drupal_set_title("Nodequeue '$queue->title'");
@@ -376,8 +373,14 @@ function nodequeue_admin_view($qid, $op, $pos) {
     $output .= t('<p>Queue is empty!</p>');
   }
 
-//  print theme('page', $output);
   return $output;
+}
+
+function nodequeue_clear_confirm_submit($formid, $form) {
+  if ($form['confirm']) {
+    nodequeue_queue_clear($form['qid']);
+    return drupal_goto("admin/nodequeue/view/$form[qid]");
+  }
 }
 
 
@@ -532,8 +535,8 @@ function _nodequeue_queue_add(&$queue, $nid) {
   db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES ($queue->qid, $nid, $queue->count)");
 }
 
-function nodequeue_queue_clear($queue) {
-  db_query("DELETE FROM {nodequeue_nodes} WHERE qid = $queue->qid");
+function nodequeue_queue_clear($qid) {
+  db_query("DELETE FROM {nodequeue_nodes} WHERE qid = %d", $qid);
 }
 
 function _nodequeue_check_queuesize(&$queue, $size = 0) {
