@@ -288,15 +288,15 @@ function nodequeue_edit_submit($formid, $form) {
   drupal_goto('admin/nodequeue');
 }
 
-function nodequeue_delete_page() {
-  $nodequeue = _nodequeues_load($vid);
+function nodequeue_admin_delete($qid) {
+  $queue = _nodequeue_load($qid);
 
-  if (!$nodequeue)
+  if (!$queue)
     return drupal_goto('admin/nodequeue');
 
-  $form['qid'] = array('#type' => 'value', '#value' => $nodequeue->qid);
+  $form['qid'] = array('#type' => 'value', '#value' => $queue->qid);
   return confirm_form('nodequeue_delete_confirm', $form,
-    t('Are you sure you want to delete %title?', array('%title' => $nodequeue->name)), 
+    t('Are you sure you want to delete "%title"?', array('%title' => $queue->title)), 
     $_GET['destination'] ? $_GET['destination'] : 'admin/nodequeue', 
     t('This action cannot be undone.'),
     t('Delete'), t('Cancel')  
