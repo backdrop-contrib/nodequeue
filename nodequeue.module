@@ -357,14 +357,13 @@ function nodequeue_admin_view($qid, $op, $pos) {
 //  $sql = db_rewrite_sql($sql);
   $result = pager_query($sql, 25, 0);
 
-  $module_path = base_path() . drupal_get_path('module', 'nodequeue');
   if (db_num_rows($result) > 0) {
     while ($node = db_fetch_object($result)) {
-      $buttons = "<a href='admin/nodequeue/view/$qid/up/$node->position' title='move up', alt='move up'><img src='". $module_path ."/go-up.png'/>"
-        . "<a href='admin/nodequeue/view/$qid/down/$node->position' title='move down', alt='move down'><img src='". $module_path ."/go-down.png'/>"
-        . "<a href='admin/nodequeue/view/$qid/front/$node->position' title='move to front', alt='move to front'><img src='". $module_path ."/go-top.png'/>"
-        . "<a href='admin/nodequeue/view/$qid/back/$node->position' title='move to back', alt='move to back'><img src='". $module_path ."/go-bottom.png'/>"
-        . "<a href='admin/nodequeue/view/$qid/remove/$node->position' title='remove from queue', alt='remove from queue'><img src='". $module_path ."/user-trash.png'/>";
+      $buttons = l(theme('image', drupal_get_path('module', 'nodequeue') .'/go-up.png', t('move up')), "admin/nodequeue/view/$qid/up/$node->position", array('title'=>t('move up')), NULL, NULL, FALSE, TRUE);
+      $buttons .= l(theme('image', drupal_get_path('module', 'nodequeue') .'/go-down.png', t('move down')), "admin/nodequeue/view/$qid/down/$node->position", array('title'=>t('move down')), NULL, NULL, FALSE, TRUE);
+      $buttons .= l(theme('image', drupal_get_path('module', 'nodequeue') .'/go-top.png', t('move to front')), "admin/nodequeue/view/$qid/front/$node->position", array('title'=>t('move to front')), NULL, NULL, FALSE, TRUE);
+      $buttons .= l(theme('image', drupal_get_path('module', 'nodequeue') .'/go-bottom.png', t('move to back')), "admin/nodequeue/view/$qid/back/$node->position", array('title'=>t('move to back')), NULL, NULL, FALSE, TRUE);
+      $buttons .= l(theme('image', drupal_get_path('module', 'nodequeue') .'/user-trash.png', t('remove from queue')), "admin/nodequeue/view/$qid/remove/$node->position", array('title'=>t('remove from queue')), NULL, NULL, FALSE, TRUE);
       $list[] = array(l($node->title, "node/$node->nid"), theme('username', $node), format_date($node->created), $buttons);
     }
     $output .= theme('table', array("Node", "Author", "Date", "Operation"), $list, array('width' => '100%'));
