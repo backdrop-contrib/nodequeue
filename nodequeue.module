@@ -647,9 +647,13 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
 // --------------------------------------------------------------------------
 // External queue fetching
 
-function nodequeue_node_titles($qid, $title = '', $backward = true) {
+function nodequeue_node_titles($qid, $title = '', $backward = true, $from = 0, $count = 0) {
   $orderby = ($backward ? "DESC" : "ASC");
-  $result = db_query(db_rewrite_sql("SELECT n.nid, n.title FROM {node} n LEFT JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.qid = $qid ORDER BY nn.position $orderby"));
+  $sql = db_rewrite_sql("SELECT n.nid, n.title FROM {node} n LEFT JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.qid = $qid ORDER BY nn.position $orderby");
+  if ($count)
+    $result = db_query_range($sql, $from, $count);
+  else
+    $result = db_query($sql);
   return node_title_list($result, $title);
 }
 
