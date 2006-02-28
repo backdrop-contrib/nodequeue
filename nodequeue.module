@@ -367,6 +367,7 @@ function nodequeue_admin_view($qid, $op, $pos) {
       $list[] = array(l($node->title, "node/$node->nid"), theme('username', $node), format_date($node->created), $buttons);
     }
     $output .= theme('table', array("Node", "Author", "Date", "Operation"), $list, array('width' => '100%'));
+    $output .= theme('pager', NULL, 25);
     $output .= "<p>" . l(t("Empty this queue"), "admin/nodequeue/view/$qid/clear") . "</p>";
   }
   else {
