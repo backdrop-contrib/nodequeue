@@ -112,7 +112,7 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
   
   $qids = implode(',', $qidlist);
 
-  $result = db_query("SELECT nq.qid, nq.title, nq.size, count(nqn.nid) AS numnodes FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_types} nt ON nt.qid = nq.qid LEFT JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid WHERE nt.type = '$node->type' AND nq.qid IN ($qids) GROUP BY nqn.qid ORDER BY nq.title");
+  $result = db_query("SELECT nq.qid, nq.title, nq.size, count(nqn.nid) AS numnodes FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_types} nt ON nt.qid = nq.qid LEFT JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid WHERE nt.type = '$node->type' AND nq.qid IN ($qids) GROUP BY nq.qid ORDER BY nq.title");
 
   $items = array();
   while ($queue = db_fetch_object($result)) {
