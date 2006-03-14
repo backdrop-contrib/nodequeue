@@ -261,8 +261,8 @@ function nodequeue_queue_form($queue = array()) {
 }
 
 function nodequeue_edit_submit($formid, $form) {
-  if ($form['op'] == t('Delete')) {
-    return drupal_goto('views/admin/delete/$form[qid]');
+  if ($_POST['op'] == t('Delete')) {
+    return drupal_goto("admin/nodequeue/delete/$form[qid]");
   }
 
   $queue = (object) $form;
