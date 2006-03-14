@@ -384,6 +384,14 @@ function nodequeue_clear_confirm_submit($formid, $form) {
   }
 }
 
+function nodequeue_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
+  switch($op) {
+    case 'delete':
+      // If a node is being deleted, ensure it's also removed from any queues.
+      db_query("DELETE FROM {nodequeue_nodes} WHERE nid=%d", $node->nid);
+      break;
+  }
+}
 
 // --------------------------------------------------------------------------
 // Database manipulation functions
