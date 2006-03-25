@@ -465,6 +465,8 @@ function _nodequeue_save($queue, $nodes = false) {
       if ($position >= $queue->size)
         break;
     }
+
+  return $queue->qid;
 }
 
 function _nodequeue_delete($qid) {
