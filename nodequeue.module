@@ -109,7 +109,7 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
   while ($res = db_fetch_object($result)) {
     $qidlist[] = $res->qid;
   }
-  
+
   $qids = implode(',', $qidlist);
 
   $result = db_query("SELECT nq.qid, nq.title, nq.size, count(nqn.nid) AS numnodes FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_types} nt ON nt.qid = nq.qid LEFT JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid WHERE nt.type = '$node->type' AND nq.qid IN ($qids) GROUP BY nq.qid ORDER BY nq.title");
@@ -296,10 +296,10 @@ function nodequeue_admin_delete($qid) {
 
   $form['qid'] = array('#type' => 'value', '#value' => $queue->qid);
   return confirm_form('nodequeue_delete_confirm', $form,
-    t('Are you sure you want to delete "%title"?', array('%title' => $queue->title)), 
-    $_GET['destination'] ? $_GET['destination'] : 'admin/nodequeue', 
+    t('Are you sure you want to delete "%title"?', array('%title' => $queue->title)),
+    $_GET['destination'] ? $_GET['destination'] : 'admin/nodequeue',
     t('This action cannot be undone.'),
-    t('Delete'), t('Cancel')  
+    t('Delete'), t('Cancel')
   );
 }
 
@@ -340,10 +340,10 @@ function nodequeue_admin_view($qid, $op, $pos) {
   if ($op == 'clear') {
     $form['qid'] = array('#type' => 'value', '#value' => $queue->qid);
     return confirm_form('nodequeue_clear_confirm', $form,
-      t('Clearing queue "%s" is irreversible. You sure?', array('%s' => $queue->title)),  
-      $_GET['destination'] ? $_GET['destination'] : "admin/nodequeue/$qid/clear", 
+      t('Clearing queue "%s" is irreversible. You sure?', array('%s' => $queue->title)),
+      $_GET['destination'] ? $_GET['destination'] : "admin/nodequeue/$qid/clear",
       t('This action cannot be undone.'),
-      t('Clear Queue'), t('Cancel')  
+      t('Clear Queue'), t('Cancel')
     );
   }
 
@@ -396,7 +396,7 @@ function nodequeue_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
 // --------------------------------------------------------------------------
 // Database manipulation functions
 
-// Return an array of nodequeue nids that $user can 
+// Return an array of nodequeue nids that $user can
 // control for this node.
 
 function nodequeue_node_access($type) {
@@ -527,7 +527,7 @@ function _nodequeue_queue_remove(&$queue, $start, $end = 0) {
   $diff = $end - $start + 1;
   db_query("DELETE FROM {nodequeue_nodes} WHERE qid = $queue->qid AND position >= $start AND position <= $end");
   db_query("UPDATE {nodequeue_nodes} SET position = position - $diff WHERE qid=$queue->qid AND position > $end");
-  
+
   $queue->count -= $diff;
 }
 
@@ -568,15 +568,15 @@ function action_nodequeue_add($op, $edit = array(), $node) {
         'description' => t('Add to Node Queue'),
         'type' => t('node'),
         'batchable' => true,
-        'configurable' => true,      
+        'configurable' => true,
       );
       break;
-  
+
     case 'do':
       $qid = $edit['qid'];
       nodequeue_queue_add($qid, $node->nid);
       break;
-  
+
     // return an HTML config form for the action
     case 'form':
       // default values for form
@@ -594,17 +594,17 @@ function action_nodequeue_add($op, $edit = array(), $node) {
         '#options' => $queues,
       );
       return $form;
-     
+
      // validate the HTML form
-     
+
     // process the HTML form to store configuration
     case 'submit':
       $params = array(
         'qid' => $edit['qid']
       );
       return $params;
-      break;   
-  } 
+      break;
+  }
 }
 
 function action_nodequeue_remove($op, $edit = array(), $node) {
@@ -614,15 +614,15 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
         'description' => t('Remove from Node Queue'),
         'type' => t('node'),
         'batchable' => true,
-        'configurable' => true,      
+        'configurable' => true,
       );
       break;
-  
+
     case 'do':
       $qid = $edit['qid'];
       nodequeue_queue_remove_node($qid, $node->nid);
       break;
-  
+
     // return an HTML config form for the action
     case 'form':
       // default values for form
@@ -641,17 +641,17 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
       );
       return $form;
       break;
-     
+
      // validate the HTML form
-     
+
     // process the HTML form to store configuration
     case 'submit':
       $params = array(
         'qid' => $edit['qid']
       );
       return $params;
-      break;   
-  } 
+      break;
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -718,42 +718,42 @@ function nodequeue_queue_remove_node($qid, $nid) {
 
 function nodequeue_views_tables() {
   $tables['nodequeue_nodes'] = array(
-    "name" => "nodequeue_nodes", 
+    "name" => "nodequeue_nodes",
     "join" => array(
       "left" => array(
         "table" => "node",
         "field" => "nid"
-      ), 
+      ),
       "right" => array(
         "field" => "nid"
-      ), 
+      ),
     ),
     "filters" => array(
       "qid" => array(
-        'name' => "NodeQueue: Queue", 
+        'name' => "NodeQueue: Queue",
         'list' => 'nodequeue_handler_queuelist',
         'operator' => 'views_handler_operator_andor',
-        'help' => "Filter the view to a specific Node Queue.",
+        'help' => t('Filter the view to a specific Node Queue.'),
       ),
     ),
     "sorts" => array(
       "position" => array(
         'name' => "NodeQueue: Queue Position",
         'field' => 'position',
-        'help' => "When sorting by queue position, be sure the view is filtered to a single queue or the sort will not work very well.",
+        'help' => t('When sorting by queue position, be sure the view is filtered to a single queue or the sort will not work very well.'),
       ),
     ),
   );
   $tables['nodequeue_queue'] = array(
-    "name" => "nodequeue_queue", 
+    "name" => "nodequeue_queue",
     "join" => array(
       "left" => array(
         "table" => "nodequeue_nodes",
         "field" => "qid"
-      ), 
+      ),
       "right" => array(
         "field" => "qid"
-      ), 
+      ),
     ),
   );
   return $tables;
@@ -762,9 +762,9 @@ function nodequeue_views_tables() {
 function nodequeue_views_arguments() {
   $arguments = array(
     'nodequeue_qid' => array(
-      'name' => t("NodeQueue: Queue ID"), 
+      'name' => t("NodeQueue: Queue ID"),
       'handler' => "nodequeue_handler_arg_qid",
-      'help' => "The Queue ID argument allows users to filter a view by specifying a Node Queue ID.",
+      'help' => t('The Queue ID argument allows users to filter a view by specifying a Node Queue ID.'),
     ),
   );
   return $arguments;
