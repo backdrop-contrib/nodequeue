@@ -7,9 +7,6 @@ Installation
 ------------
 
 1. untar the nodequeue module into /modules, or copy this directory there.
-2. Run the nodequeue.mysql file to create the necessary database table.
-   mysql -u YOURMYSQLUSER -p YOURMYSLQPASS < nodequeue.mysql
-   (You can also use phpmyadmin to run this file)
-3. Activate the module on the admin/modules page
-4. Create a node queue on administer->node queue
+2. Activate the module on the administer >> modules page
+3. Create a node queue on administer >> node queue
 
