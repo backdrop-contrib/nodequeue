@@ -687,7 +687,7 @@ function nodequeue_fetch_front($qid, $teaser = true, $links = true) {
 }
 
 function nodequeue_fetch_back($qid, $teaser = true, $links = true) {
-  $size = db_result(db_query("SELECT size FROM {nodequeue_queue} WHERE qid = $qid"));
+  $size = db_result(db_query("SELECT size FROM {nodequeue_nodes} WHERE qid = $qid"));
   return nodequeue_nodes($qid, false, $teaser, $links, $size - 1, 1);
 }
 
