@@ -1,0 +1,65 @@
+<?php
+// nodequeue.install
+function nodequeue_install() {
+  drupal_set_message('Installing nodequeue');
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+        db_query("CREATE TABLE if not exists {nodequeue_queue} (
+          qid int(10) unsigned NOT NULL PRIMARY KEY,
+          title varchar(255) NOT NULL,
+          size int(3) unsigned default '0'
+        )");
+
+        db_query("CREATE TABLE if not exists {nodequeue_roles} (
+          qid int(10) unsigned NOT NULL,
+          rid int(10) unsigned
+        )");
+
+        db_query("CREATE TABLE if not exists {nodequeue_types} (
+          qid int(10) unsigned NOT NULL,
+          type varchar(255)
+        )");
+
+        db_query("CREATE TABLE if not exists {nodequeue_nodes} (
+          qid int(10) unsigned NOT NULL,
+          nid int(10) unsigned,
+          position int(3) unsigned
+        )");
+      $success = TRUE;
+      break;
+
+    case 'pgsql':
+        db_query("CREATE TABLE {nodequeue_queue} (
+          qid integer unsigned NOT NULL PRIMARY KEY,
+          title varchar(255) NOT NULL,
+          size integer unsigned default '0'
+        )");
+
+        db_query("CREATE TABLE {nodequeue_roles} (
+          qid integer unsigned NOT NULL,
+          rid integer unsigned
+        )");
+
+        db_query("CREATE TABLE {nodequeue_types} (
+          qid integer unsigned NOT NULL,
+          type varchar(255)
+        )");
+
+        db_query("CREATE TABLE {nodequeue_nodes} (
+          qid integer unsigned NOT NULL,
+          nid integer unsigned,
+          position integer unsigned
+        )");
+      $success = TRUE;
+      break;
+  }
+  if ($success) {
+    drupal_set_message(t('Nodequeue module installed tables successfully.'));
+  }
+  else {
+    drupal_set_message(t('The installation of nodequeue module was unsuccessful.'), 
+'error');
+  }
+}
+?>
