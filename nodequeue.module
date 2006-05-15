@@ -122,7 +122,7 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
       $queue->size,
       $queue->numnodes . ($queue->size && $queue->size == $queue->numnodes ? " QUEUE FULL" : ''),
     );
-    $ops = array(l('view queue', "admin/nodequeue/view/$queue->qid"));
+    $ops = array(l(t('view queue'), "admin/nodequeue/view/$queue->qid"));
     if ($pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE nid = $nid AND qid = $queue->qid")))
       $ops[] = l(t("remove from queue"), "node/$nid/nodequeue/remove/$queue->qid/$pos");
     else
@@ -132,7 +132,7 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
   }
 
   if ($items)
-    $output = theme('table', array('Queue', 'Max', 'In Queue', 'Operations'), $items);
+    $output = theme('table', array(t('Queue'), t('Max'), t('In Queue'), t('Operations')), $items);
   else
     $output = "No valid queues for this node? You shouldn't even be here if this is true.";
 
