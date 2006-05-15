@@ -101,6 +101,7 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
   $output = "";
 
   $node = node_load($nid);
+  drupal_set_title($node->title);
 
   // Determine which queues are appropriate for this nodetype.
   global $user;
