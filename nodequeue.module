@@ -404,9 +404,6 @@ function nodequeue_node_access($type) {
   global $user;
   // superuser always has access.
 
-  if ($user->uid == 1) {
-    return true;
-  }
   $roles = "'" . implode("','", array_keys($user->roles)) . "'";
   $sql = "SELECT DISTINCT(nq.qid) FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_roles} nr ON nr.qid = nq.qid LEFT JOIN {nodequeue_types} nt ON nt.qid = nq.qid WHERE nr.rid IN ($roles) AND nt.type = '$type'";
   $result = db_query($sql);
