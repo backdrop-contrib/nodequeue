@@ -114,7 +114,7 @@ function nodequeue_page_form($node) {
   $roles = array_keys($user->roles) + array(DRUPAL_AUTHENTICATED_RID);
   $role_args = array_fill(0, count($roles), '%d');
 
-  $result = db_query(db_rewrite_sql("SELECT nq.qid, nq.title, nq.size, count(nqn.nid) AS numnodes FROM {nodequeue_queue} nq INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid INNER JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid WHERE nt.type = '%s' AND nr.rid IN (". implode(',', $role_args) .") GROUP BY nq.qid ORDER BY nq.title", 'nq', 'qid'), array_merge(array($node->type), $roles));
+  $result = db_query(db_rewrite_sql("SELECT nq.qid, nq.title, nq.size, count(nqn.nid) AS numnodes FROM {nodequeue_queue} nq INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid LEFT JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid WHERE nt.type = '%s' AND nr.rid IN (". implode(',', $role_args) .") GROUP BY nq.qid ORDER BY nq.title", 'nq', 'qid'), array_merge(array($node->type), $roles));
 
   $form = array();
   while ($queue = db_fetch_object($result)) {
@@ -160,7 +160,7 @@ function nodequeue_admin($arg = "", $arg2 = "", $arg3 = "", $arg4 = "") {
     return nodequeue_admin_view($arg2, $arg3, $arg4);
   }
 
-  $result = pager_query("SELECT nq.*, count(nn.nid) as nodes FROM {nodequeue_queue} nq INNER JOIN {nodequeue_nodes} nn ON nq.qid = nn.qid GROUP by title", 20);
+  $result = pager_query("SELECT nq.*, count(nn.nid) as nodes FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_nodes} nn ON nq.qid = nn.qid GROUP by title", 20);
 
   $header = array(t("Title"), t("Max Nodes"), t("In Queue"), t("Operation"));
 
