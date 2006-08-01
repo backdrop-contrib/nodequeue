@@ -18,7 +18,7 @@ function nodequeue_help($section = "admin/help#nodequeue") {
 }
 
 function nodequeue_perm() {
-  return array ('administer nodequeue');
+  return array ('manipulate queues', 'administer nodequeue');
 }
 
 function nodequeue_menu($may_cache) {
@@ -27,17 +27,18 @@ function nodequeue_menu($may_cache) {
 
   if ($may_cache) {
     // administrative items
+    $access = user_access('administer nodequeue');
     $items[] = array(
       'path' => 'admin/nodequeue',
       'title' => t('node queue'),
-      'access' => user_access('administer nodequeue'),
+      'access' => $access,
       'callback' => 'nodequeue_admin',
       'type' => MENU_NORMAL_ITEM
     );
     $items[] = array(
       'path' => 'admin/nodequeue/list',
       'title' => t('list'),
-      'access' => user_access('administer nodequeue'),
+      'access' => $access,
       'callback' => 'nodequeue_admin',
       'weight' => -1,
       'type' => MENU_DEFAULT_LOCAL_TASK
@@ -45,27 +46,28 @@ function nodequeue_menu($may_cache) {
     $items[] = array(
       'path' => 'admin/nodequeue/add',
       'title' => t('add'),
-      'access' => user_access('administer nodequeue'),
+      'access' => $access,
       'callback' => 'nodequeue_admin_edit',
       'type' => MENU_LOCAL_TASK
     );
     $items[] = array(
       'path' => 'admin/nodequeue/delete',
       'title' => t('add'),
-      'access' => user_access('administer nodequeue'),
+      'access' => $access,
       'callback' => 'nodequeue_admin_delete',
       'type' => MENU_CALLBACK
     );
   }
   else {
 		$arg1 = (int) arg(1);
-    if ($user && arg(0) == 'node' && is_numeric($arg1)) {
+    if ($user && arg(0) == 'node' && is_numeric($arg1) && $arg1 > 0 && ($access = user_access('manipulate queues'))) {
       $node = node_load($arg1);
       $items[] = array(
         'path' => 'node/' . $arg1 . '/nodequeue',
         'title' => t('nodequeue'),
-        'access' => nodequeue_node_access($node->type) && $arg1 > 0,
+        'access' => $access,
         'callback' => 'nodequeue_page',
+        'callback arguments' => array($arg1),
         'type' => MENU_LOCAL_TASK,
         'weight' => 5
       );
@@ -76,65 +78,77 @@ function nodequeue_menu($may_cache) {
 
 // --------------------------------------------------------------------------
 // Nodequeue Admin pages
+
 /**
  * menu callback
  */
-function nodequeue_page($op = '', $qid = 0, $pos = 0) {
-  $nid = (int) arg(1);
-
-  $qid = intval($qid);
-
-  if ($op && $qid) {
-    $queue = _nodequeue_load($qid);
-    if ($op == 'add') {
-      _nodequeue_queue_add($queue, $nid);
-      return drupal_goto("node/$nid/nodequeue");
-    }
-    else if ($op == 'remove') {
-      _nodequeue_queue_remove($queue, $pos);
-      return drupal_goto("node/$nid/nodequeue");
-    }
-  }
-
-  $output = "";
-
+function nodequeue_page($nid) {
   $node = node_load($nid);
   drupal_set_title($node->title);
 
+  if(!nodequeue_node_access($node->type)) {
+    return t('No node queue defined for this node type.');
+  }
+  else {
+    $op = (string) arg(3);
+    $qid = (int) arg(4);
+
+    if ($op && $qid) {
+      $queue = _nodequeue_load($qid);
+      if ($op == 'add') {
+        _nodequeue_queue_add($queue, $nid);
+      }
+      elseif ($op == 'remove') {
+        _nodequeue_queue_remove($queue, $pos);
+      }
+      drupal_goto("node/$nid/nodequeue");
+    }
+    return nodequeue_page_form($node);
+  }
+}
+
+function nodequeue_page_form($node) {
   // Determine which queues are appropriate for this nodetype.
   global $user;
-  $role_args = array_fill(0, count(array_keys($user->roles)) + 1, '%d');
-  $result = db_query('SELECT DISTINCT(qid) FROM {nodequeue_roles} WHERE rid IN ('. implode(',', $role_args) .')', implode(',', array_keys($user->roles)), DRUPAL_AUTHENTICATED_RID);
-  while ($res = db_fetch_object($result)) {
-    $qidlist[] = $res->qid;
-  }
 
-  $qids = implode(',', $qidlist);
-  $qid_args = array_fill(0, count($qidlist), '%d');
+  $roles = array_keys($user->roles) + array(DRUPAL_AUTHENTICATED_RID);
+  $role_args = array_fill(0, count($roles), '%d');
 
-  $result = db_query("SELECT nq.qid, nq.title, nq.size, count(nqn.nid) AS numnodes FROM {nodequeue_queue} nq INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid INNER JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid WHERE nt.type = '%s' AND nq.qid IN (". implode(',', $qid_args) .") GROUP BY nq.qid ORDER BY nq.title", $node->type, $qids);
+  $result = db_query(db_rewrite_sql("SELECT nq.qid, nq.title, nq.size, count(nqn.nid) AS numnodes FROM {nodequeue_queue} nq INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid INNER JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid WHERE nt.type = '%s' AND nr.rid IN (". implode(',', $role_args) .") GROUP BY nq.qid ORDER BY nq.title", 'nq', 'qid'), array_merge(array($node->type), $roles));
 
-  $items = array();
+  $form = array();
   while ($queue = db_fetch_object($result)) {
-    $item = array(
-      $queue->title,
-      $queue->size,
-      $queue->numnodes . ($queue->size && $queue->size == $queue->numnodes ? " QUEUE FULL" : ''),
-    );
+    $form['title'][$queue->qid] = array('#type' => 'markup', '#value' => $queue->title);
+    $form['size'][$queue->qid] = array('#type' => 'markup', '#value' => $queue->size);
+    $form['numnodes'][$queue->qid] = array('#type' => 'markup', '#value' => $queue->numnodes . ($queue->size && $queue->size == $queue->numnodes ? ' '. t('QUEUE FULL') : ''));
+
     $ops = array(l(t('view queue'), "admin/nodequeue/view/$queue->qid"));
-    if ($pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE nid = %d AND qid = %d", $nid, $queue->qid)))
-      $ops[] = l(t("remove from queue"), "node/$nid/nodequeue/remove/$queue->qid/$pos");
-    else
-      $ops[] = l(t("add to queue"), "node/$nid/nodequeue/add/$queue->qid");
-    $item[] = theme('links', $ops);
-    $items[] = $item;
+
+    if ($pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE nid = %d AND qid = %d", $node->nid, $queue->qid))) {
+      $ops[] = l(t("remove from queue"), "node/$node->nid/nodequeue/remove/$queue->qid/$pos");
+    }
+    else {
+      $ops[] = l(t("add to queue"), "node/$node->nid/nodequeue/add/$queue->qid");
+    }
+
+    $form['operations'][$queue->qid] = array('#type' => 'markup', '#value' => theme('links', $ops));
   }
 
-  if ($items)
-    $output = theme('table', array(t('Queue'), t('Max'), t('In Queue'), t('Operations')), $items);
-  else
-    $output = t("No valid queues for this node? You shouldn't even be here if this is true.");
+  return drupal_get_form('nodequeue_page_form', $form);
+}
 
+function theme_nodequeue_page_form($form) {
+  $header = array(t('Title'), t('Max Nodes'), t('In queue'), t('Operation'));
+  foreach (element_children($form['title']) as $key) {
+    $row = array();
+    $row[] = form_render($form['title'][$key]);
+    $row[] = array('data' => form_render($form['size'][$key]), 'align' => 'right');
+    $row[] = array('data' => form_render($form['numnodes'][$key]), 'align' => 'right');
+    $row[] = form_render($form['operations'][$key]);
+    $rows[] = $row;
+  }
+  $output .= theme('table', $header, $rows);
+  $output .= form_render($form);
   return $output;
 }
 
@@ -405,14 +419,21 @@ function nodequeue_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
  */
 function nodequeue_node_access($type) {
   global $user;
+
+  $sql = 'SELECT nq.qid FROM {nodequeue_queue} nq INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid ';
+
   // superuser always has access.
   if ($user->uid == 1) {
-    return TRUE;
+    $sql .= "WHERE nt.type = '%s'";
+    $result = db_query($sql, $type);
   }
+  else {
+    $roles = array_keys($user->roles) + array(DRUPAL_AUTHENTICATED_RID);
+    $role_args = array_fill(0, count($roles), '%d');
 
-  $roles = "'" . implode("','", array_keys($user->roles)) . "'";
-  $sql = "SELECT nq.qid FROM {nodequeue_queue} nq INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid WHERE nr.rid IN ($roles) AND nt.type = '%s'";
-  $result = db_query($sql, $type);
+    $sql .= "WHERE nr.rid IN (". implode(',', $role_args) .") AND nt.type = '%s'";
+    $result = db_query($sql, array_merge($roles, array($type)));
+  }
 
   return db_num_rows($result);
 }
