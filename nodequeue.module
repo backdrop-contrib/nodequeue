@@ -670,7 +670,7 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
 
 function nodequeue_node_titles($qid, $title = '', $backward = true, $from = 0, $count = 0) {
   $orderby = ($backward ? "DESC" : "ASC");
-  $sql = db_rewrite_sql("SELECT n.nid, n.title FROM {node} n LEFT JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.qid = %d ORDER BY nn.position $orderby");
+  $sql = db_rewrite_sql("SELECT n.nid, n.title FROM {node} n LEFT JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.qid = %d AND n.status = 1 ORDER BY nn.position $orderby");
   if ($count) {
     $result = db_query_range($sql, $qid, $from, $count);
   }
@@ -682,7 +682,7 @@ function nodequeue_node_titles($qid, $title = '', $backward = true, $from = 0, $
 
 function nodequeue_nodes($qid, $backward = true, $teaser = true, $links = true, $from = 0, $count = 0) {
   $orderby = ($backward ? "DESC" : "ASC");
-  $sql = db_rewrite_sql("SELECT n.nid FROM {node} n INNER JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.qid = %d ORDER BY nn.position $orderby");
+  $sql = db_rewrite_sql("SELECT n.nid FROM {node} n INNER JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.qid = %d AND n.status = 1 ORDER BY nn.position $orderby");
   if ($count) {
     $result = db_query_range($sql, $qid, $from, $count);
   }
