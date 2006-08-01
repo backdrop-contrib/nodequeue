@@ -575,7 +575,7 @@ function _nodequeue_queue_add(&$queue, $nid) {
 
   $nid = intval($nid);
   $queue->count++;
-  db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES (%d, $d, $d)", $queue->qid, $nid, $queue->count);
+  db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES (%d, %d, %d)", $queue->qid, $nid, $queue->count);
 }
 
 function nodequeue_queue_clear($qid) {
