@@ -4,8 +4,6 @@
 // Drupal Hooks
 
 function nodequeue_help($section = "admin/help#nodequeue") {
-  $output = "";
-
   switch ($section) {
     case 'admin/help#nodequeue':
       $output = t("The nodequeue module enables putting nodes into manual queues.");
@@ -60,14 +58,13 @@ function nodequeue_menu($may_cache) {
     );
   }
   else {
-		global $user;
-		$arg1 = arg(1);
+		$arg1 = (int) arg(1);
     if ($user && arg(0) == 'node' && is_numeric($arg1)) {
       $node = node_load($arg1);
       $items[] = array(
-        'path' => 'node/' . arg(1) . '/nodequeue',
+        'path' => 'node/' . $arg1 . '/nodequeue',
         'title' => t('nodequeue'),
-        'access' => nodequeue_node_access($node->type),
+        'access' => nodequeue_node_access($node->type) && $arg1 > 0,
         'callback' => 'nodequeue_page',
         'type' => MENU_LOCAL_TASK,
         'weight' => 5
@@ -79,11 +76,12 @@ function nodequeue_menu($may_cache) {
 
 // --------------------------------------------------------------------------
 // Nodequeue Admin pages
-
+/**
+ * menu callback
+ */
 function nodequeue_page($op = '', $qid = 0, $pos = 0) {
-  $nid = arg(1);
-  if (!$nid)
-    return drupal_not_found();
+  $nid = (int) arg(1);
+
   $qid = intval($qid);
 
   if ($op && $qid) {
@@ -105,15 +103,16 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
 
   // Determine which queues are appropriate for this nodetype.
   global $user;
-  $roles = "'" . implode("','", array_keys($user->roles)) . "'";
-  $result = db_query("SELECT distinct(qid) FROM {nodequeue_roles} WHERE rid IN ($roles)");
+  $role_args = array_fill(0, count(array_keys($user->roles)) + 1, '%d');
+  $result = db_query('SELECT DISTINCT(qid) FROM {nodequeue_roles} WHERE rid IN ('. implode(',', $role_args) .')', implode(',', array_keys($user->roles)), DRUPAL_AUTHENTICATED_RID);
   while ($res = db_fetch_object($result)) {
     $qidlist[] = $res->qid;
   }
 
   $qids = implode(',', $qidlist);
+  $qid_args = array_fill(0, count($qidlist), '%d');
 
-  $result = db_query("SELECT nq.qid, nq.title, nq.size, count(nqn.nid) AS numnodes FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_types} nt ON nt.qid = nq.qid LEFT JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid WHERE nt.type = '$node->type' AND nq.qid IN ($qids) GROUP BY nq.qid ORDER BY nq.title");
+  $result = db_query("SELECT nq.qid, nq.title, nq.size, count(nqn.nid) AS numnodes FROM {nodequeue_queue} nq INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid INNER JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid WHERE nt.type = '%s' AND nq.qid IN (". implode(',', $qid_args) .") GROUP BY nq.qid ORDER BY nq.title", $node->type, $qids);
 
   $items = array();
   while ($queue = db_fetch_object($result)) {
@@ -123,7 +122,7 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
       $queue->numnodes . ($queue->size && $queue->size == $queue->numnodes ? " QUEUE FULL" : ''),
     );
     $ops = array(l(t('view queue'), "admin/nodequeue/view/$queue->qid"));
-    if ($pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE nid = $nid AND qid = $queue->qid")))
+    if ($pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE nid = %d AND qid = %d", $nid, $queue->qid)))
       $ops[] = l(t("remove from queue"), "node/$nid/nodequeue/remove/$queue->qid/$pos");
     else
       $ops[] = l(t("add to queue"), "node/$nid/nodequeue/add/$queue->qid");
@@ -134,17 +133,20 @@ function nodequeue_page($op = '', $qid = 0, $pos = 0) {
   if ($items)
     $output = theme('table', array(t('Queue'), t('Max'), t('In Queue'), t('Operations')), $items);
   else
-    $output = "No valid queues for this node? You shouldn't even be here if this is true.";
+    $output = t("No valid queues for this node? You shouldn't even be here if this is true.");
 
-  print theme("page", $output);
+  return $output;
 }
 
 function nodequeue_admin($arg = "", $arg2 = "", $arg3 = "", $arg4 = "") {
-  if ($arg == 'edit')
+  if ($arg == 'edit') {
     return nodequeue_admin_edit($arg2);
-  if ($arg == 'view')
+  }
+  if ($arg == 'view') {
     return nodequeue_admin_view($arg2, $arg3, $arg4);
-  $result = pager_query("SELECT nq.*, count(nn.nid) as nodes FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_nodes} nn ON nq.qid = nn.qid GROUP by title", 20);
+  }
+
+  $result = pager_query("SELECT nq.*, count(nn.nid) as nodes FROM {nodequeue_queue} nq INNER JOIN {nodequeue_nodes} nn ON nq.qid = nn.qid GROUP by title", 20);
 
   $header = array(t("Title"), t("Max Nodes"), t("In Queue"), t("Operation"));
 
@@ -397,37 +399,42 @@ function nodequeue_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
 // --------------------------------------------------------------------------
 // Database manipulation functions
 
-// Return an array of nodequeue nids that $user can
-// control for this node.
-
+/**
+ * Return TRUE if $user can
+ * control the queue for this node.
+ */
 function nodequeue_node_access($type) {
   global $user;
   // superuser always has access.
+  if ($user->uid == 1) {
+    return TRUE;
+  }
 
   $roles = "'" . implode("','", array_keys($user->roles)) . "'";
-  $sql = "SELECT DISTINCT(nq.qid) FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_roles} nr ON nr.qid = nq.qid LEFT JOIN {nodequeue_types} nt ON nt.qid = nq.qid WHERE nr.rid IN ($roles) AND nt.type = '$type'";
-  $result = db_query($sql);
+  $sql = "SELECT nq.qid FROM {nodequeue_queue} nq INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid WHERE nr.rid IN ($roles) AND nt.type = '%s'";
+  $result = db_query($sql, $type);
+
   return db_num_rows($result);
 }
 
 function _nodequeue_load($qid, $nodes = false) {
-  $qid = intval($qid); // safety
-  $queue = db_fetch_object(db_query("SELECT * FROM {nodequeue_queue} WHERE qid = $qid"));
+  $queue = db_fetch_object(db_query("SELECT * FROM {nodequeue_queue} WHERE qid = %d", $qid));
   if ($queue) {
-    $result = db_query("SELECT rid FROM {nodequeue_roles} WHERE qid = $qid");
+    $result = db_query("SELECT rid FROM {nodequeue_roles} WHERE qid = %d", $qid);
     while ($obj = db_fetch_object($result))
       $queue->roles[] = $obj->rid;
 
-    $result = db_query("SELECT type FROM {nodequeue_types} WHERE qid = $qid");
+    $result = db_query("SELECT type FROM {nodequeue_types} WHERE qid = %d", $qid);
     while ($obj = db_fetch_object($result))
       $queue->types[] = $obj->type;
 
-    $queue->count = db_result(db_query("SELECT count(*) from {nodequeue_nodes} where qid = $qid"));
+    $queue->count = db_result(db_query("SELECT count(*) from {nodequeue_nodes} where qid = %d", $qid));
 
     if ($nodes) {
       $result = db_query("SELECT nid FROM {nodequeue_nodes} WHERE qid = $qid ORDER BY position");
-      while ($obj = db_fetch_object($result))
+      while ($obj = db_fetch_object($result)) {
         $queue->nodes[] = $obj->nid;
+      }
     }
   }
   return $queue;
@@ -438,31 +445,30 @@ function _nodequeue_save($queue, $nodes = false) {
   $title = db_escape_string($queue->title);
   if (!$queue->qid) {
     $queue->qid = db_next_id("{nodequeue_queue}_qid");
-    $sql = "INSERT INTO {nodequeue_queue} (qid, title, size) VALUES ($queue->qid, '$title', $queue->size)";
+    db_query("INSERT INTO {nodequeue_queue} (qid, title, size) VALUES (%d, '%s', %d)", $queue->qid, $title, $queue->size);
   }
   else {
     $queue->qid = intval($queue->qid);
-    $sql = "UPDATE {nodequeue_queue} set size = $queue->size, title = '$title' WHERE qid = $queue->qid";
-    db_query("DELETE FROM {nodequeue_roles} WHERE qid = $queue->qid");
-    db_query("DELETE FROM {nodequeue_types} WHERE qid = $queue->qid");
+    db_query("UPDATE {nodequeue_queue} set size = %d, title = '%s' WHERE qid = %d", $queue->size, $title, $queue->qid);
+    db_query("DELETE FROM {nodequeue_roles} WHERE qid = %d", $queue->qid);
+    db_query("DELETE FROM {nodequeue_types} WHERE qid = %d", $queue->qid);
     if ($nodes) {
-      db_query("DELETE FROM {nodequeue_nodes} WHERE qid = $queue->qid");
+      db_query("DELETE FROM {nodequeue_nodes} WHERE qid = %d", $queue->qid);
     }
   }
 
-  db_query($sql);
 
   if (is_array($queue->roles))
     foreach($queue->roles as $rid)
-      db_query("INSERT INTO {nodequeue_roles} (qid, rid) VALUES ($queue->qid, %d)", $rid);
+      db_query("INSERT INTO {nodequeue_roles} (qid, rid) VALUES (%d, %d)", $queue->qid, $rid);
 
   if (is_array($queue->types))
     foreach($queue->types as $type)
-      db_query("INSERT INTO {nodequeue_types} (qid, type) VALUES ($queue->qid, '%s')", $type);
+    db_query("INSERT INTO {nodequeue_types} (qid, type) VALUES (%d, '%s')", $queue->qid, $type);
 
   if ($nodes && is_array($queue->nodes))
     foreach($queue->nodes as $nid) {
-      db_query("INSERT INTO {nodequeue_roles} (qid, nid, position) VALUES ($queue->qid, %d, %d)", $nid, ++$position);
+      db_query("INSERT INTO {nodequeue_roles} (qid, nid, position) VALUES (%d, %d, %d)", $queue->qid, $nid, ++$position);
 
       // Stop if we somehow have more nodes in the queue than are allowed.
       if ($position >= $queue->size)
@@ -473,10 +479,10 @@ function _nodequeue_save($queue, $nodes = false) {
 }
 
 function _nodequeue_delete($qid) {
-  db_query("DELETE FROM {nodequeue_queue} WHERE qid = $qid");
-  db_query("DELETE FROM {nodequeue_roles} WHERE qid = $qid");
-  db_query("DELETE FROM {nodequeue_types} WHERE qid = $qid");
-  db_query("DELETE FROM {nodequeue_nodes} WHERE qid = $qid");
+  db_query("DELETE FROM {nodequeue_queue} WHERE qid = %d", $qid);
+  db_query("DELETE FROM {nodequeue_roles} WHERE qid = %d", $qid);
+  db_query("DELETE FROM {nodequeue_types} WHERE qid = %d", $qid);
+  db_query("DELETE FROM {nodequeue_nodes} WHERE qid = %d", $qid);
 }
 
 
@@ -485,12 +491,13 @@ function _nodequeue_delete($qid) {
 
 function nodequeue_queue_swap($queue, $pos1, $pos2) {
   // Grab the nid off one of the positions so we can more easily swap.
-  $nid = db_result(db_query("SELECT nid FROM {nodequeue_nodes} WHERE qid = $queue->qid AND position = $pos1"));
-  if (!$nid)
+  $nid = db_result(db_query("SELECT nid FROM {nodequeue_nodes} WHERE qid = %d AND position = %d", $queue->qid, $pos1));
+  if (!$nid) {
     return;
+  }
 
-  db_query("UPDATE {nodequeue_nodes} SET position = $pos1 WHERE position = $pos2 AND qid = $queue->qid");
-  db_query("UPDATE {nodequeue_nodes} SET position = $pos2 WHERE nid = $nid AND qid = $queue->qid");
+  db_query("UPDATE {nodequeue_nodes} SET position = %d WHERE position = %d AND qid = %d", $pos1, $pos2,  $queue->qid);
+  db_query("UPDATE {nodequeue_nodes} SET position = %d WHERE nid = %d AND qid = %d", $pos2, $nid, $queue->qid);
 }
 
 function nodequeue_queue_up($queue, $position) {
@@ -508,19 +515,19 @@ function nodequeue_queue_down($queue, $position) {
 function nodequeue_queue_front($queue, $position) {
   if ($position < 2 || $position > $queue->count)
     return;
-  $entry = db_fetch_object(db_query("SELECT * FROM {nodequeue_nodes} WHERE qid=$queue->qid AND position = $position"));
-  db_query("DELETE FROM {nodequeue_nodes} WHERE qid=$queue->qid AND position = $position");
-  db_query("UPDATE {nodequeue_nodes} SET position=position + 1 WHERE qid=$queue->qid AND position < $position");
-  db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES ($queue->qid, $entry->nid, 1)");
+  $entry = db_fetch_object(db_query("SELECT * FROM {nodequeue_nodes} WHERE qid= %d AND position = %d", $queue->qid, $position));
+  db_query("DELETE FROM {nodequeue_nodes} WHERE qid = %d AND position = %d", $queue->qid, $position);
+  db_query("UPDATE {nodequeue_nodes} SET position = position + 1 WHERE qid= %d AND position < %d", $queue->qid, $position);
+  db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES (%d, %d, 1)", $queue->qid, $entry->nid);
 }
 
 function nodequeue_queue_back($queue, $position) {
   if ($position < 1 || $position >= $queue->count)
     return;
-  $entry = db_fetch_object(db_query("SELECT * FROM {nodequeue_nodes} WHERE qid=$queue->qid AND position = $position"));
-  db_query("DELETE FROM {nodequeue_nodes} WHERE qid=$queue->qid AND position = $position");
-  db_query("UPDATE {nodequeue_nodes} SET position=position - 1 WHERE qid=$queue->qid AND position > $position");
-  db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES ($queue->qid, $entry->nid, $queue->count)");
+  $entry = db_fetch_object(db_query("SELECT * FROM {nodequeue_nodes} WHERE qid = %d AND position = %d", $queue->qid, $position));
+  db_query("DELETE FROM {nodequeue_nodes} WHERE qid = %d AND position = %d", $queue->qid, $position);
+  db_query("UPDATE {nodequeue_nodes} SET position = position - 1 WHERE qid = %d AND position > %d", $queue->qid, $position);
+  db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES (%d, %d, %d)", $queue->qid, $entry->nid, $queue->count);
 }
 
 function _nodequeue_queue_remove(&$queue, $start, $end = 0) {
@@ -528,16 +535,17 @@ function _nodequeue_queue_remove(&$queue, $start, $end = 0) {
     $end = $start;
 
   $diff = $end - $start + 1;
-  db_query("DELETE FROM {nodequeue_nodes} WHERE qid = $queue->qid AND position >= $start AND position <= $end");
-  db_query("UPDATE {nodequeue_nodes} SET position = position - $diff WHERE qid=$queue->qid AND position > $end");
+  db_query("DELETE FROM {nodequeue_nodes} WHERE qid = %d AND position >= %d AND position <= %d", $queue->qid, $start, $end);
+  db_query("UPDATE {nodequeue_nodes} SET position = position - %d WHERE qid = %d AND position > %d",  $diff, $queue->qid, $end);
 
   $queue->count -= $diff;
 }
 
 function _nodequeue_queue_add(&$queue, $nid) {
   // Check for uniqueness
-  if (db_result(db_query("SELECT nid from {nodequeue_nodes} WHERE qid = $queue->qid AND nid = $nid")))
+  if (db_result(db_query("SELECT nid from {nodequeue_nodes} WHERE qid = %d AND nid = %d", $queue->qid, $nid))) {
     return;
+  }
 
   // Really, it should never happen that a queue gets bigger than is possible,
   // but just in case.
@@ -546,7 +554,7 @@ function _nodequeue_queue_add(&$queue, $nid) {
 
   $nid = intval($nid);
   $queue->count++;
-  db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES ($queue->qid, $nid, $queue->count)");
+  db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES (%d, $d, $d)", $queue->qid, $nid, $queue->count);
 }
 
 function nodequeue_queue_clear($qid) {
@@ -662,21 +670,25 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
 
 function nodequeue_node_titles($qid, $title = '', $backward = true, $from = 0, $count = 0) {
   $orderby = ($backward ? "DESC" : "ASC");
-  $sql = db_rewrite_sql("SELECT n.nid, n.title FROM {node} n LEFT JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.qid = $qid ORDER BY nn.position $orderby");
-  if ($count)
-    $result = db_query_range($sql, $from, $count);
-  else
-    $result = db_query($sql);
+  $sql = db_rewrite_sql("SELECT n.nid, n.title FROM {node} n LEFT JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.qid = %d ORDER BY nn.position $orderby");
+  if ($count) {
+    $result = db_query_range($sql, $qid, $from, $count);
+  }
+  else {
+    $result = db_query($sql, $qid);
+  }
   return node_title_list($result, $title);
 }
 
 function nodequeue_nodes($qid, $backward = true, $teaser = true, $links = true, $from = 0, $count = 0) {
   $orderby = ($backward ? "DESC" : "ASC");
-  $sql = db_rewrite_sql("SELECT n.nid FROM {node} n LEFT JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.qid = $qid ORDER BY nn.position $orderby");
-  if ($count)
-    $result = db_query_range($sql, $from, $count);
-  else
-    $result = db_query($sql);
+  $sql = db_rewrite_sql("SELECT n.nid FROM {node} n INNER JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.qid = %d ORDER BY nn.position $orderby");
+  if ($count) {
+    $result = db_query_range($sql, $qid, $from, $count);
+  }
+  else {
+    $result = db_query($sql, $qid);
+  }
 
   while ($nid = db_fetch_object($result)) {
     $node = node_load($nid->nid);
@@ -690,29 +702,31 @@ function nodequeue_fetch_front($qid, $teaser = true, $links = true) {
 }
 
 function nodequeue_fetch_back($qid, $teaser = true, $links = true) {
-  $size = db_result(db_query("SELECT size FROM {nodequeue_nodes} WHERE qid = $qid"));
+  $size = db_result(db_query("SELECT size FROM {nodequeue_nodes} WHERE qid = %d", $qid));
   return nodequeue_nodes($qid, false, $teaser, $links, $size - 1, 1);
 }
 
 function nodequeue_fetch_random($qid, $teaser = true, $links = true) {
-  $count = db_result(db_query("SELECT count(*) FROM {nodequeue_nodes} WHERE qid = $qid"));
+  $count = db_result(db_query("SELECT count(*) FROM {nodequeue_nodes} WHERE qid = %d", $qid));
   return nodequeue_nodes($qid, false, $teaser, $links, rand(0, $count - 1), 1);
 }
 
 function nodequeue_queue_add($qid, $nid) {
   $queue = _nodequeue_load($qid);
-  if ($queue)
+  if ($queue) {
     _nodequeue_queue_add($queue, $nid);
+  }
 }
 
 function nodequeue_queue_remove($qid, $start, $end = 0) {
   $queue = _nodequeue_load($qid);
-  if ($queue)
+  if ($queue) {
     _nodequeue_queue_remove($queue, $start, $end);
+  }
 }
 
 function nodequeue_queue_remove_node($qid, $nid) {
-  $pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE qid = $qid AND nid = $nid"));
+  $pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE qid = %d AND nid = %d", $qid, $nid));
   nodequeue_queue_remove($qid, $pos);
 }
 
@@ -799,7 +813,7 @@ function nodequeue_handler_arg_qid($op, &$query, $argtype, $arg = '') {
     case 'link':
       return l($query->title, "$arg/" . intval($query->qid));
     case 'title':
-      $queue = db_fetch_object(db_query("SELECT title FROM {nodequeue_queue} WHERE qid = '%d'", $query));
+      $queue = db_fetch_object(db_query("SELECT title FROM {nodequeue_queue} WHERE qid = %d", $query->qid));
       return $queue->title;
   }
 }
