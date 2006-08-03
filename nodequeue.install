@@ -1,5 +1,6 @@
 <?php
-// nodequeue.install
+// $Id$
+
 function nodequeue_install() {
   drupal_set_message('Installing nodequeue');
   switch ($GLOBALS['db_type']) {
