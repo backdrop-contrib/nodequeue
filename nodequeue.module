@@ -153,7 +153,7 @@ function theme_nodequeue_page_form($form) {
   return $output;
 }
 
-function nodequeue_admin($arg = "", $arg2 = "", $arg3 = "", $arg4 = "") {
+function nodequeue_admin($arg = '', $arg2 = '', $arg3 = '', $arg4 = '') {
   if ($arg == 'edit') {
     return nodequeue_admin_edit($arg2);
   }
@@ -161,29 +161,30 @@ function nodequeue_admin($arg = "", $arg2 = "", $arg3 = "", $arg4 = "") {
     return nodequeue_admin_view($arg2, $arg3, $arg4);
   }
 
-  $result = pager_query("SELECT nq.*, COUNT(DISTINCT(nn.nid)) as nodes FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_nodes} nn ON nq.qid = nn.qid GROUP by title", 20);
+  $result = pager_query('SELECT nq.*, COUNT(DISTINCT(nn.nid)) as nodes FROM {nodequeue_queue} nq LEFT JOIN {nodequeue_nodes} nn ON nq.qid = nn.qid GROUP by nq.title', 20, 0, 'SELECT COUNT(q.qid) FROM {nodequeue_queue} q');
 
-  $header = array(t("Title"), t("Max Nodes"), t("In Queue"), t("Operation"));
+  if (db_num_rows($result)) {
+    $header = array(t('Title'), t('Max Nodes'), t('In Queue'), t('Operation'));
 
-  while ($queue = db_fetch_object($result)) {
+    $rows = array();
+    while ($queue = db_fetch_object($result)) {
       $rows[] = array(
-        array("data" => $queue->title),
-        array("data" => $queue->size, "align" => "right"),
-        array("data" => $queue->nodes, "align" => "right"),
-        array("data" => theme('links', array(l(t('edit'), "admin/nodequeue/edit/$queue->qid"), l(t('view'), "admin/nodequeue/view/$queue->qid"), l(t('delete'), "admin/nodequeue/delete/$queue->qid"))))
-      );
+        $queue->title,
+        array('data' => $queue->size, 'align' => 'right'),
+        array('data' => $queue->nodes, 'align' => 'right'),
+        array('data' => theme('links', array(l(t('edit'), "admin/nodequeue/edit/$queue->qid"), l(t('view'), "admin/nodequeue/view/$queue->qid"), l(t('delete'), "admin/nodequeue/delete/$queue->qid"))))
+        );
+    }
+
+    $output = theme('table', $header, $rows);
+    $output .= theme('pager', NULL, 20);
+
+    return  $output;
+  }
+  else {
+    return t('No node queues exist.');
   }
 
-  if (!$rows) {
-    $rows[] = array(array("data" => t("No node queues exist."), "colspan" => "4"));
-  }
-
-  $pager = theme("pager", NULL, 20, 0);
-  if (!empty($pager)) {
-    $rows[] = array(array("data" => $pager, "colspan" => "4"));
-  }
-
-  return theme('table', $header, $rows);
 }
 
 //
