@@ -63,15 +63,17 @@ function nodequeue_menu($may_cache) {
 		$arg1 = (int) arg(1);
     if ($user && arg(0) == 'node' && is_numeric($arg1) && $arg1 > 0 && ($access = user_access('manipulate queues'))) {
       $node = node_load($arg1);
-      $items[] = array(
-        'path' => 'node/' . $arg1 . '/nodequeue',
-        'title' => t('nodequeue'),
-        'access' => $access,
-        'callback' => 'nodequeue_page',
-        'callback arguments' => array($arg1),
-        'type' => MENU_LOCAL_TASK,
-        'weight' => 5
-      );
+//      if (nodequeue_node_access($node->type)) {
+        $items[] = array(
+          'path' => 'node/' . $arg1 . '/nodequeue',
+          'title' => t('nodequeue'),
+          'access' => $access,
+          'callback' => 'nodequeue_page',
+          'callback arguments' => array($arg1),
+          'type' => MENU_LOCAL_TASK,
+          'weight' => 5
+        );
+//      }
     }
   }
   return $items;
@@ -115,7 +117,14 @@ function nodequeue_page_form($node) {
   $roles = array_keys($user->roles) + array(DRUPAL_AUTHENTICATED_RID);
   $role_args = array_fill(0, count($roles), '%d');
 
-  $result = db_query(db_rewrite_sql("SELECT nq.qid, nq.title, nq.size, COUNT(DISTINCT(nqn.nid)) AS numnodes FROM {nodequeue_queue} nq INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid LEFT JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid WHERE nt.type = '%s' AND nr.rid IN (". implode(',', $role_args) .") GROUP BY nq.qid, nqn.nid ORDER BY nq.title", 'nq', 'qid'), array_merge(array($node->type), $roles));
+  $result = db_query(db_rewrite_sql(
+    "SELECT nq.qid, nq.title, nq.size, COUNT(DISTINCT(nqn.nid)) AS numnodes " .
+    "FROM {nodequeue_queue} nq " .
+    "INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid " .
+    "LEFT JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid " .
+    "INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid " . 
+    "WHERE nt.type = '%s' AND nr.rid IN (". implode(',', $role_args) .") " .
+    "GROUP BY nq.qid  ORDER BY nq.title", 'nq', 'qid'), array_merge(array($node->type), $roles));
 
   $form = array();
   while ($queue = db_fetch_object($result)) {

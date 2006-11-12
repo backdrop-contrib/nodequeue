@@ -52,6 +52,7 @@ function nodequeue_install() {
           nid integer unsigned,
           position integer unsigned
         )");
+        db_query("CREATE SEQUENCE nodequeue_queue_qid_seq INCREMENT 1 START 1");
       $success = TRUE;
       break;
   }
@@ -63,4 +64,9 @@ function nodequeue_install() {
 'error');
   }
 }
-?>
+
+function nodequeue_update_1() {
+  if ($GLOBALS['db_type'] == 'pgsql') {
+    db_query("CREATE SEQUENCE nodequeue_queue_qid_seq INCREMENT 1 START 1");
+  }
+}
