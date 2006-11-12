@@ -125,7 +125,7 @@ function nodequeue_page_form($node) {
 
     $ops = array(l(t('view queue'), "admin/nodequeue/view/$queue->qid"));
 
-    if ($pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE nid = %d AND qid = %d", $node->nid, $queue->qid))) {
+    if (is_numeric($pos = db_result(db_query("SELECT position FROM {nodequeue_nodes} WHERE nid = %d AND qid = %d", $node->nid, $queue->qid)))) {
       $ops[] = l(t("remove from queue"), "node/$node->nid/nodequeue/remove/$queue->qid/$pos");
     }
     else {
