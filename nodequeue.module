@@ -85,7 +85,7 @@ function nodequeue_menu($may_cache) {
  */
 function nodequeue_page($nid) {
   $node = node_load($nid);
-  drupal_set_title($node->title);
+  drupal_set_title(check_plain($node->title));
 
   if(!nodequeue_node_access($node->type)) {
     return t('No node queue defined for this node type.');
@@ -115,14 +115,18 @@ function nodequeue_page_form($node) {
   $roles = array_keys($user->roles) + array(DRUPAL_AUTHENTICATED_RID);
   $role_args = array_fill(0, count($roles), '%d');
 
+  if ($user->uid != 1) {
+    $roles_join = "INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid ";
+    $roles_where = "AND nr.rid IN (". implode(',', $role_args) .") ";
+  }
+
   $result = db_query(db_rewrite_sql(
     "SELECT nq.qid, nq.title, nq.size, COUNT(DISTINCT(nqn.nid)) AS numnodes " .
     "FROM {nodequeue_queue} nq " .
     "INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid " .
-    "LEFT JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid " .
-    "INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid " . 
-    "WHERE nt.type = '%s' AND nr.rid IN (". implode(',', $role_args) .") " .
-    "GROUP BY nq.qid ORDER BY nq.title", 'nq', 'qid'), array_merge(array($node->type), $roles));
+    "LEFT JOIN {nodequeue_nodes} nqn ON nqn.qid = nq.qid " . $roles_join .
+    "WHERE nt.type = '%s' " . $roles_where .
+    "GROUP BY nq.qid  ORDER BY nq.title", 'nq', 'qid'), $node->type);
 
   $form = array();
   while ($queue = db_fetch_object($result)) {
@@ -429,21 +433,19 @@ function nodequeue_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
  */
 function nodequeue_node_access($type) {
   global $user;
-
-  $sql = 'SELECT nq.qid FROM {nodequeue_queue} nq INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid ';
-
   // superuser always has access.
-  if ($user->uid == 1) {
-    $sql .= "WHERE nt.type = '%s'";
-    $result = db_query($sql, $type);
-  }
-  else {
+  if ($user->uid != 1) {
+    $roles_join = "INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid ";
     $roles = array_keys($user->roles) + array(DRUPAL_AUTHENTICATED_RID);
     $role_args = array_fill(0, count($roles), '%d');
 
-    $sql .= "WHERE nr.rid IN (". implode(',', $role_args) .") AND nt.type = '%s'";
-    $result = db_query($sql, array_merge($roles, array($type)));
+    $roles_where .= "AND nr.rid IN (". implode(',', $role_args) .")";
   }
+
+  $sql = 'SELECT nq.qid FROM {nodequeue_queue} nq ' .
+    'INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid ' . $roles_join .
+    "WHERE nt.type = '%s' " . $roles_where;
+  $result = db_query($sql, $type);
 
   return db_num_rows($result);
 }
@@ -592,8 +594,8 @@ function nodequeue_queue_clear($qid) {
   db_query("DELETE FROM {nodequeue_nodes} WHERE qid = %d", $qid);
 }
 
-function _nodequeue_check_queuesize(&$queue, $size = 0) {
-  if (!$size)
+function _nodequeue_check_queuesize(&$queue, $size = FALSE) {
+  if ($size === FALSE) 
     $size = $queue->size;
   if ($queue->count > $size) {
     _nodequeue_queue_remove($queue, 1, $queue->count - $size);
