@@ -370,7 +370,7 @@ function nodequeue_admin_view($qid, $op, $pos) {
   }
   if ($op == 'clear') {
     $form['qid'] = array('#type' => 'value', '#value' => $queue->qid);
-    return confirm_form('nodequeue_clear_confirm', $form,
+    return drupal_get_form('nodequeue_clear_confirm', $queue); confirm_form('nodequeue_clear_confirm', $form,
       t('Clearing queue "%s" is irreversible. You sure?', array('%s' => $queue->title)),
       $_GET['destination'] ? $_GET['destination'] : "admin/content/nodequeue/$qid/clear",
       t('This action cannot be undone.'),
@@ -406,6 +406,16 @@ function nodequeue_admin_view($qid, $op, $pos) {
   }
 
   return $output;
+}
+
+function nodequeue_clear_confirm($queue) {
+  $form['qid'] = array('#type' => 'value', '#value' => $queue->qid);
+  return confirm_form($form,
+    t('Clearing queue "%s" is irreversible. You sure?', array('%s' => $queue->title)),
+    $_GET['destination'] ? $_GET['destination'] : "admin/content/nodequeue/view/$queue->qid",
+    t('This action cannot be undone.'),
+    t('Clear Queue'), t('Cancel')
+  );
 }
 
 function nodequeue_clear_confirm_submit($formid, $form) {

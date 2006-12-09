@@ -1,0 +1,3 @@
+Nodequeue-5.x-1.2
+  o 102385: Extraneous SEQUENCE in mysql portion of install.
+  o 102402: Fix queue empty confirm form.
