@@ -27,7 +27,6 @@ function nodequeue_install() {
           nid int(10) unsigned,
           position int(3) unsigned
         )");
-        db_query("CREATE SEQUENCE nodequeue_queue_qid_seq INCREMENT 1 START 1");
       $success = TRUE;
       break;
 
