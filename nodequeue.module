@@ -381,6 +381,9 @@ function nodequeue_admin_view($qid, $op, $pos) {
   drupal_set_title("Nodequeue '$queue->title'");
   $output = '';
 
+  $output = '<p class="nodequeue-js-hide" style="display: none;">';
+  $output .= t('Changes made to the queue order and queue removals will not be active until you click Save, below.');
+  $output .= '</p>';
   $sql = "SELECT DISTINCT(n.nid), n.title, n.uid, u.name, n.created, nq.position FROM {node} n LEFT JOIN {users} u on n.uid = u.uid LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.qid = $qid ORDER BY nq.position";
 
   // Don't rewrite because a queue manager has to be able to move items up
@@ -388,24 +391,102 @@ function nodequeue_admin_view($qid, $op, $pos) {
 //  $sql = db_rewrite_sql($sql);
   $result = pager_query($sql, 25, 0);
 
+  $list = array();
+  $nids = array();
+
   if (db_num_rows($result) > 0) {
     while ($node = db_fetch_object($result)) {
-      $buttons = l(theme('image', drupal_get_path('module', 'nodequeue') .'/go-up.png', t('Move up')), "admin/content/nodequeue/view/$qid/up/$node->position", array('title'=>t('Move up')), NULL, NULL, FALSE, TRUE);
-      $buttons .= l(theme('image', drupal_get_path('module', 'nodequeue') .'/go-down.png', t('Move down')), "admin/content/nodequeue/view/$qid/down/$node->position", array('title'=>t('Move down')), NULL, NULL, FALSE, TRUE);
-      $buttons .= l(theme('image', drupal_get_path('module', 'nodequeue') .'/go-top.png', t('Move to front')), "admin/content/nodequeue/view/$qid/front/$node->position", array('title'=>t('Move to front')), NULL, NULL, FALSE, TRUE);
-      $buttons .= l(theme('image', drupal_get_path('module', 'nodequeue') .'/go-bottom.png', t('Move to back')), "admin/content/nodequeue/view/$qid/back/$node->position", array('title'=>t('Move to back')), NULL, NULL, FALSE, TRUE);
-      $buttons .= l(theme('image', drupal_get_path('module', 'nodequeue') .'/user-trash.png', t('Remove from queue')), "admin/content/nodequeue/view/$qid/remove/$node->position", array('title'=>t('Remove from queue')), NULL, NULL, FALSE, TRUE);
-      $list[] = array(l($node->title, "node/$node->nid"), theme('username', $node), format_date($node->created), $buttons);
+      $buttons = l(
+        theme('image', drupal_get_path('module', 'nodequeue') .'/go-up.png', t('Move up')),
+        "admin/content/nodequeue/view/$qid/up/$node->position", 
+        array(
+          'title' => t('Move up'),
+          'class' => 'nodequeue-move-up',
+        ), NULL, NULL, FALSE, TRUE);
+      $buttons .= l(
+        theme('image', drupal_get_path('module', 'nodequeue') .'/go-down.png', t('Move down')),
+        "admin/content/nodequeue/view/$qid/down/$node->position", 
+        array(
+          'title' => t('Move down'),
+          'class' => 'nodequeue-move-down',
+        ), NULL, NULL, FALSE, TRUE);
+      $buttons .= l(
+        theme('image', drupal_get_path('module', 'nodequeue') .'/go-top.png', t('Move to front')), 
+        "admin/content/nodequeue/view/$qid/front/$node->position", 
+        array(
+          'title' => t('Move to front'),
+          'class' => 'nodequeue-move-front',
+        ), NULL, NULL, FALSE, TRUE);
+      $buttons .= l(
+        theme('image', drupal_get_path('module', 'nodequeue') .'/go-bottom.png', t('Move to back')),
+        "admin/content/nodequeue/view/$qid/back/$node->position", 
+        array(
+          'title' => t('Move to back'),
+          'class' => 'nodequeue-move-back',
+        ), NULL, NULL, FALSE, TRUE);
+      $buttons .= l(
+        theme('image', drupal_get_path('module', 'nodequeue') .'/user-trash.png', t('Remove from queue')),
+        "admin/content/nodequeue/view/$qid/remove/$node->position", 
+        array(
+          'title' => t('Remove from queue'),
+          'class' => 'nodequeue-remove',
+        ), NULL, NULL, FALSE, TRUE);
+      $list[] = array(
+        'id' => 'nodequeue-row-' . $node->nid,
+        'class' => 'nodequeue-row',
+        'data' => array(l($node->title, "node/$node->nid"), theme('username', $node), format_date($node->created), $buttons),
+      );
+      $nids[] = $node->nid;
     }
-    $output .= theme('table', array("Node", "Author", "Date", "Operation"), $list, array('width' => '100%'));
-    $output .= theme('pager', NULL, 25);
-    $output .= "<p>" . l(t("Empty this queue"), "admin/content/nodequeue/view/$qid/clear") . "</p>";
+    $output .= theme('table', array("Node", "Author", "Date", "Operation"), $list, array('width' => '100%', 'id' => 'nodequeue-table'));
+// Pager won't work with the javascript thingy!
+//    $output .= theme('pager', NULL, 25);
+    $output .= drupal_get_form('nodequeue_queue_admin', $qid, $nids);
+//    $output .= "<p>" . l(t("Empty this queue"), "admin/content/nodequeue/view/$qid/clear") . "</p>";
+    drupal_add_js(drupal_get_path('module', 'nodequeue') .'/nodequeue.js');
   }
   else {
     $output .= t('<p>Queue is empty!</p>');
   }
 
   return $output;
+}
+
+function nodequeue_queue_admin($qid, $nids) {
+  $form['qid'] = array(
+    '#type' => 'value',
+    '#value' => $qid,
+  );
+
+  $form['order'] = array(
+    '#type' => 'hidden',
+    '#id' => 'nodequeue-order',
+    '#default_value' => implode(',', $nids),
+  );
+
+  $form['save'] = array(
+    '#type' => 'submit',
+    '#attributes' => array('class' => 'nodequeue-js-hide nodequeue-save', 'style' => 'display: none'),
+    '#value' => t('Save'),
+  );
+
+  $form['clear'] = array(
+    '#type' => 'submit',
+    '#value' => t('Clear queue'),
+  );
+
+  return $form;
+}
+
+function nodequeue_queue_admin_submit($form_id, $form_values, $form) {
+  db_query("DELETE FROM {nodequeue_nodes} WHERE qid = %d", $form_values['qid']);
+  if ($form_values['op'] == t('Save') && $form_values['order']) {
+    $counter = 1;
+    foreach (explode(',', $form_values['order']) as $nid) {
+      db_query("INSERT INTO {nodequeue_nodes} (qid, nid, position) VALUES (%d, %d, %d)", $form_values['qid'], $nid, $counter++);
+    }
+  }
+  drupal_set_message(t('The queue has been updated'));
 }
 
 function nodequeue_clear_confirm($queue) {
