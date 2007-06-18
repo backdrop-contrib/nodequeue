@@ -1,5 +1,4 @@
 ; $Id$
 name = Node Queue
 description = Create queues which can contain nodes in arbitrary order
-version = 1.0
 
