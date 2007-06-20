@@ -9,49 +9,67 @@ function nodequeue_install() {
         db_query("CREATE TABLE if not exists {nodequeue_queue} (
           qid int(10) unsigned NOT NULL PRIMARY KEY,
           title varchar(255) NOT NULL,
-          size int(3) unsigned default '0'
-        )");
+          size int(3) unsigned default '0',
+          link varchar(255),
+          link_remove varchar(255)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */");
 
         db_query("CREATE TABLE if not exists {nodequeue_roles} (
           qid int(10) unsigned NOT NULL,
-          rid int(10) unsigned
-        )");
+          rid int(10) unsigned,
+          KEY {nodequeue_roles}_qid_idx (qid),
+          KEY {nodequeue_roles}_rid_idx (rid)
+        )/*!40100 DEFAULT CHARACTER SET utf8 */");
 
         db_query("CREATE TABLE if not exists {nodequeue_types} (
           qid int(10) unsigned NOT NULL,
-          type varchar(255)
-        )");
+          type varchar(255),
+          KEY {nodequeue_types}_qid_idx (qid),
+          KEY {nodequeue_types}_type_idx (type)
+        )/*!40100 DEFAULT CHARACTER SET utf8 */");
 
         db_query("CREATE TABLE if not exists {nodequeue_nodes} (
           qid int(10) unsigned NOT NULL,
           nid int(10) unsigned,
-          position int(3) unsigned
-        )");
+          position int(3) unsigned,
+          timestamp int unsigned NOT NULL default '0',
+          KEY {nodequeue_nodes}_qid_idx (qid, position),
+          KEY {nodequeue_nodes}_nid_idx (nid)
+        )/*!40100 DEFAULT CHARACTER SET utf8 */");
       $success = TRUE;
       break;
 
     case 'pgsql':
         db_query("CREATE TABLE {nodequeue_queue} (
-          qid integer unsigned NOT NULL PRIMARY KEY,
+          qid integer NOT NULL PRIMARY KEY,
           title varchar(255) NOT NULL,
-          size integer unsigned default '0'
+          size integer default '0',
+          link varchar(255),
+          link_remove varchar(255)
         )");
 
         db_query("CREATE TABLE {nodequeue_roles} (
-          qid integer unsigned NOT NULL,
-          rid integer unsigned
+          qid integer NOT NULL,
+          rid integer
         )");
+        db_query("CREATE INDEX {nodequeue_roles}_qid_idx ON {nodequeue_roles} (qid)");
+        db_query("CREATE INDEX {nodequeue_roles}_rid_idx ON {nodequeue_roles} (rid)");
 
         db_query("CREATE TABLE {nodequeue_types} (
-          qid integer unsigned NOT NULL,
+          qid integer NOT NULL,
           type varchar(255)
         )");
+        db_query("CREATE INDEX {nodequeue_types}_qid_idx ON {nodequeue_types} (qid)");
 
         db_query("CREATE TABLE {nodequeue_nodes} (
-          qid integer unsigned NOT NULL,
-          nid integer unsigned,
-          position integer unsigned
+          qid integer NOT NULL,
+          nid integer,
+          position integer,
+          timestamp integer NOT NULL default '0',
         )");
+        db_query("CREATE INDEX {nodequeue_nodes}_qid_idx ON {nodequeue_nodes} (qid, position)");
+        db_query("CREATE INDEX {nodequeue_nodes}_nid_idx ON {nodequeue_nodes} (nid)");
+
         db_query("CREATE SEQUENCE nodequeue_queue_qid_seq INCREMENT 1 START 1");
       $success = TRUE;
       break;
@@ -66,15 +84,52 @@ function nodequeue_install() {
 }
 
 function nodequeue_uninstall() {
-  // Note: pgsql versions of these necessary?
-  db_query("DROP TABLE IF EXISTS {nodequeue_queue}");
-  db_query("DROP TABLE IF EXISTS {nodequeue_roles}");
-  db_query("DROP TABLE IF EXISTS {nodequeue_types}");
-  db_query("DROP TABLE IF EXISTS {nodequeue_nodes}");
+  $tables = array(
+    'nodequeue_queue',
+    'nodequeue_roles',
+    'nodequeue_types',
+    'nodequeue_nodes',
+  );
+  foreach ($tables as $table) {
+    if (db_table_exists($table)) {
+      db_query("DROP TABLE {$table}");
+    }
+  }
 }
 
 function nodequeue_update_1() {
   if ($GLOBALS['db_type'] == 'pgsql') {
     db_query("CREATE SEQUENCE nodequeue_queue_qid_seq INCREMENT 1 START 1");
   }
+}
+
+function nodequeue_update_5000() {
+  $ret = array();
+  $ret[] = t(array('success' => TRUE, 'query' => 'Some of the following queries may appear to fail. This is not a problem.'));
+
+  $ret[] = update_sql("ALTER TABLE {nodequeue_queue} ADD COLUMN link VARCHAR(40) DEFAULT '' NOT NULL");
+  $ret[] = update_sql("ALTER TABLE {nodequeue_queue} ADD COLUMN link_remove VARCHAR(40) DEFAULT '' NOT NULL");
+  
+  $ret[] = update_sql("CREATE INDEX {nodequeue_roles}_qid_idx ON {nodequeue_roles} (qid)");
+  $ret[] = update_sql("CREATE INDEX {nodequeue_roles}_rid_idx ON {nodequeue_roles} (rid)");
+  $ret[] = update_sql("CREATE INDEX {nodequeue_types}_qid_idx ON {nodequeue_types} (qid)");
+  $ret[] = update_sql("CREATE INDEX {nodequeue_nodes}_qid_idx ON {nodequeue_nodes} (qid, position)");
+  $ret[] = update_sql("CREATE INDEX {nodequeue_nodes}_nid_idx ON {nodequeue_nodes} (nid)");
+  
+  $ret[] = _system_update_utf8(array('nodequeue_queue', 'nodequeue_roles', 'nodequeue_types', 'nodequeue_nodes'));
+  return $ret;
+}
+
+function nodequeue_update_5001() {
+  $ret = array();
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {nodequeue_nodes} ADD COLUMN timestamp int DEFAULT '0' NOT NULL");
+      break;
+    case 'pgsql':
+      db_add_column($ret, 'nodequeue_nodes', 'timestamp', 'integer', array('default' => 0, 'not null' => TRUE));
+      break;
+  }
+  return $ret;
 }

@@ -3,7 +3,6 @@
 Drupal.nodequeue = {};
 
 Drupal.nodequeue.autoAttach = function() {
-  $('.nodequeue-js-hide').show();
   $('a.nodequeue-move-up').click(function(e) {
     var item = $(this).parent().parent();
     var prev = $(this).parent().parent().prev();
@@ -15,6 +14,7 @@ Drupal.nodequeue.autoAttach = function() {
 
       // move item
       prev.before(item);
+    $('.nodequeue-js-hide').show();
     }
     return false;
   });
@@ -30,6 +30,7 @@ Drupal.nodequeue.autoAttach = function() {
 
       // move item
       next.after(item);
+      $('.nodequeue-js-hide').show();
     }
     return false;
   });
@@ -46,6 +47,7 @@ Drupal.nodequeue.autoAttach = function() {
     if (item.attr('id') != current.attr('id')) {
       item.removeClass('even').addClass('odd');
       current.before(item);
+      $('.nodequeue-js-hide').show();
     }
     return false;
   });
@@ -66,6 +68,7 @@ Drupal.nodequeue.autoAttach = function() {
         item.toggleClass('even').toggleClass('odd');
       }
       current.after(item);
+      $('.nodequeue-js-hide').show();
     }
     return false;
   });
@@ -79,6 +82,7 @@ Drupal.nodequeue.autoAttach = function() {
       next = $('#' + next.attr('id')).next();
     }
 
+    $('.nodequeue-js-hide').show();
     $(this).parent().parent().remove();    
     return false;
   });
@@ -92,6 +96,29 @@ Drupal.nodequeue.autoAttach = function() {
       order += $(this).attr('id').replace('nodequeue-row-', '');
     });
     $('#nodequeue-order').val(order);
+  });
+
+  $('a.nodequeue-ajax-toggle').click(function() {
+    var a = this;
+    href = $(this).attr('href');
+    $.ajax({
+      type: 'POST',
+      data: { js: 1 },
+      url: href,
+      global: true,
+      success: function (data) {
+        // Parse response
+        data = Drupal.parseJson(data);
+        // Change text on success
+        if (data.status) {
+          // Change label back
+          $(a).attr('href', data.href);
+          $(a).html(data.label);
+          return;
+        }
+      },
+    });
+    return false;
   });
 }
 

@@ -81,7 +81,7 @@ most recently added.
 Available Functions and Descriptions
 ====================================
 
-nodequeue_node_titles($qid, $title = '', $backward = true)
+nodequeue_node_titles($qid, $title = '', $backward = true, $from = 0, $count = 0)
     Display a title list of the queue. If backward is true (the default) the
     list will be from back (newest) to front (oldest).
 
