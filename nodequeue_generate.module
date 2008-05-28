@@ -149,7 +149,7 @@ function nodequeue_generate_rehash($vids) {
   $queues = nodequeue_load_queues(nodequeue_get_all_qids(200));
   foreach ($queues as $queue) {
     if ($queue->owner == 'smartqueue_taxonomy') {
-      nodequeue_api_subqueues(&$queue, $node);
+      nodequeue_api_subqueues($queue, $node);
     }
   }
 }
