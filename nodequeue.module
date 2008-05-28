@@ -2270,7 +2270,7 @@ function nodequeue_fetch_back($sqid, $teaser = true, $links = true) {
 }
 
 function nodequeue_fetch_random($sqid, $teaser = true, $links = true) {
-  $count = db_result(db_query("SELECT count(*) FROM {nodequeue_nodes} WHERE sqid = %d", $sqid));
+  $count = db_result(db_query(db_rewrite_sql("SELECT COUNT(n.nid) FROM {node} n INNER JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.sqid = %d AND n.status = 1"), $sqid));
   return nodequeue_nodes($sqid, false, $teaser, $links, rand(0, $count - 1), 1);
 }
 
