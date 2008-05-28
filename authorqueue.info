@@ -1,0 +1,6 @@
+; $Id$
+name = Smart Queue Author
+description = Creates a node queue for each node author
+package = Node Queue
+dependencies = nodequeue
+

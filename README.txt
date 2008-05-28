@@ -5,14 +5,6 @@ a block listing teasers for 5 forum posts that the admin thinks are important.
 Another use might be to create a group of nodes, and then have a block or the
 front page offer one of these randomly.
 
-Future uses include putting nodes into a queue that can be acted on
-automatically, such as a publishing queue where at a certain interval
-the front of the queue is promoted, or has a workflow state change, or
-some other automatic operation.
-
-Once the module and the mysql file for the module are installed, an admin
-can go to admininister->nodequeue and create a new queue.
-
 Queues can be set to allow only certain types of nodes to be added to the
 queue. Queue can be a fixed size or of infinite length. And the admin can
 select which roles have permission to add nodes to a given queue.
@@ -20,10 +12,14 @@ select which roles have permission to add nodes to a given queue.
 Once a queue is set up, a new tab will appear on eligible nodes for eligible
 users. This tab will allow the user--regardless of edit permissions--to add or
 remove that node from the queue. Queue admins can view the nodes in the queue,
-and can modify the order of items already in the queue.
+and can modify the order of items already in the queue. Items may also appear
+in a nodes links area to add/remove them from the queue.
 
 When a node is added to the queue, it is added to the back of the queue. If a
 queue is full when a node is added, the front of the queue is removed. 
+
+It is highly recommended that you use the Views module to display your queues.
+However, if you choose not to, here is an alternative:
 
 In order to actually do something useful with a node queue, the admin is
 required to use a small PHP snippet. This is a very small snippet, and while

@@ -1,0 +1,6 @@
+; $Id$
+name = Smart Queue Taxonomy
+description = Creates a node queue for each taxonomy vocabulary
+package = Node Queue
+dependencies = nodequeue taxonomy
+
