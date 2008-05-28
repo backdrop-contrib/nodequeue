@@ -2,3 +2,4 @@
 name = Node Queue
 description = Create queues which can contain nodes in arbitrary order
 package = Node Queue
+core = 6.x

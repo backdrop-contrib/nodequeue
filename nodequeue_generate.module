@@ -1,16 +1,14 @@
 <?php
 
-function nodequeue_generate_menu($may_cache) {
-  if ($may_cache) {
-    $items[] = array(
-        'path' => 'admin/content/generate_nodequeue',
-        'callback' => 'drupal_get_form',
-        'callback arguments' => array('nodequeue_generate_form'),
-        'description' => t('Bulk add nodes into queues'),
-        'title' => t('Generate node queue assignments'),
-        'access' => user_access('manipulate all queues'),
-    );
-  }
+function nodequeue_generate_menu() {
+  $items['admin/content/generate_nodequeue'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('nodequeue_generate_form'),
+    'description' => t('Bulk add nodes into queues'),
+    'title' => t('Generate node queue assignments'),
+    'access callback' => 'user_access',
+    'access arguments' => array('manipulate all queues'),
+  );
   return $items;
 }
 
@@ -58,6 +56,19 @@ function nodequeue_generate_form() {
   return $form;
 }
 
+/**
+ * Implements hook_theme
+ *
+ * @return unknown
+ */
+function nodequeue_generate_theme() {
+  return array(
+    'nodequeue_generate_form' => array(
+      'arguments' => array('form' => NULL),
+    ),
+  );
+}
+
 function theme_nodequeue_generate_form($form) {
   $output = drupal_render($form['help']);
   $children = element_children($form['rows']);
@@ -78,8 +89,8 @@ function theme_nodequeue_generate_form($form) {
   return $output;
 }
 
-function nodequeue_generate_form_submit($form_id, $form_values) {
-  $qids = array_keys(array_filter($form_values['rows']['cb']));
+function nodequeue_generate_form_submit($form, $form_state) {
+  $qids = array_keys(array_filter($form_state['values']['rows']['cb']));
   // Empty the queue
   $placeholders = implode(', ', array_fill(0, count($qids), '%d'));
   db_query("DELETE FROM {nodequeue_nodes} WHERE qid IN ($placeholders)", $qids);
@@ -99,7 +110,7 @@ function nodequeue_generate_form_submit($form_id, $form_values) {
     // smartqueue_taxonomy pulls nodes from the proper terms. nodequeue type queues don't care about taxo.
     if ($queues[$subqueue->qid]->owner == 'nodequeue') {
       $sql = "SELECT n.nid FROM {node} n WHERE n.status = 1 AND n.type IN ($placeholders) ORDER BY RAND()";
-      $result = db_query_range($sql, $args, 0, $form_values['rows'][$subqueue->qid]['limit']);
+      $result = db_query_range($sql, $args, 0, $form_state['values']['rows'][$subqueue->qid]['limit']);
       while ($row = db_fetch_object($result)) {
         nodequeue_subqueue_add($subqueue, $subqueue, $row->nid);
       }
@@ -107,7 +118,7 @@ function nodequeue_generate_form_submit($form_id, $form_values) {
     elseif ($queues[$subqueue->qid]->owner == 'smartqueue_taxonomy') {
       $args[] = $subqueue->reference;
       $sql = "SELECT tn.nid FROM {term_node} tn INNER JOIN {node} n ON tn.nid=n.nid WHERE n.status = 1 AND n.type IN ($placeholders) AND tn.tid = %d ORDER BY RAND()";
-      $result = db_query_range($sql, $args, 0, $form_values['rows'][$subqueue->qid]['limit']);
+      $result = db_query_range($sql, $args, 0, $form_state['values']['rows'][$subqueue->qid]['limit']);
       while ($row = db_fetch_object($result)) {
         nodequeue_subqueue_add($subqueue, $subqueue, $row->nid);
       }

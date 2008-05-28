@@ -27,7 +27,7 @@ function nodequeue_views_tables() {
         'sortable' => true,
         'handler' => views_handler_field_dates(),
         'option' => 'string',
-        'help' => t('Display the time the node was added to a given node queue.').' '.
+        'help' => t('Display the time the node was added to a given node queue.') .' '.
                   t('The option field may be used to specify the custom date format as it\'s required by the date() function or if "as time ago" has been chosen to customize the granularity of the time interval.'),
       ),
       'ajaxtoggle' => array(
@@ -225,7 +225,7 @@ function nodequeue_views_default_views() {
     $view->page_empty = '';
     $view->page_empty_format = '1';
     $view->page_type = 'teaser';
-    $view->url = 'nodequeue/' . $queue->qid;
+    $view->url = 'nodequeue/'. $queue->qid;
     $view->use_pager = TRUE;
     $view->nodes_per_page = '10';
     $view->block = TRUE;
@@ -242,18 +242,18 @@ function nodequeue_views_default_views() {
     $view->block_use_page_header = FALSE;
     $view->block_use_page_footer = FALSE;
     $view->block_use_page_empty = FALSE;
-    $view->sort = array (
-      array (
+    $view->sort = array(
+      array(
         'tablename' => 'nodequeue_nodes',
         'field' => 'position',
         'sortorder' => 'ASC',
         'options' => '',
       ),
     );
-    $view->argument = array (
+    $view->argument = array(
     );
-    $view->field = array (
-      array (
+    $view->field = array(
+      array(
         'tablename' => 'node',
         'field' => 'title',
         'label' => '',
@@ -261,11 +261,11 @@ function nodequeue_views_default_views() {
         'options' => 'link',
       ),
     );
-    $view->exposed_filter = array (
+    $view->exposed_filter = array(
     );
     $view->requires = array('nodequeue_nodes', 'node');
-    $view->filter = array (
-      array (
+    $view->filter = array(
+      array(
         'tablename' => 'nodequeue_nodes',
         'field' => 'qid',
         'operator' => 'OR',
@@ -314,7 +314,7 @@ function nodequeue_handler_subqueuelist($op, $argument) {
 }
 
 function nodequeue_handler_arg_qid($op, &$query, $argtype, $arg = '') {
-  switch($op) {
+  switch ($op) {
     case 'summary':
       $query->ensure_table('nodequeue_queue', true);
       $query->add_field('title', 'nodequeue_queue');
@@ -340,7 +340,7 @@ function nodequeue_handler_arg_qid($op, &$query, $argtype, $arg = '') {
 }
 
 function nodequeue_handler_arg_qtitle($op, &$query, $argtype, $arg = '') {
-  switch($op) {
+  switch ($op) {
     case 'summary':
       $query->ensure_table('nodequeue_subqueue', true);
       $query->add_field('title', 'nodequeue_subqueue');
@@ -373,7 +373,7 @@ function nodequeue_handler_arg_qtitle($op, &$query, $argtype, $arg = '') {
 }
 
 function nodequeue_handler_arg_sqid($op, &$query, $argtype, $arg = '') {
-  switch($op) {
+  switch ($op) {
     case 'summary':
       $query->ensure_table('nodequeue_subqueue', true);
       $query->add_field('title', 'nodequeue_subqueue');
@@ -404,7 +404,7 @@ function nodequeue_handler_arg_sqid($op, &$query, $argtype, $arg = '') {
 }
 
 function nodequeue_handler_arg_reference($op, &$query, $argtype, $arg = '') {
-  switch($op) {
+  switch ($op) {
     case 'summary':
       // $arg == $option
       $query->ensure_table('nodequeue_subqueue', true);

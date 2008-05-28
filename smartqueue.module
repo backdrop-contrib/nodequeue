@@ -12,7 +12,7 @@ function smartqueue_nodequeue_info() {
 }
 
 /**
- * Implementation of hook_nodequeue()
+ * Implementation of hook_nodequeue_form()
  */
 function smartqueue_taxonomy_nodequeue_form($queue, &$form) {
   foreach (taxonomy_get_vocabularies() as $vid => $vocabulary) {
@@ -42,17 +42,17 @@ function smartqueue_taxonomy_nodequeue_form($queue, &$form) {
 }
 
 /**
- * Implementation of hook_nodequeue()
+ * Implementation of hook_nodequeue_form_validate()
  */
-function smartqueue_taxonomy_nodequeue_form_validate($queue, $form_values, &$form) {
+function smartqueue_taxonomy_nodequeue_form_validate($queue, &$form_state, &$form) {
   if (!isset($queue->qid)) {
-    $vids = array_keys(array_filter($form_values['vocabularies']));
+    $vids = array_keys(array_filter($form_state['values']['vocabularies']));
     if (empty($vids)) {
       form_error($form['placeholder']['vocabularies'], t('You must select at least one vocabulary.'));
     }
 
     // Convert this to our reference.
-    form_set_value($form['reference'], implode('-', $vids));
+    form_set_value($form['reference'], implode('-', $vids), $form_state);
   }
 }
 
@@ -91,7 +91,9 @@ function smartqueue_taxonomy_nodequeue_subqueues(&$queue, $node) {
     if (!empty($tids)) {
       $empty = FALSE;
     }
-    $vids[$vid][] = 0;
+    if (!count($vids[$vid])) {
+      $vids[$vid][] = 0;
+    }
   }
 
   if ($empty) {
@@ -100,7 +102,7 @@ function smartqueue_taxonomy_nodequeue_subqueues(&$queue, $node) {
 
   $references = smartqueue_build_string(array_filter($vids));
   // Because of how we built this, the last one will always be all zeros. Lose it.
-  array_pop($references);
+  //array_pop($references);
 
   // We're returning an array of references for efficiency, but we also have
   // to check to see if the references we've generated exist. If they don't,
@@ -145,7 +147,6 @@ function smartqueue_build_string($arrays) {
 function smartqueue_taxonomy_nodequeue_subqueue_title($queue, $reference) {
   $vids = explode('-', $queue->reference);
   $tids = explode('-', $reference);
-  $titles = array();
   foreach ($vids as $vid) {
     $tid = array_shift($tids);
     // $tid can be 0, specifically meaning this term is unset.
