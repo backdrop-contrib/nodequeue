@@ -152,10 +152,11 @@ function nodequeue_views_data() {
  * Implementation of hook_views_data_alter().
  */
 function nodequeue_views_data_alter(&$data) {
+  // queue relationship
   $data['node']['nodequeue_rel'] = array(
     'group' => t('Node queue'),
-    'title' => t('queue'),
-    'help' => t('Create a relationship to a nodequeue'),
+    'title' => t('Queue'),
+    'help' => t('Create a relationship to a nodequeue.'),
     'real field' => 'nid',
     'relationship' => array(
       'handler' => 'nodequeue_handler_relationship_nodequeue',
@@ -165,11 +166,48 @@ function nodequeue_views_data_alter(&$data) {
     ),
   );
 
-  // ajaxtoggle
+  // links
+  $data['node']['nodequeue_links'] = array(
+    'group' => t('Node queue'),
+    'title' => t('Add/remove links'),
+    'help' => t('Display add/remove links for all eligible node queues. Note that this performs a node_load so could add many extra queries to a view.'),
+    'real field' => 'nid',
+    'field' => array(
+      'handler' => 'nodequeue_handler_field_links',
+    ),
+  );
+
+  $data['node']['nodequeue_queue_tab'] = array(
+    'group' => t('Node queue'),
+    'title' => t('Link to tab'),
+    'help' => t('Display add/remove links for all eligible node queues. Note that this performs a node_load so could add many extra queries to a view.'),
+    'real field' => 'nid',
+    'field' => array(
+      'handler' => 'nodequeue_handler_field_queue_tab',
+    ),
+  );
 
   // all queues
+  $data['node']['nodequeue_all_queues'] = array(
+    'group' => t('Node queue'),
+    'title' => t('All queues'),
+    'help' => t('Display all queues a node is a member of.'),
+    'real field' => 'nid',
+    'field' => array(
+      'handler' => 'nodequeue_handler_field_all_queues',
+    ),
+  );
 
-  // link to queue tab
+  // all subqueues
+  $data['node']['nodequeue_all_subqueues'] = array(
+    'group' => t('Node queue'),
+    'title' => t('All subqueues'),
+    'help' => t('Display all subqueues a node is a member of.'),
+    'real field' => 'nid',
+    'field' => array(
+      'handler' => 'nodequeue_handler_field_all_subqueues',
+    ),
+  );
 }
 
 /**
@@ -179,7 +217,8 @@ class nodequeue_handler_relationship_nodequeue extends views_handler_relationshi
   function options(&$options) {
     parent::options($options);
 
-    $options['qid'] = -1;
+    $options['limit'] = FALSE;
+    $options['qids'] = array();
   }
 
   /**
@@ -189,19 +228,29 @@ class nodequeue_handler_relationship_nodequeue extends views_handler_relationshi
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
-    $queues = nodequeue_load_queues(nodequeue_get_all_qids(0));
+    $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
 
-    $options = array(-1 => t('All queues'));
+    $form['limit'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Limit to one or more queues (recommended)'),
+      '#default_value'=> $this->options['limit'],
+    );
+
+    $options = array();
+    $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
     foreach ($queues as $queue) {
       $options[$queue->qid] = $queue->title;
     }
 
-    $form['qid'] = array(
-      '#type' => 'select',
-      '#title' => t('Queue'),
+    $form['qids'] = array(
+      '#prefix' => '<div><div id="edit-options-qids">',
+      '#suffix' => '</div></div>',
+      '#type' => 'checkboxes',
+      '#title' => t('Queues'),
       '#options' => $options,
-      '#description' => t('Select which queue to create this relationship for; if "All queues" is selected, all queues a node belongs to will be in the query; this will cause duplicates so be careful when using this option.'),
-      '#default_value' => $this->options['qid'],
+      '#default_value' => $this->options['qids'],
+      '#process' => array('expand_checkboxes', 'views_process_dependency'),
+      '#dependency' => array('edit-options-limit' => array(TRUE)),
     );
   }
 
@@ -222,13 +271,12 @@ class nodequeue_handler_relationship_nodequeue extends views_handler_relationshi
       $join->definition['type'] = 'INNER';
     }
 
-    if (!empty($this->options['qid']) && $this->options['qid'] != -1) {
-        $join->definition['extra'] = array(array(
-          'field' => 'qid',
-          'value' => $this->options['qid'],
-          'numeric' => TRUE,
-        ),
-      );
+    if (!empty($this->options['limit'])) {
+      $join->definition['extra'] = array(array(
+        'field' => 'qid',
+        'value' => array_filter($this->options['qids']),
+        'numeric' => TRUE,
+      ));
     }
 
     $join->construct();
@@ -278,275 +326,133 @@ class nodequeue_handler_argument_subqueue_qid extends views_handler_argument_num
   }
 }
 
-function nodequeue_views_default_views() {
-  $view = array();
-  return ;
-
-  $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
-  foreach ($queues as $queue) {
-    $view = new stdClass();
-    $view->name = "nodequeue_$queue->qid";
-    $view->disabled = TRUE;
-    $view->description = t('View node queue @queue', array('@queue' => $queue->title));
-    $view->access = array();
-    $view->view_args_php = '';
-    $view->page = TRUE;
-    $view->page_title = check_plain($queue->title);
-    $view->page_header = '';
-    $view->page_header_format = '1';
-    $view->page_footer = '';
-    $view->page_footer_format = '1';
-    $view->page_empty = '';
-    $view->page_empty_format = '1';
-    $view->page_type = 'teaser';
-    $view->url = 'nodequeue/'. $queue->qid;
-    $view->use_pager = TRUE;
-    $view->nodes_per_page = '10';
-    $view->block = TRUE;
-    $view->block_title = check_plain($queue->title);
-    $view->block_header = '';
-    $view->block_header_format = '1';
-    $view->block_footer = '';
-    $view->block_footer_format = '1';
-    $view->block_empty = '';
-    $view->block_empty_format = '1';
-    $view->block_type = 'list';
-    $view->nodes_per_block = '5';
-    $view->block_more = TRUE;
-    $view->block_use_page_header = FALSE;
-    $view->block_use_page_footer = FALSE;
-    $view->block_use_page_empty = FALSE;
-    $view->sort = array(
-      array(
-        'tablename' => 'nodequeue_nodes',
-        'field' => 'position',
-        'sortorder' => 'ASC',
-        'options' => '',
-      ),
-    );
-    $view->argument = array(
-    );
-    $view->field = array(
-      array(
-        'tablename' => 'node',
-        'field' => 'title',
-        'label' => '',
-        'handler' => 'views_handler_field_nodelink',
-        'options' => 'link',
-      ),
-    );
-    $view->exposed_filter = array(
-    );
-    $view->requires = array('nodequeue_nodes', 'node');
-    $view->filter = array(
-      array(
-        'tablename' => 'nodequeue_nodes',
-        'field' => 'qid',
-        'operator' => 'OR',
-        'options' => '',
-        'value' => array($queue->qid),
-      ),
-    );
-    $views[$view->name] = $view;
+/**
+ * Views field handler for the nodequeue queue links
+ */
+class nodequeue_handler_field_links extends views_handler_field {
+  function render($values) {
+    $nid = $nids->{$this->field_alias};
+    return theme('links', nodequeue_link('node', node_load($nid)));
   }
-  return $views;
 }
 
 /**
- * Generate a list of queues for use in handlers.
+ * Views field handler for the nodequeue queue links
  */
-function nodequeue_handler_queuelist($op, $argument) {
-  $options = array();
-  if (isset($argument['#all_ok']) || isset($argument['value']['#all_ok'])) {
-    $options[0] = t('<All>');
+class nodequeue_handler_field_queue_tab extends views_handler_field_node_link {
+  function render($values) {
+    $text = !empty($this->options['text']) ? $this->options['text'] : t('view');
+    $nid = $values->{$this->aliases['nid']};
+    return l($text, "node/$nid/nodequeue");
+  }
+}
+
+/**
+ * Field handler for all queues.
+ *
+ * @ingroup views_field_handlers
+ */
+class nodequeue_handler_field_all_queues extends views_handler_field_prerender_list {
+  /**
+   * Provide meaningful defaults
+   */
+  function options(&$options) {
+    parent::options($options);
+    $options['link_to_queue'] = TRUE;
+    $options['limit'] = FALSE;
+    $options['qids'] = array();
   }
 
-  if (isset($argument['#any_ok']) || isset($argument['value']['#any_ok'])) {
-    $options[-1] = t('<Any>');
-  }
+  /**
+   * Provide "link to term" option.
+   */
+  function options_form(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
+    $form['link_to_queue'] = array(
+      '#title' => t('Link this field to queue arrange page'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->options['link_to_taxonomy']),
+    );
 
-  $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
-  foreach ($queues as $queue) {
-    // no check plain necessary as this goes into a fieldset which takes
-    // care of that.
-    if (empty($argument['#simple_queues']) || $queue->subqueues == 1) {
+    $form['limit'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Limit to queues'),
+      '#default_value'=> $this->options['limit'],
+    );
+
+    $options = array();
+    $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
+    foreach ($queues as $queue) {
       $options[$queue->qid] = $queue->title;
     }
+
+    $form['qids'] = array(
+      '#prefix' => '<div><div id="edit-options-qids">',
+      '#suffix' => '</div></div>',
+      '#type' => 'checkboxes',
+      '#title' => t('Queues'),
+      '#options' => $options,
+      '#default_value' => $this->options['qids'],
+      '#process' => array('expand_checkboxes', 'views_process_dependency'),
+      '#dependency' => array('edit-options-limit' => array(TRUE)),
+    );
   }
-  return $options;
+
+  function pre_render($values) {
+    $nids = array();
+    foreach ($values as $result) {
+      $nids[] = $result->{$this->field_alias};
+    }
+
+    if ($nids) {
+      $queue = '';
+      if (!empty($this->options['limit']) && !empty($this->options['qids'])) {
+        $queue = " AND nn.qid IN (" . implode(', ', array_keys(array_filter($this->options['qids']))) . ")";
+      }
+
+      $result = db_query("SELECT nn.nid, nn.qid, nq.title FROM {nodequeue_nodes} nn INNER JOIN {nodequeue_queue} nq ON nq.qid = nn.qid WHERE nn.nid IN (" . implode(', ', $nids) . ")$queue ORDER BY nq.title");
+
+      while ($queue = db_fetch_object($result)) {
+        if (empty($this->options['link_to_queue'])) {
+          $this->items[$queue->nid][$queue->qid] = check_plain($queue->title);
+        }
+        else {
+          $this->items[$queue->nid][$queue->qid] = l($queue->title, "admin/content/nodequeue/$queue->qid");
+        }
+      }
+    }
+  }
 }
 
 /**
- * Generate a list of queues for use in option/value fields.
+ * Field handler for all subqueues
+ *
+ * @ingroup views_field_handlers
  */
-function nodequeue_handler_subqueuelist($op, $argument) {
-  $subqueues = nodequeue_load_subqueues_by_queue($argument['#qid']);
-  foreach ($subqueues as $subqueue) {
-    $items[$subqueue->sqid] = $subqueue->title;
-  }
-  return $items;
-}
+class nodequeue_handler_field_all_subqueues extends nodequeue_handler_field_all_queues {
+  function pre_render($values) {
+    $nids = array();
+    foreach ($values as $result) {
+      $nids[] = $result->{$this->field_alias};
+    }
 
-function nodequeue_handler_arg_qid($op, &$query, $argtype, $arg = '') {
-  switch ($op) {
-    case 'summary':
-      $query->ensure_table('nodequeue_queue', true);
-      $query->add_field('title', 'nodequeue_queue');
-      $query->add_field('qid', 'nodequeue_queue');
-      $query->add_where('nodequeue_queue.qid IS NOT NULL');
-      $fieldinfo['field'] = "nodequeue_queue.title";
-      return $fieldinfo;
-      break;
-    case 'sort':
-      $query->add_orderby('nodequeue_queue', 'title', $argtype);
-      break;
-    case 'filter':
-      $qid = intval($arg);
-      $query->ensure_table('nodequeue_queue', true);
-      $query->add_where("nodequeue_queue.qid = %d", $qid);
-      break;
-    case 'link':
-      return l($query->title, "$arg/" . intval($query->qid));
-    case 'title':
-      $queue = db_fetch_object(db_query("SELECT title FROM {nodequeue_queue} WHERE qid = %d", $query));
-      return $queue->title;
-  }
-}
-
-function nodequeue_handler_arg_qtitle($op, &$query, $argtype, $arg = '') {
-  switch ($op) {
-    case 'summary':
-      $query->ensure_table('nodequeue_subqueue', true);
-      $query->add_field('title', 'nodequeue_subqueue');
-      $query->add_field('sqid', 'nodequeue_subqueue');
-      $query->add_where('nodequeue_subqueue.sqid IS NOT NULL');
-      if (!empty($arg)) {
-        // User wanted to restrict to a specific queue, too.
-        $query->add_where("nodequeue_subqueue.qid = %d", $arg);
+    if ($nids) {
+      $queue = '';
+      if (!empty($this->options['limit']) && !empty($this->options['qids'])) {
+        $queue = " AND nn.qid IN (" . implode(', ', array_keys(array_filter($this->options['qids']))) . ")";
       }
-      $fieldinfo['field'] = "nodequeue_subqueue.title";
-      return $fieldinfo;
-      break;
-    case 'sort':
-      $query->add_orderby('nodequeue_subqueue', 'title', $argtype);
-      break;
-    case 'filter':
-      $qtitle = $arg;
-      $query->ensure_table('nodequeue_subqueue', true);
-      $query->add_where("nodequeue_subqueue.title = '%s'", $qtitle);
-      if (!empty($argtype['options'])) {
-        // User wanted to restrict to a specific queue, too.
-        $query->add_where("nodequeue_subqueue.qid = %d", $argtype['options']);
+
+      $result = db_query("SELECT nn.nid, nn.sqid, nn.qid, nq.subqueue_title, ns.title FROM {nodequeue_nodes} nn INNER JOIN {nodequeue_queue} nq ON nq.qid = nn.qid INNER JOIN {nodequeue_subqueue} ns on nn.sqid = ns.sqid WHERE nn.nid IN (" . implode(', ', $nids) . ")$queue ORDER BY ns.title, nq.subqueue_title");
+
+      while ($queue = db_fetch_object($result)) {
+        $title = empty($queue->subqueue_title) ? $queue->title : str_replace('%subqueue', $queue->title, $queue->subqueue_title);
+        if (empty($this->options['link_to_queue'])) {
+          $this->items[$queue->nid][$queue->sqid] = check_plain($title);
+        }
+        else {
+          $this->items[$queue->nid][$queue->sqid] = l($title, "admin/content/nodequeue/$queue->qid/$queue->sqid");
+        }
       }
-      break;
-    case 'link':
-      return l($query->title, "$arg/" . $query->title);
-    case 'title':
-      return check_plain($query);
+    }
   }
-}
-
-function nodequeue_handler_arg_sqid($op, &$query, $argtype, $arg = '') {
-  switch ($op) {
-    case 'summary':
-      $query->ensure_table('nodequeue_subqueue', true);
-      $query->add_field('title', 'nodequeue_subqueue');
-      $query->add_field('sqid', 'nodequeue_subqueue');
-      $query->add_where('nodequeue_subqueue.sqid IS NOT NULL');
-      if ($arg) {
-        $query->add_where('nodequeue_subqueue.qid = %d', $arg);
-      }
-      $fieldinfo['field'] = "nodequeue_subqueue.title";
-      return $fieldinfo;
-      break;
-    case 'sort':
-      $query->add_orderby('nodequeue_subqueue', 'title', $argtype);
-      break;
-    case 'filter':
-      $query->ensure_table('nodequeue_subqueue', true);
-      $query->add_where("nodequeue_subqueue.sqid = %d", $arg);
-      if ($argtype['options']) {
-        $query->add_where('nodequeue_subqueue.qid = %d', $argtype['options']);
-      }
-      break;
-    case 'link':
-      return l($query->title, "$arg/" . intval($query->sqid));
-    case 'title':
-      $queue = db_fetch_object(db_query("SELECT title FROM {nodequeue_subqueue} WHERE sqid = %d", $query));
-      return check_plain($queue->title);
-  }
-}
-
-function nodequeue_handler_arg_reference($op, &$query, $argtype, $arg = '') {
-  switch ($op) {
-    case 'summary':
-      // $arg == $option
-      $query->ensure_table('nodequeue_subqueue', true);
-      $query->add_field('title', 'nodequeue_subqueue');
-      $query->add_field('reference', 'nodequeue_subqueue');
-      $query->add_where('nodequeue_subqueue.reference IS NOT NULL');
-      if ($argtype['options'] != -1) {
-        $query->add_where('nodequeue_subqueue.qid = %d', $arg);
-      }
-      $fieldinfo['field'] = "nodequeue_subqueue.title";
-      return $fieldinfo;
-      break;
-    case 'sort':
-      $query->add_orderby('nodequeue_subqueue', 'title', $argtype);
-      break;
-    case 'filter':
-      // $argtype['options'] == $option
-      $query->ensure_table('nodequeue_subqueue', true);
-      $query->add_where("nodequeue_subqueue.reference = %d", $arg);
-      if ($argtype['options'] != -1) {
-       $query->add_where('nodequeue_subqueue.qid = %d', $argtype['options']);
-      };
-      break;
-    case 'link':
-      return l($query->title, "$arg/" . intval($query->reference));
-    case 'title':
-      $queue = db_fetch_object(db_query("SELECT title FROM {nodequeue_subqueue} WHERE reference = %d", $query));
-      return check_plain($queue->title);
-  }
-}
-
-function nodequeue_handler_filter_exclusion($op, $filter, $filterinfo, &$query) {
-  $table = $filterinfo['table'];
-  $column = $filterinfo['field'];
-  $value = $filter['value'];
-  $joininfo = array(
-    'type' => 'LEFT',
-    'left' => array(
-      'table' => 'node',
-      'field' => 'nid',
-    ),
-    'right' => array(
-      'field' => 'nid',
-    ),
-  );
-
-  // If we're just checking for one queue, add the qid to our join info.
-  if (!empty($value)) {
-    $joininfo['extra']['qid'] = $value;
-  }
-
-  $num = $query->add_table($table, true, 1, $joininfo);
-  $tablename = $query->get_table_name($table, $num);
-  $field = "$tablename.$column";
-  $query->add_where("$field IS NULL");
-}
-
-/**
- * Views field handler for "NodeQueue: AJAX Add/Remove Link"
- */
-function nodequeue_views_ajax_link($fieldinfo, $fielddata, $value, $data) {
-  return theme('links', nodequeue_link('node', node_load($data->nid)));
-}
-
-/**
- * display a link to view a node
- */
-function nodequeue_views_tab_link($fieldinfo, $fielddata, $value, $data) {
-  $link_text = $fielddata['options'] ? $fielddata['options'] : t('Node queues');
-  return l($link_text, "node/$data->nid/nodequeue");
 }

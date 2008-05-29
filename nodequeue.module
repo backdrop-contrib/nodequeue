@@ -18,10 +18,6 @@ function nodequeue_perm() {
  */
 function nodequeue_init() {
   include_once drupal_get_path('module', 'nodequeue') .'/nodequeue.actions.inc';
-
-  if (module_exists('views')) {
-    include_once drupal_get_path('module', 'nodequeue') .'/nodequeue.views.inc';
-  }
 }
 
 /**
@@ -783,7 +779,6 @@ function nodequeue_admin_view($queue, $sqid = NULL) {
       // display subqueue list page.
       return nodequeue_view_subqueues($queue);
     }
-    $sqid = $queue->current;
   }
   else if ($sqid) {
     // Adjust properties of the page so our subqueue is in the right
@@ -1431,6 +1426,8 @@ class nodequeue_queue {
   // runtime
   var $subqueues = array();
   var $subqueue = NULL;
+
+  var $current = NULL;
 
   function nodequeue_queue($type) {
     $this->owner = $type;
