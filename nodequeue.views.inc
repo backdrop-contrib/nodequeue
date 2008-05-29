@@ -4,6 +4,16 @@
 /**
  * @file nodequeue.views.inc
  * Provides support for the Views module.
+ *
+ * This implementation is almost entirely based around a relationship
+ * which is stapled to the 'node' table via hook_views_data_alter.
+ *
+ * The relationship allows you to define 0 or more queues that join the
+ * queue tables, limiting the join to just the queues selected. Once
+ * the queues are joined in, the queue fields will show up, and they
+ * have the usual array of arguments, sorts, fields and filters; since
+ * the real legwork is done by the relationship, most of these are
+ * really quite simple.
  */
 
 /**
@@ -94,7 +104,7 @@ function nodequeue_views_data() {
   // specialized is null/is not null filter
   $data['nodequeue_nodes']['in_queue'] = array(
     'title' => t('In queue'),
-    'help' => t('Filter to ensure a node is NOT in the related queue'),
+    'help' => t('Filter to ensure a node IS or IS NOT in the related queue'),
     'filter' => array(
       'handler' => 'nodequeue_handler_filter_not_in_queue',
       'label' => t('In queue'),
@@ -144,8 +154,25 @@ function nodequeue_views_data() {
     ),
   );
 
-  return $data;
+  $data['nodequeue_subqueue']['reference'] = array(
+    'reference' => t('Subqueue reference'),
+    'help' => t('The reference that defines a subqueue; what this actually is depends upon the type of subqueue, but is a taxonomy tid for smartqueue taxonomy, or a uid for authorview.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+     ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
+    ),
+  );
 
+  return $data;
 }
 
 /**
