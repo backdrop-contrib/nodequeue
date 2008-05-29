@@ -12,7 +12,7 @@ function authorqueue_nodequeue_info() {
 }
 
 /**
- * Implementation of hook_nodequeue()
+ * Implementation of hook_nodequeue_form()
  */
 function smartqueue_author_nodequeue_form($queue, &$form) {
   $roles = user_roles(TRUE);
@@ -39,11 +39,11 @@ function smartqueue_author_nodequeue_form($queue, &$form) {
 }
 
 /**
- * Implementation of hook_nodequeue()
+ * Implementation of hook_nodequeue_form_validate()
  */
-function smartqueue_author_nodequeue_form_validate($queue, $form_values, &$form) {
+function smartqueue_author_nodequeue_form_validate($queue, &$form_state, &$form) {
   if (!isset($queue->qid)) {
-    $rids = !empty($form_values['rids']) ? array_keys(array_filter($form_values['rids'])) : array();
+    $rids = !empty($form_state['values']['rids']) ? array_keys(array_filter($form_state['values']['rids'])) : array();
     // Convert this to our reference.
     form_set_value($form['reference'], implode('-', $rids));
   }

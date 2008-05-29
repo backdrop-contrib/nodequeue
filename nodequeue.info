@@ -1,5 +1,5 @@
 ; $Id$
 name = Node Queue
 description = Create queues which can contain nodes in arbitrary order
-package = Node Queue
+package = Node queue
 core = 6.x

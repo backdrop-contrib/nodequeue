@@ -17,7 +17,7 @@
  */
 
 /**
- * Implementation of hook_views_tables()
+ * Implementation of hook_views_data()
  */
 function nodequeue_views_data() {
   $data = array();
