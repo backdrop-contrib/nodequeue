@@ -25,7 +25,7 @@ function nodequeue_views_data() {
   // ----------------------------------------------------------------
   // nodequeue_nodes table
 
-  $data['nodequeue_nodes']['table']['group'] = t('Node queue');
+  $data['nodequeue_nodes']['table']['group'] = t('Nodequeue');
 
   // The nodequeue_nodes table is how nodequeue connects to the
   // rest of the world, but we will only join it in via relationship.
@@ -114,7 +114,7 @@ function nodequeue_views_data() {
   // ----------------------------------------------------------------
   // nodequeue_queue table
 
-  $data['nodequeue_queue']['table']['group'] = t('Node queue');
+  $data['nodequeue_queue']['table']['group'] = t('Nodequeue');
 
   // For use with the relationship.
   $data['nodequeue_queue']['table']['join'] = array(
@@ -126,7 +126,7 @@ function nodequeue_views_data() {
 
   $data['nodequeue_queue']['title'] = array(
     'title' => t('Title'),
-    'help' => t('The title of the node queue.'),
+    'help' => t('The title of the nodequeue.'),
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
@@ -144,7 +144,7 @@ function nodequeue_views_data() {
 
   // ----------------------------------------------------------------
   // nodequeue_subqueue table
-  $data['nodequeue_subqueue']['table']['group'] = t('Node queue');
+  $data['nodequeue_subqueue']['table']['group'] = t('Nodequeue');
 
   // For use with the relationship.
   $data['nodequeue_subqueue']['table']['join'] = array(
@@ -181,7 +181,7 @@ function nodequeue_views_data() {
 function nodequeue_views_data_alter(&$data) {
   // queue relationship
   $data['node']['nodequeue_rel'] = array(
-    'group' => t('Node queue'),
+    'group' => t('Nodequeue'),
     'title' => t('Queue'),
     'help' => t('Create a relationship to a nodequeue.'),
     'real field' => 'nid',
@@ -195,9 +195,9 @@ function nodequeue_views_data_alter(&$data) {
 
   // links
   $data['node']['nodequeue_links'] = array(
-    'group' => t('Node queue'),
+    'group' => t('Nodequeue'),
     'title' => t('Add/remove links'),
-    'help' => t('Display add/remove links for all eligible node queues. Note that this performs a node_load so could add many extra queries to a view.'),
+    'help' => t('Display add/remove links for all eligible nodequeues. Note that this performs a node_load so could add many extra queries to a view.'),
     'real field' => 'nid',
     'field' => array(
       'handler' => 'nodequeue_handler_field_links',
@@ -205,9 +205,9 @@ function nodequeue_views_data_alter(&$data) {
   );
 
   $data['node']['nodequeue_queue_tab'] = array(
-    'group' => t('Node queue'),
+    'group' => t('Nodequeue'),
     'title' => t('Link to tab'),
-    'help' => t('Display add/remove links for all eligible node queues. Note that this performs a node_load so could add many extra queries to a view.'),
+    'help' => t('Display add/remove links for all eligible nodequeues. Note that this performs a node_load so could add many extra queries to a view.'),
     'real field' => 'nid',
     'field' => array(
       'handler' => 'nodequeue_handler_field_queue_tab',
@@ -216,7 +216,7 @@ function nodequeue_views_data_alter(&$data) {
 
   // all queues
   $data['node']['nodequeue_all_queues'] = array(
-    'group' => t('Node queue'),
+    'group' => t('Nodequeue'),
     'title' => t('All queues'),
     'help' => t('Display all queues a node is a member of.'),
     'real field' => 'nid',
@@ -227,7 +227,7 @@ function nodequeue_views_data_alter(&$data) {
 
   // all subqueues
   $data['node']['nodequeue_all_subqueues'] = array(
-    'group' => t('Node queue'),
+    'group' => t('Nodequeue'),
     'title' => t('All subqueues'),
     'help' => t('Display all subqueues a node is a member of.'),
     'real field' => 'nid',

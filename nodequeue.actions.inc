@@ -3,7 +3,7 @@
 
 /**
  * @file nodequeue.actions.inc
- * Provides actions integration for node queues.
+ * Provides actions integration for nodequeues.
  */
 
 /**
@@ -13,7 +13,7 @@ function nodequeue_action_info() {
   return array(
     'nodequeue_add_action' => array(
       'type' => 'node',
-      'description' => t('Add to Node Queues'),
+      'description' => t('Add to Nodequeues'),
       'configurable' => TRUE,
       'hooks' => array(
         'nodeapi' => array('insert', 'update'),
@@ -21,7 +21,7 @@ function nodequeue_action_info() {
     ),
     'nodequeue_remove_action' => array(
       'type' => 'node',
-      'description' => t('Remove from Node Queues'),
+      'description' => t('Remove from Nodequeues'),
       'configurable' => TRUE,
       'hooks' => array(
         'nodeapi' => array('insert', 'update'),
@@ -31,7 +31,7 @@ function nodequeue_action_info() {
 }
 
 /**
- * Configuration form for Add to Node Queues action.
+ * Configuration form for Add to Nodequeues action.
  */
 function nodequeue_add_action_form($context) {
   // Default values for form.
@@ -63,7 +63,7 @@ function nodequeue_add_action_form($context) {
 }
 
 /**
- * Submit handler for Add to Node Queues action configuration.
+ * Submit handler for Add to Nodequeues action configuration.
  */
 function nodequeue_add_action_submit($form_id, $form_values) {
   return array(
@@ -105,7 +105,7 @@ function action_nodequeue_add($op, $edit = array(), $node) {
   switch($op) {
     case 'metadata':
       return array(
-        'description' => t('Add to Node Queues'),
+        'description' => t('Add to Nodequeues'),
         'type' => t('node'),
         'batchable' => true,
         'configurable' => true,
@@ -176,7 +176,7 @@ function action_nodequeue_add($op, $edit = array(), $node) {
 }
 
 /**
- * Configuration form for Remove from Node Queues action.
+ * Configuration form for Remove from Nodequeues action.
  */
 function nodequeue_remove_action_form($context) {
   // Default values for form.
@@ -203,7 +203,7 @@ function nodequeue_remove_action_form($context) {
 }
 
 /**
- * Submit handler for Remove from Node Queues action configuration.
+ * Submit handler for Remove from Nodequeues action configuration.
  */
 function nodequeue_remove_action_submit($form_id, $form_values) {
   return array(
@@ -232,7 +232,7 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
   switch($op) {
     case 'metadata':
       return array(
-        'description' => t('Remove from Node Queues'),
+        'description' => t('Remove from Nodequeues'),
         'type' => t('node'),
         'batchable' => true,
         'configurable' => true,

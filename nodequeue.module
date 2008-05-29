@@ -40,10 +40,10 @@ function nodequeue_menu() {
 
   // administrative items
   $items['admin/content/nodequeue'] = array(
-    'title' => t('Node queue'),
+    'title' => t('Nodequeue'),
     'access callback' => '_nodequeue_access_admin_or_manipulate',
     'page callback' => 'nodequeue_view_queues',
-    'description' => t('Create and maintain simple node queues.'),
+    'description' => t('Create and maintain simple nodequeues.'),
     'type' => MENU_NORMAL_ITEM
   );
   $items['admin/content/nodequeue/list'] = array(
@@ -86,7 +86,7 @@ function nodequeue_menu() {
 
   // Note: This path used to set up with a call to nodequeue_load_queues_by_type, passing the result in.  Now, that function is called inside of nodequeue_node_tab.
   $items['node/%node/nodequeue'] = array(
-    'title' => variable_get('nodequeue_tab_name', t('Node queue')),
+    'title' => variable_get('nodequeue_tab_name', t('Nodequeue')),
     'access callback' => 'user_access',
     'access arguments' => $access,
     'page callback' => 'nodequeue_node_tab',
@@ -424,7 +424,7 @@ function nodequeue_view_queues() {
   // Fetch all of the queues.
   $queues = nodequeue_load_queues(nodequeue_get_all_qids(25));
   if (empty($queues)) {
-    return t('No node queues exist.');
+    return t('No nodequeues exist.');
   }
 
   $qids = array();
@@ -2231,8 +2231,8 @@ function nodequeue_subqueue_shuffle($subqueue) {
  */
 function nodequeue_nodequeue_info() {
   return array('nodequeue' => array(
-    'title' => t('Node queue'),
-    'description' => t('Standard node queues have just one subqueue. Nodes put into a queue are added to the back of the queue; when a node is added to a full queue, the node in the front of the queue will be popped out to make room.'),
+    'title' => t('Nodequeue'),
+    'description' => t('Standard nodequeues have just one subqueue. Nodes put into a queue are added to the back of the queue; when a node is added to a full queue, the node in the front of the queue will be popped out to make room.'),
     ));
 }
 
@@ -2485,9 +2485,9 @@ function nodequeue_admin_settings() {
   );
   $form['nodequeue_tab_name'] = array(
     '#type' => 'textfield',
-    '#title' => t('Node queue tab label'),
-    '#default_value' => variable_get('nodequeue_tab_name', t('Node queue')),
-    '#description' => t('If nodes will have a menu tab for manipulating related node queues, what should that tab be called?'),
+    '#title' => t('Nodequeue tab label'),
+    '#default_value' => variable_get('nodequeue_tab_name', t('Nodequeue')),
+    '#description' => t('If nodes will have a menu tab for manipulating related nodequeues, what should that tab be called?'),
   );
   return system_settings_form($form);
 }
