@@ -9,205 +9,279 @@
 /**
  * Implementation of hook_views_tables()
  */
-function nodequeue_views_tables() {
-  $tables['nodequeue_nodes'] = array(
-    "name" => "nodequeue_nodes",
-    "join" => array(
-      "left" => array(
-        "table" => "node",
-        "field" => "nid"
-      ),
-      "right" => array(
-        "field" => "nid"
-      ),
-    ),
-    "fields" => array(
-      'timestamp' => array(
-        'name' => t('NodeQueue: Timestamp'),
-        'sortable' => true,
-        'handler' => views_handler_field_dates(),
-        'option' => 'string',
-        'help' => t('Display the time the node was added to a given node queue.') .' '.
-                  t('The option field may be used to specify the custom date format as it\'s required by the date() function or if "as time ago" has been chosen to customize the granularity of the time interval.'),
-      ),
-      'ajaxtoggle' => array(
-        'name' => t('NodeQueue: AJAX Add/Remove Link'),
-        'handler' => 'nodequeue_views_ajax_link',
-        'notafield' => true,
-      ),
-      'nodequeue_link' => array(
-        'name' => t('NodeQueue: Link to nodequeue tab'),
-        'sortable' => false,
-        'notafield' => TRUE,
-        'handler' => 'nodequeue_views_tab_link',
-        'option' => 'string',
-        'help' => t('Display a link to the nodequeue tab for the node.  Enter the text of this link into the option field; if blank the default "Node queues" will be used.'),
-      ),
-    ),
-    "filters" => array(
-      "qid" => array(
-        'name' => t("NodeQueue: Queue"),
-        'value' => array(
-          '#type' => 'select',
-          '#options' => 'nodequeue_handler_queuelist',
-          '#simple_queues' => TRUE,
-        ),
-        'operator' => 'views_handler_operator_andor',
-        'help' => t('Filter the view to a specific Node Queue. This only applies to queues with a single subqueue.'),
-      ),
-      "position" => array(
-        'name' => t("NodeQueue: Queue Position"),
-        'field' => 'position',
-        'operator' => 'views_handler_operator_gtlt',
-        'help' => t('Filter by where in the queue an item is.'),
-      ),
-      "timestamp" => array(
-        'name' => t('NodeQueue: Queue Timestamp'),
-        'operator' => 'views_handler_operator_gtlt',
-        'value' => views_handler_filter_date_value_form(),
-        'handler' => 'views_handler_filter_timestamp',
-        'option' => 'string',
-        'help' => t('This filter allows nodes to be filtered by the time they were added to a given NodeQueue.') .' '. views_t_strings('filter date'),
-      ),
-      "exclusion" => array(
-        'name' => t('NodeQueue: Not in a queue'),
-        'operator' => array('IS' => t('is')),
-        'value' => array(
-          '#type' => 'select',
-          '#options' => 'nodequeue_handler_queuelist',
-          '#all_ok' => TRUE,
-        ),
-        'field' => 'qid',
-        'handler' => 'nodequeue_handler_filter_exclusion',
-        'help' => t('This filter allows nodes to be filtered that do not belong to any node queue, or do not belong to a particular node queue.'),
-      ),
+function nodequeue_views_data() {
+  $data = array();
 
+  // ----------------------------------------------------------------
+  // nodequeue_nodes table
+
+  $data['nodequeue_nodes']['table']['group'] = t('Node queue');
+
+  // The nodequeue_nodes table is how nodequeue connects to the
+  // rest of the world, but we will only join it in via relationship.
+
+  // position
+  $data['nodequeue_nodes']['position'] = array(
+    'title' => t('Position'),
+    'help' => t('The position of the node within a queue.'),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+     ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
     ),
-    "sorts" => array(
-      "position" => array(
-        'name' => t("NodeQueue: Queue Position"),
-        'field' => 'position',
-        'help' => t('When sorting by queue position, be sure the view is filtered to a single queue or the sort will not work very well.'),
-      ),
-      'timestamp' => array(
-        'name' => t('NodeQueue: Timestamp'),
-        'handler' => 'views_handler_sort_date',
-        'option' => views_handler_sort_date_options(),
-        'help' => t('Sort by the time the node was added to a node queue.'),
-      ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
     ),
   );
 
-  foreach (nodequeue_load_queues(nodequeue_get_all_qids(NULL)) as $queue) {
-    if ($queue->subqueues > 1) {
-      $tables['nodequeue_nodes']['filters']["qid_$queue->qid"] = array(
-        'name' => t("NodeQueue: Subqueues for @queue", array('@queue' => $queue->title)),
-        'field' => 'qid',
-        'value' => array(
-          '#type' => 'select',
-          '#options' => 'nodequeue_handler_queuelist',
-          '#qid' => $queue->qid,
-        ),
-        'operator' => 'views_handler_operator_andor',
-        'help' => t('Filter the view to a specific Node Queue.'),
-      );
-    }
-    else {
-      $tables['nodequeue_nodes_'. $queue->qid] = array(
-        "name" => "nodequeue_nodes",
-        "join" => array(
-          "left" => array(
-            "table" => "node",
-            "field" => "nid"
-          ),
-          "right" => array(
-            "field" => "nid"
-          ),
-          'extra' => array(
-            'qid' => $queue->qid,
-          ),
-        ),
-        "sorts" => array(
-          "position" => array(
-            'name' => t("NodeQueue: Queue Position in @queue", array('@queue' => $queue->title)),
-            'field' => 'position',
-            'help' => t('Sort by the position of the node in a given queue. Use this only if, for some reason, you are filtering in such a way that you are including nodes from multiple queues; otherwise use the simpler "NodeQueue: Queue Position" filter.'),
-          ),
-        ),
-      );
-    }
-  }
-  $tables['nodequeue_subqueue'] = array(
-    "name" => "nodequeue_subqueue",
-    "join" => array(
-      "left" => array(
-        "table" => "nodequeue_nodes",
-        "field" => "sqid"
-      ),
-      "right" => array(
-        "field" => "sqid"
-      ),
+  // timestamp
+  $data['nodequeue_nodes']['timestamp'] = array(
+    'title' => t('Added date'),
+    'help' => t('The date the node was added to a queue.'),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
     ),
   );
-  $tables['nodequeue_queue'] = array(
-    "name" => "nodequeue_queue",
-    "join" => array(
-      "left" => array(
-        "table" => "nodequeue_subqueue",
-        "field" => "qid"
-      ),
-      "right" => array(
-        "field" => "qid"
-      ),
+
+  $data['nodequeue_nodes']['qid'] = array(
+    'title' => t('Queue ID'),
+    'help' => t('The ID of the queue the node belongs to.'),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+     ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+      'name field' => 'title',
+      'name table' => 'nodequeue_queue',
+      'empty field name' => t('No queue'),
     ),
   );
-  return $tables;
+
+  $data['nodequeue_nodes']['sqid'] = array(
+    'title' => t('Subqueue ID'),
+    'help' => t('The ID of the subqueue the node belongs to.'),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+     ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'argument' => array(
+      'handler' => 'nodequeue_handler_argument_subqueue_qid',
+      'name field' => 'title',
+      'name table' => 'nodequeue_subqueue',
+      'empty field name' => t('No queue'),
+    ),
+  );
+
+  // specialized is null/is not null filter
+  $data['nodequeue_nodes']['in_queue'] = array(
+    'title' => t('In queue'),
+    'help' => t('Filter to ensure a node is NOT in the related queue'),
+    'filter' => array(
+      'handler' => 'nodequeue_handler_filter_not_in_queue',
+      'label' => t('In queue'),
+    ),
+  );
+
+  // ----------------------------------------------------------------
+  // nodequeue_queue table
+
+  $data['nodequeue_queue']['table']['group'] = t('Node queue');
+
+  // For use with the relationship.
+  $data['nodequeue_queue']['table']['join'] = array(
+    'nodequeue_nodes' => array(
+      'left_field' => 'qid',
+      'field' => 'qid',
+    ),
+  );
+
+  $data['nodequeue_queue']['title'] = array(
+    'title' => t('Title'),
+    'help' => t('The title of the node queue.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+     ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
+    ),
+  );
+
+  // ----------------------------------------------------------------
+  // nodequeue_subqueue table
+  $data['nodequeue_subqueue']['table']['group'] = t('Node queue');
+
+  // For use with the relationship.
+  $data['nodequeue_subqueue']['table']['join'] = array(
+    'nodequeue_nodes' => array(
+      'left_field' => 'qid',
+      'field' => 'qid',
+    ),
+  );
+
+  return $data;
+
 }
 
-function nodequeue_views_arguments() {
-  $arguments = array(
-    'nodequeue_qid' => array(
-      'name' => t("NodeQueue: Queue ID"),
-      'handler' => "nodequeue_handler_arg_qid",
-      'help' => t('The Queue ID argument allows users to filter a view by specifying a Node Queue ID. This is only valid for simple nodequeues with just one subqueue. You should not use this argument if you have queues with subqueues.'),
-    ),
-    'nodequeue_qtitle' => array(
-      'name' => t("NodeQueue: Subqueue title"),
-      'handler' => "nodequeue_handler_arg_qtitle",
-      'option' => array(
-        '#type' => 'select',
-        '#options' => 'nodequeue_handler_queuelist',
-        '#all_ok' => TRUE,
-      ),
-      'help' => t('The Queue Title argument allows users to filter a view by specifying a Subqueue Title. Use the Option to restrict this to just one queue.'),
-    ),
-    "nodequeue_sqid" => array(
-      'name' => t("NodeQueue: Subqueue ID"),
-      'handler' => "nodequeue_handler_arg_sqid",
-      'operator' => 'views_handler_operator_andor',
-      'option' => array(
-        '#type' => 'select',
-        '#options' => 'nodequeue_handler_queuelist',
-        '#all_ok' => TRUE,
-      ),
-      'help' => t('Filter the view to a specific Sub Queue.'),
-    ),
-    "nodequeue_reference" => array(
-      'name' => t("NodeQueue: Subqueue reference"),
-      'handler' => "nodequeue_handler_arg_reference",
-      'operator' => 'views_handler_operator_andor',
-      'option' => array(
-        '#type' => 'select',
-        '#options' => 'nodequeue_handler_queuelist',
-        '#any_ok' => TRUE,
-      ),
-      'help' => t('Filter the view to a specific Sub Queue. The subqueue reference is the ID that the subqueue is attached to; tax id for taxonomy or user id for user queues, etc.'),
+/**
+ * Implementation of hook_views_data_alter().
+ */
+function nodequeue_views_data_alter(&$data) {
+  $data['node']['nodequeue_rel'] = array(
+    'group' => t('Node queue'),
+    'title' => t('queue'),
+    'help' => t('Create a relationship to a nodequeue'),
+    'real field' => 'nid',
+    'relationship' => array(
+      'handler' => 'nodequeue_handler_relationship_nodequeue',
+      'base' => 'nodequeue_nodes',
+      'field' => 'nid',
+      'label' => t('queue'),
     ),
   );
-  return $arguments;
+
+  // ajaxtoggle
+
+  // all queues
+
+  // link to queue tab
+}
+
+/**
+ * Specialized relationship handler to add nodequeues.
+ */
+class nodequeue_handler_relationship_nodequeue extends views_handler_relationship {
+  function options(&$options) {
+    parent::options($options);
+
+    $options['qid'] = -1;
+  }
+
+  /**
+   * Default options form that provides the label widget that all fields
+   * should have.
+   */
+  function options_form(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
+
+    $queues = nodequeue_load_queues(nodequeue_get_all_qids(0));
+
+    $options = array(-1 => t('All queues'));
+    foreach ($queues as $queue) {
+      $options[$queue->qid] = $queue->title;
+    }
+
+    $form['qid'] = array(
+      '#type' => 'select',
+      '#title' => t('Queue'),
+      '#options' => $options,
+      '#description' => t('Select which queue to create this relationship for; if "All queues" is selected, all queues a node belongs to will be in the query; this will cause duplicates so be careful when using this option.'),
+      '#default_value' => $this->options['qid'],
+    );
+  }
+
+  /**
+   * Called to implement a relationship in a query.
+   */
+  function query() {
+    // Figure out what base table this relationship brings to the party.
+    $join = new views_join();
+    $join->definition = array(
+      'table' => 'nodequeue_nodes',
+      'field' => 'nid',
+      'left_table' => 'node',
+      'left_field' => 'nid',
+    );
+
+    if (!empty($this->options['required'])) {
+      $join->definition['type'] = 'INNER';
+    }
+
+    if (!empty($this->options['qid']) && $this->options['qid'] != -1) {
+        $join->definition['extra'] = array(array(
+          'field' => 'qid',
+          'value' => $this->options['qid'],
+          'numeric' => TRUE,
+        ),
+      );
+    }
+
+    $join->construct();
+
+    $alias = $join->definition['table'] . '_' . $join->definition['left_table'];
+
+    $this->alias = $this->query->add_relationship($alias, $join, 'nodequeue_nodes', $this->relationship);
+  }
+}
+
+/**
+ * Handler to filter for nodes that are not in a queue.
+ */
+class nodequeue_handler_filter_not_in_queue extends views_handler_filter_in_operator {
+  function query() {
+    $operator = empty($this->operator) ? 'IS NOT' : 'IS';
+    $this->add_where($this->options['group'], "$this->table_alias.nid $operator NULL");
+  }
+}
+
+/**
+ * Argument handler for subqueues.
+ *
+ * Subqueues have titles that are determined by doing substitution from
+ * the subqueue_title on the queue using the title on the subqueue, which
+ * takes a little extra work to do here.
+ */
+class nodequeue_handler_argument_subqueue_qid extends views_handler_argument_numeric {
+  function summary_name_field() {
+    $this->queue_alias = $this->query->ensure_table('nodequeue_queue', $this->relationship);
+    $this->subqueue_alias = $this->name_table_alias = $this->query->ensure_table('nodequeue_subqueue', $this->relationship);
+
+    $this->queue_title_alias = $this->query->add_field($this->queue_alias, 'subqueue_title');
+    $this->subqueue_title_alias = $this->name_alias = $this->query->add_field($this->subqueue_alias, 'title');
+  }
+
+  function summary_name($data) {
+    $queue_title = $data->{$this->queue_title_alias};
+    $subqueue_title = $data->{$this->subqueue_title_alias};
+
+    $value = empty($queue_title) ? $subqueue_title : str_replace('%subqueue', $subqueue_title, $queue_title);
+
+    if (empty($value) && !empty($this->definition['empty field name'])) {
+      $value = $this->definition['empty field name'];
+    }
+    return check_plain($value);
+  }
 }
 
 function nodequeue_views_default_views() {
+  $view = array();
+  return ;
+
   $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
   foreach ($queues as $queue) {
     $view = new stdClass();

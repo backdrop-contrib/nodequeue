@@ -38,11 +38,11 @@ function _nodequeue_access_admin_or_manipulate() {
  */
 function nodequeue_menu() {
   $items = array();
-  
+
   $admin_access = array('administer nodequeue');
   $access = array('manipulate queues');
 
-  // administrative items  
+  // administrative items
   $items['admin/content/nodequeue'] = array(
     'title' => t('Node queue'),
     'access callback' => '_nodequeue_access_admin_or_manipulate',
@@ -225,8 +225,10 @@ function nodequeue_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
 
 /**
  * Implementation of hook_link
- */ 
+ */
 function nodequeue_link($type, $node = NULL, $teaser = FALSE) {
+  $links = array();
+
   if ($type == 'node' &&
       variable_get('nodequeue_links', FALSE) &&
       user_access('manipulate queues')) {
@@ -271,7 +273,7 @@ function nodequeue_link($type, $node = NULL, $teaser = FALSE) {
     drupal_add_css(drupal_get_path('module', 'nodequeue') .'/nodequeue.css');
   }
   return $links;
-} 
+}
 
 // --------------------------------------------------------------------------
 // Nodequeue Admin operations
@@ -358,6 +360,8 @@ function nodequeue_admin_remove_node($queue, $subqueue, $node) {
  *   The loaded $node; will be loaded by the hook_menu.
  */
 function nodequeue_node_tab($node) {
+  $output = '';
+
   // moved from hook_menu due to architecture change.  This function seems to only be called from menu anyway...
   $queues = nodequeue_load_queues_by_type($node->type, 'tab');
   if (!$queues) {
@@ -501,17 +505,17 @@ function nodequeue_view_subqueues($queue) {
  */
 function nodequeue_edit_queue_form(&$form_state, $queue) {
   $info = nodequeue_api_info();
-  
+
   // For adding queues.
   if (is_string($queue)) {
     // If the $queue is a string - name of a queue type, basically - then we test that it's a valid queue type.
     $queue = strtolower($queue);
     if (!isset($info[$queue])) {
-      return false; 
+      return false;
     }
     drupal_set_title(t('Add @type', array('@type' => strtolower($info[$queue]['title']))));
     $queue = new nodequeue_queue($queue);
-  } 
+  }
   else {
     drupal_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)));
   }
@@ -577,19 +581,33 @@ function nodequeue_edit_queue_form(&$form_state, $queue) {
     '#description' => t('Enter the text for the corresponding link to remove a node from a queue. This may be blank (in which case no link will appear) but a remove link will only appear if link, above, is set.'),
   );
 
-  
+
   $result = db_query("SELECT r.* FROM {role} r LEFT JOIN {permission} p ON p.rid = r.rid WHERE p.perm LIKE '%manipulate queues%' ORDER BY r.name");
+
+  $roles = array();
   while ($role = db_fetch_object($result)) {
     $roles[$role->rid] = $role->name;
   }
 
-  $form['roles'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Roles'),
-    '#default_value' => is_array($queue->roles) ? $queue->roles : array(),
-    '#options' => $roles,
-    '#description' => t('Check each role that can add nodes to the queue. Be sure that roles you want to appear here have "manipulate queues" access in the main access control panel.'),
-  );
+  if (!empty($roles)) {
+    $form['roles'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Roles'),
+      '#default_value' => is_array($queue->roles) ? $queue->roles : array(),
+      '#options' => $roles,
+      '#description' => t('Check each role that can add nodes to the queue. Be sure that roles you want to appear here have "manipulate queues" access in the main access control panel.'),
+    );
+  }
+  else {
+    $form['roles'] = array(
+      '#type' => 'value',
+      '#value' => array(),
+    );
+
+    $form['roles_markup'] = array(
+      '#value' => t('No roles have the "manipulate queues" permission, so only the administrator account will be able to add or remove items from this queue.'),
+    );
+  }
 
   foreach (node_get_types() as $type => $info) {
     $nodes[$type] = $info->name;
@@ -1096,7 +1114,7 @@ function nodequeue_arrange_subqueue_form_save_validate($form, &$form_state) {
 
 /**
  * Submit function for nodequeue_arrange_subqueue_form on 'Reverse' button.
- * 
+ *
  * Yeah, this just calls the below function with a different parameter, but in D6 we're not supposed to use the $form['ops'].
  */
 function nodequeue_arrange_subqueue_form_reverse_submit($form, &$form_state) {
@@ -1162,7 +1180,7 @@ function nodequeue_arrange_subqueue_form_clear_submit($form, &$form_state) {
 function nodequeue_arrange_subqueue_form_add_submit($form, &$form_state) {
   $queue = nodequeue_load($form_state['values']['qid']);
   $subqueue = nodequeue_load_subqueue($form_state['values']['sqid']);
-  
+
   nodequeue_subqueue_add($queue, $subqueue, $form_state['values']['nid']);
 }
 
@@ -1178,7 +1196,7 @@ function nodequeue_admin_up($queue, $subqueue, $pos) {
   // This function is safe if $pos is out of bounds.
   if (!$queue->reverse) {
     nodequeue_queue_up($subqueue, $pos);
-  } 
+  }
   else {
     nodequeue_queue_down($subqueue, $pos);
   }
@@ -1198,7 +1216,7 @@ function nodequeue_admin_down($queue, $subqueue, $pos) {
   // This function is safe if $pos is out of bounds.
   if ($queue->reverse) {
     nodequeue_queue_up($subqueue, $pos);
-  } 
+  }
   else {
     nodequeue_queue_down($subqueue, $pos);
   }
@@ -1218,7 +1236,7 @@ function nodequeue_admin_front($queue, $subqueue, $pos) {
   // This function is safe if $pos is out of bounds.
   if (!$queue->reverse) {
     nodequeue_queue_front($subqueue, $pos);
-  } 
+  }
   else {
     nodequeue_queue_back($subqueue, $pos);
   }
@@ -1238,7 +1256,7 @@ function nodequeue_admin_back($queue, $subqueue, $pos) {
   // This function is safe if $pos is out of bounds.
   if ($queue->reverse) {
     nodequeue_queue_front($subqueue, $pos);
-  } 
+  }
   else {
     nodequeue_queue_back($subqueue, $pos);
   }
@@ -1257,7 +1275,7 @@ function nodequeue_admin_remove($queue, $subqueue, $pos) {
   if (!is_numeric($pos) || !is_numeric($subqueue) || !nodequeue_check_token($node->nid)) {
     return drupal_goto();
   }
-  
+
   nodequeue_subqueue_remove($subqueue, $pos);
 
   drupal_goto();
@@ -1299,7 +1317,7 @@ function nodequeue_clear_confirm_submit($form, &$form_state) {
 function nodequeue_autocomplete($sqid = NULL, $string = NULL) {
   $output = _nodequeue_autocomplete($sqid, $string);
 
-  drupal_json($drupal_map_assoc($output));
+  drupal_json(drupal_map_assoc($output));
   exit;
 }
 
@@ -1399,7 +1417,7 @@ class nodequeue_queue {
   var $title = '';
   var $size = 0;
   var $link = '';
-  var $remove_link = '';
+  var $link_remove = '';
   var $roles = array();
   var $types = array();
   var $show_in_links = TRUE;
@@ -1407,7 +1425,13 @@ class nodequeue_queue {
   var $show_in_ui = TRUE;
   var $reference = 0;
 
-  var $subqueue = array();
+  var $subqueue_title = '';
+  var $reverse = FALSE;
+
+  // runtime
+  var $subqueues = array();
+  var $subqueue = NULL;
+
   function nodequeue_queue($type) {
     $this->owner = $type;
   }
@@ -1449,8 +1473,8 @@ function nodequeue_load_queues_by_type($type, $location = NULL, $account = NULL)
 }
 
 /**
- * Used by menu system to determine access to the node and the queue in question.  
- * 
+ * Used by menu system to determine access to the node and the queue in question.
+ *
  * No, this isn't some odd hook_access implementation.
  *
  * @param unknown_type $node
@@ -1797,7 +1821,7 @@ function nodequeue_load_subqueues_by_reference($references) {
 function nodequeue_save(&$queue) {
   if (!isset($queue->qid)) {
     db_query("INSERT INTO {nodequeue_queue} (title, subqueue_title, size, link, link_remove, owner, show_in_links, show_in_tab, show_in_ui, reverse, reference) VALUES ('%s', '%s', %d, '%s', '%s', '%s', %d, %d, %d, %d, '%s')", $queue->title, $queue->subqueue_title, $queue->size, $queue->link, $queue->link_remove, $queue->owner, $queue->show_in_links, $queue->show_in_tab, $queue->show_in_ui, $queue->reverse, $queue->reference);
-    $queue->qid = db_last_insert_id('nodequeue_queue', 'qid'); 
+    $queue->qid = db_last_insert_id('nodequeue_queue', 'qid');
     if (function_exists('views_invalidate_cache')) {
       views_invalidate_cache();
     }
@@ -1877,10 +1901,10 @@ function nodequeue_add_subqueue(&$queue, $title, $reference = NULL) {
   $subqueue->title = $title;
 
   db_query("INSERT INTO {nodequeue_subqueue} (qid, reference, title) VALUES (%d, '%s', '%s')", $queue->qid, $insert_reference, $title);
-  
+
   $subqueue->sqid = db_last_insert_id('nodequeue_subqueue', 'sqid');
-  
-  // If somehow the $reference is null, here we set it to the sqid.  
+
+  // If somehow the $reference is null, here we set it to the sqid.
   // We have to do it here, because before the insert we don't know what the sqid will be.
   if (empty($reference)) {
     db_query("UPDATE {nodequeue_subqueue} SET reference = '%s' WHERE sqid = %d", $subqueue->sqid, $subqueue->sqid);
