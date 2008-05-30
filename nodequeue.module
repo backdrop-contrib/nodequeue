@@ -421,10 +421,11 @@ function nodequeue_node_tab($node) {
  * Display a list of queues and their status for the administrator.
  */
 function nodequeue_view_queues() {
+  $output = theme('advanced_help_topic', 'nodequeue', 'about', 'icon') . '&nbsp;' . theme('advanced_help_topic', 'nodequeue', 'about', t('Click here for information about this module'));
   // Fetch all of the queues.
   $queues = nodequeue_load_queues(nodequeue_get_all_qids(25));
   if (empty($queues)) {
-    return t('No nodequeues exist.');
+    return $output . t('No nodequeues exist.');
   }
 
   $qids = array();
@@ -464,7 +465,7 @@ function nodequeue_view_queues() {
     );
   }
 
-  $output = theme('table', $header, $rows);
+  $output .= theme('table', $header, $rows);
   $output .= theme('pager', NULL, 25);
 
   return  $output;
@@ -2239,7 +2240,7 @@ function nodequeue_nodequeue_info() {
 /**
  * Implementation of hook_nodequeue_form_submit()
  */
-function nodequeue_nodequeue_form_submit(&$queue, $form_submit) {
+function nodequeue_nodequeue_form_submit(&$queue, $form_state) {
   // This will add a single subqueue to our new queue.
   if (!isset($queue->qid) && !isset($queue->add_subqueue)) {
     // A 0 will set the reference to the sqid of the queue.
@@ -2335,7 +2336,7 @@ function nodequeue_api_queue_form($queue, &$form) {
  *
  * @param $queue
  *   The queue being edited.
- * @param $form_values
+ * @param $form_state
  *   The form values that were submitted.
  * @param &$form
  *   The actual form object. This may be modified.
@@ -2353,13 +2354,13 @@ function nodequeue_api_queue_form_validate($queue, &$form_state, &$form) {
  * @param &$queue
  *   The queue being edited. This may be modified prior to being
  *   saved.
- * @param $form_values
+ * @param $form_state
  *   The form values that were submitted.
  */
-function nodequeue_api_queue_form_submit(&$queue, &$form_submit) {
+function nodequeue_api_queue_form_submit(&$queue, &$form_state) {
   $function = $queue->owner ."_nodequeue_form_submit";
   if (function_exists($function)) {
-    $function($queue, $form_submit);
+    $function($queue, $form_state);
   }
 }
 
@@ -2370,13 +2371,13 @@ function nodequeue_api_queue_form_submit(&$queue, &$form_submit) {
  * @param &$queue
  *   The queue being edited. This may be modified prior to being
  *   saved.
- * @param $form_values
+ * @param $form_state
  *   The form values that were submitted.
  */
-function nodequeue_api_queue_form_submit_finish($queue, &$form_submit) {
+function nodequeue_api_queue_form_submit_finish($queue, &$form_state) {
   $function = $queue->owner ."_nodequeue_form_submit_finish";
   if (function_exists($function)) {
-    $function($queue, $form_submit);
+    $function($queue, $form_state);
   }
 }
 
