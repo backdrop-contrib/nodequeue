@@ -1632,6 +1632,10 @@ function nodequeue_load_queues($qids) {
     $result = db_query("SELECT q.*, COUNT(s.sqid) AS subqueues FROM {nodequeue_queue} q LEFT JOIN {nodequeue_subqueue} s ON q.qid = s.qid WHERE q.qid IN ($placeholders) GROUP BY q.qid", $to_load);
     while ($queue = db_fetch_object($result)) {
       $cache[$queue->qid] = $queue;
+      // ensure valid defaults:
+      $cache[$queue->qid]->types = array();
+      $cache[$queue->qid]->roles = array();
+      $cache[$queue->qid]->count = 0;
     }
 
     $result = db_query("SELECT qid, rid FROM {nodequeue_roles} WHERE qid IN ($placeholders)", $to_load);
