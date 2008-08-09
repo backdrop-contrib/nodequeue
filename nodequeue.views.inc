@@ -106,7 +106,7 @@ function nodequeue_views_data() {
     'title' => t('In queue'),
     'help' => t('Filter to ensure a node IS or IS NOT in the related queue'),
     'filter' => array(
-      'handler' => 'nodequeue_handler_filter_not_in_queue',
+      'handler' => 'nodequeue_handler_filter_in_queue',
       'label' => t('In queue'),
     ),
   );
@@ -317,10 +317,10 @@ class nodequeue_handler_relationship_nodequeue extends views_handler_relationshi
 /**
  * Handler to filter for nodes that are not in a queue.
  */
-class nodequeue_handler_filter_not_in_queue extends views_handler_filter_in_operator {
+class nodequeue_handler_filter_in_queue extends views_handler_filter_boolean_operator {
   function query() {
-    $operator = empty($this->operator) ? 'IS NOT' : 'IS';
-    $this->add_where($this->options['group'], "$this->table_alias.nid $operator NULL");
+    $this->ensure_my_table();
+    $this->query->add_where($this->options['group'], "$this->table_alias.nid " . ($this->value ? '<> 0' : 'IS NULL'));
   }
 }
 
