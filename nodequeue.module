@@ -1551,7 +1551,7 @@ function nodequeue_get_qids($type, $account = NULL) {
       $roles_join = "INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid ";
       $roles = array_keys((array) $account->roles) + array(DRUPAL_AUTHENTICATED_RID);
 
-      $roles_where .= "AND nr.rid IN (". db_placeholders($role_args, 'int') .")";
+      $roles_where .= "AND nr.rid IN (". db_placeholders($roles, 'int') .")";
     }
 
     $sql = 'SELECT nq.qid, nq.show_in_tab, nq.show_in_links, show_in_ui '.
