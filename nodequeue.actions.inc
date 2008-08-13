@@ -49,7 +49,7 @@ function nodequeue_add_action_form($context) {
     $form['qids'] = array(
       '#type' => 'select',
       '#title' => t("Queue"),
-      '#default_value' => $edit['qids'],
+      '#default_value' => $context['qids'],
       '#multiple' => TRUE,
       '#options' => $options,
       '#required' => TRUE,
@@ -65,9 +65,9 @@ function nodequeue_add_action_form($context) {
 /**
  * Submit handler for Add to Nodequeues action configuration.
  */
-function nodequeue_add_action_submit($form_id, $form_values) {
+function nodequeue_add_action_submit($form, &$form_state) {
   return array(
-    'qids' => $form_values['qids'],
+    'qids' => $form_state['values']['qids'],
   );
 }
 
@@ -205,9 +205,9 @@ function nodequeue_remove_action_form($context) {
 /**
  * Submit handler for Remove from Nodequeues action configuration.
  */
-function nodequeue_remove_action_submit($form_id, $form_values) {
+function nodequeue_remove_action_submit($form, $form_state) {
   return array(
-    'qids' => $form_values['qids'],
+    'qids' => $form_state['values']['qids'],
   );
 }
 
