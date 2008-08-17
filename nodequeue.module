@@ -85,10 +85,11 @@ function nodequeue_menu() {
   }
 
   // Note: This path used to set up with a call to nodequeue_load_queues_by_type, passing the result in.  Now, that function is called inside of nodequeue_node_tab.
+
   $items['node/%node/nodequeue'] = array(
     'title' => variable_get('nodequeue_tab_name', t('Nodequeue')),
-    'access callback' => 'user_access',
-    'access arguments' => $access,
+    'access callback' => 'nodequeue_node_tab_access',
+    'access arguments' => array(1),
     'page callback' => 'nodequeue_node_tab',
     'page arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
@@ -103,12 +104,12 @@ function nodequeue_menu() {
     'page arguments' => array(3),
     'type' => MENU_CALLBACK
   );
-  $items['admin/content/nodequeue/%nodequeue/view'] = array(
+  $items['admin/content/nodequeue/%nodequeue/view/%subqueue'] = array(
     'title' => t('View'),
-    'access arguments' => array(3),
+    'access arguments' => array(3, 5),
     'access callback' => 'nodequeue_queue_access',
     'page callback' => 'nodequeue_admin_view',
-    'page arguments' => array(3),
+    'page arguments' => array(3, 5),
     'weight' => -10,
     'type' => MENU_DEFAULT_LOCAL_TASK
   );
@@ -138,62 +139,58 @@ function nodequeue_menu() {
           $node = node_load($nid);
         }*/
 
-
-  $items["admin/content/nodequeue/%nodequeue/add/%/%node"] = array(
-    'access arguments' => array(6, 3),
+  $items["admin/content/nodequeue/%nodequeue/add/%subqueue/%node"] = array(
+    'access arguments' => array(6, 3, 5),
     'access callback' => 'nodequeue_node_and_queue_access',
     'page callback' => 'nodequeue_admin_add_node',
     'page arguments' => array(3, 5, 6),
     'type' => MENU_CALLBACK
   );
-  $items["admin/content/nodequeue/%nodequeue/remove-node/%/%node"] = array(
-    'access arguments' => array(6, 3),
+  $items["admin/content/nodequeue/%nodequeue/remove-node/%subqueue/%node"] = array(
+    'access arguments' => array(6, 3, 5),
     'access callback' => 'nodequeue_node_and_queue_access',
     'page callback' => 'nodequeue_admin_remove_node',
     'page arguments' => array(3, 5, 6),
     'type' => MENU_CALLBACK
   );
-
-  // NB: For the following menu paths, the value in spot 6 is the position, not the nid.
-  $items["admin/content/nodequeue/%nodequeue/up/%/%"] = array(
-    'access arguments' => array(3),
+  $items["admin/content/nodequeue/%nodequeue/up/%subqueue/%"] = array(
+    'access arguments' => array(3, 5),
     'access callback' => 'nodequeue_queue_access',
     'page callback' => 'nodequeue_admin_up',
     'page arguments' => array(3, 5, 6),
     'type' => MENU_CALLBACK
   );
-  $items["admin/content/nodequeue/%nodequeue/down/%/%"] = array(
-    'access arguments' => array(3),
+  $items["admin/content/nodequeue/%nodequeue/down/%subqueue/%"] = array(
+    'access arguments' => array(3, 5),
     'access callback' => 'nodequeue_queue_access',
     'page callback' => 'nodequeue_admin_down',
     'page arguments' => array(3, 5, 6),
     'type' => MENU_CALLBACK
   );
-  $items["admin/content/nodequeue/%nodequeue/front/%/%"] = array(
-    'access arguments' => array(3),
+  $items["admin/content/nodequeue/%nodequeue/front/%subqueue/%"] = array(
+    'access arguments' => array(3, 5),
     'access callback' => 'nodequeue_queue_access',
     'page callback' => 'nodequeue_admin_front',
     'page arguments' => array(3, 5, 6),
     'type' => MENU_CALLBACK
   );
-  $items["admin/content/nodequeue/%nodequeue/back/%/%"] = array(
-    'access arguments' => array(3),
+  $items["admin/content/nodequeue/%nodequeue/back/%subqueue/%"] = array(
+    'access arguments' => array(3, 5),
     'access callback' => 'nodequeue_queue_access',
     'page callback' => 'nodequeue_admin_back',
     'page arguments' => array(3, 5, 6),
     'type' => MENU_CALLBACK
   );
-  $items["admin/content/nodequeue/%nodequeue/remove/%/%"] = array(
-    'access arguments' => array(3),
+  $items["admin/content/nodequeue/%nodequeue/remove/%subqueue/%"] = array(
+    'access arguments' => array(3, 5),
     'access callback' => 'nodequeue_queue_access',
     'page callback' => 'nodequeue_admin_remove',
     'page arguments' => array(3, 5, 6),
     'type' => MENU_CALLBACK
   );
-
-  $items["admin/content/nodequeue/%nodequeue/clear/%"] = array(
+  $items["admin/content/nodequeue/%nodequeue/clear/%subqueue"] = array(
     'title' => t('Clear'),
-    'access arguments' => array(3),
+    'access arguments' => array(3, 5),
     'access callback' => 'nodequeue_queue_access',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('nodequeue_clear_confirm', 3, 5),
@@ -245,7 +242,6 @@ function nodequeue_link($type, $node = NULL, $teaser = FALSE) {
     }
 
     nodequeue_set_subqueue_positions($subqueues, $node->nid);
-    //drupal_set_message(dprint_r($subqueues, true));
 
     foreach ($subqueues as $subqueue) {
       $queue = $queues[$subqueue->qid];
@@ -297,10 +293,9 @@ function nodequeue_js_output($label, $href, $count = NULL, $sqid = NULL) {
  * Page callback to add a node to a queue.
  */
 function nodequeue_admin_add_node($queue, $subqueue, $node) {
-  if (!is_numeric($subqueue) || !nodequeue_check_token($node->nid)) {
+  if (!nodequeue_check_token($node->nid)) {
     return drupal_goto();
   }
-  $subqueue = nodequeue_load_subqueue($subqueue);
   nodequeue_subqueue_add($queue, $subqueue, $node->nid);
 
   // Provide a response if this is javascript.
@@ -325,10 +320,10 @@ function nodequeue_admin_add_node($queue, $subqueue, $node) {
  * Page callback to remove a node from a queue.
  */
 function nodequeue_admin_remove_node($queue, $subqueue, $node) {
-  if (!is_numeric($subqueue) || !nodequeue_check_token($node->nid)) {
+  if (!nodequeue_check_token($node->nid)) {
     return drupal_goto();
   }
-  $subqueue = nodequeue_load_subqueue($subqueue);
+
   nodequeue_subqueue_remove_node($subqueue->sqid, $node->nid);
 
   // Provide a response if this is javascript.
@@ -361,7 +356,7 @@ function nodequeue_node_tab($node) {
   // moved from hook_menu due to architecture change.  This function seems to only be called from menu anyway...
   $queues = nodequeue_load_queues_by_type($node->type, 'tab');
   if (!$queues) {
-    return false;
+    return FALSE;
   }
   $header = array();
   $header[] = array('data' => t('Title'), 'class' => 'nodequeue-title');
@@ -413,7 +408,6 @@ function nodequeue_node_tab($node) {
   $output .= theme('table', $header, $rows, array('class' => 'nodequeue-table'));
   drupal_add_js(drupal_get_path('module', 'nodequeue') .'/nodequeue.js');
   drupal_add_css(drupal_get_path('module', 'nodequeue') .'/nodequeue.css');
-
   return $output;
 }
 
@@ -424,6 +418,12 @@ function nodequeue_view_queues() {
   $output = theme('advanced_help_topic', 'nodequeue', 'about', 'icon') . '&nbsp;' . theme('advanced_help_topic', 'nodequeue', 'about', t('Click here for information about this module'));
   // Fetch all of the queues.
   $queues = nodequeue_load_queues(nodequeue_get_all_qids(25));
+  foreach ($queues as $queue) {
+    if (!nodequeue_queue_access($queue)) {
+      unset($queues[$queue->qid]);
+    }
+  }
+
   if (empty($queues)) {
     return $output . t('No nodequeues exist.');
   }
@@ -439,7 +439,9 @@ function nodequeue_view_queues() {
   $subqueues = nodequeue_load_subqueues_by_queue($qids);
   // Relate all the subqueues we loaded back to our queues.
   foreach ($subqueues as $subqueue) {
-    $queues[$subqueue->qid]->subqueue = $subqueue;
+     if (nodequeue_api_subqueue_access($subqueue, NULL, $queues[$subqueue->qid])) {
+       $queues[$subqueue->qid]->subqueue = $subqueue;
+     }
   }
 
   $header = array(t('Title'), t('Max nodes'), t('Subqueues'), t('Operation'));
@@ -482,12 +484,14 @@ function nodequeue_view_subqueues($queue) {
 
   $rows = array();
   foreach ($subqueues as $subqueue) {
-    $sub_text = nodequeue_subqueue_size_text($queue->size, $subqueue->count, FALSE);
-    $rows[] = array(
-      array('class' => 'nodequeue-title', 'data' => check_plain($subqueue->title)),
-      array('class' => 'nodequeue-subqueues', 'data' => $sub_text),
-      array('class' => 'nodequeue-operation', 'data' => l(t('View'), "admin/content/nodequeue/$queue->qid/view/$subqueue->sqid"))
-    );
+    if (nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
+      $sub_text = nodequeue_subqueue_size_text($queue->size, $subqueue->count, FALSE);
+      $rows[] = array(
+        array('class' => 'nodequeue-title', 'data' => check_plain($subqueue->title)),
+        array('class' => 'nodequeue-subqueues', 'data' => $sub_text),
+        array('class' => 'nodequeue-operation', 'data' => l(t('View'), "admin/content/nodequeue/$queue->qid/view/$subqueue->sqid"))
+      );
+    }
   }
 
   $output = '<p>'. t('Max nodes in queue: @size', array('@size' => $queue->size ? $queue->size : t("Infinite"))) .'</p>';
@@ -766,12 +770,12 @@ function nodequeue_admin_delete_submit($formid, &$form_state) {
 /**
  * Page callback to view a queue.
  */
-function nodequeue_admin_view($queue, $sqid = NULL) {
+function nodequeue_admin_view($queue, $subqueue = NULL) {
   drupal_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)));
   $qid = $queue->qid;
 
   // If the queue has just one subqueue, it gets special treatment.
-  if (!$sqid) {
+  if (!$subqueue->sqid) {
     if ($queue->subqueues == 1) {
       $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
       $subqueue = array_shift($subqueues);
@@ -781,17 +785,18 @@ function nodequeue_admin_view($queue, $sqid = NULL) {
       return nodequeue_view_subqueues($queue);
     }
   }
-  else if ($sqid) {
+  else if ($subqueue->sqid) {
+   if (!nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
+      return drupal_not_found();
+    }
     // Adjust properties of the page so our subqueue is in the right
     // visual place.
-    $subqueue = nodequeue_load_subqueue($sqid);
     drupal_set_title(t("Subqueue '@title'",
       array('@title' => nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue))));
     $breadcrumb = drupal_get_breadcrumb();
     $breadcrumb[] = l($queue->title, "admin/content/nodequeue/$queue->qid");
     drupal_set_breadcrumb($breadcrumb);
   }
-
   return nodequeue_arrange_subqueue($queue, $subqueue);
 }
 
@@ -1370,6 +1375,10 @@ function _nodequeue_ajax_add($sqid, $position, $string) {
     return array('error' => t('Invalid sqid'));
   }
 
+  if (!nodequeue_api_subqueue_access($subqueue)) {
+    return array('error' => t('Access denied'));
+  }
+ 
   $nodes = nodequeue_api_autocomplete($queue, $subqueue, $string);
   if (empty($nodes) || !is_array($nodes)) {
     return array('error' => t('Invalid node'));
@@ -1438,7 +1447,7 @@ class nodequeue_queue {
 /**
  * Return TRUE If the specified account has access to manipulate this queue.
  */
-function nodequeue_queue_access($queue, $account = NULL) {
+function nodequeue_queue_access($queue, $subqueue = NULL, $account = NULL) {
   if (!$account) {
     global $user;
     $account = $user;
@@ -1450,8 +1459,16 @@ function nodequeue_queue_access($queue, $account = NULL) {
   }
 
   // Automatically false if they can't manipulate queues at all.
-  if (!user_access('manipulate queues')) {
+  if (!user_access('manipulate queues') || empty($queue->roles)) {
     return FALSE;
+  }
+
+  if (!nodequeue_api_queue_access($queue, $account)) {
+    return FALSE;
+  }
+
+  if ($subqueue) {
+    return nodequeue_api_subqueue_access($subqueue, $account);
   }
 
   $roles = array_keys((array) $account->roles) + array(DRUPAL_AUTHENTICATED_RID);
@@ -1479,10 +1496,23 @@ function nodequeue_load_queues_by_type($type, $location = NULL, $account = NULL)
  * @param unknown_type $queue
  * @return unknown
  */
-function nodequeue_node_and_queue_access($node, $queue) {
-  return nodequeue_node_access($node->type) && nodequeue_queue_access($queue);
+function nodequeue_node_and_queue_access($node, $queue, $subqueue = NULL) { 
+  return nodequeue_node_access($node->type) && nodequeue_queue_access($queue, $subqueue);
 }
 
+function nodequeue_node_tab_access($node) {
+  $queues = nodequeue_load_queues_by_type($node->type, 'tab');
+  $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
+  if (empty($subqueues)) {
+    return FALSE;
+  }
+  foreach ($subqueues as $subqueue) {
+    if (!nodequeue_api_subqueue_access($subqueue)) {
+      unset($subqueues[$subqueue->sqid]);
+    }
+  }
+  return (variable_get('nodequeue_use_tab', 1) && !empty($subqueues));
+}
 /**
  * Return TRUE if $user can queue(s) for this node.
  *
@@ -1666,6 +1696,16 @@ function nodequeue_load_queues($qids) {
 function nodequeue_load($qid) {
   $queues = nodequeue_load_queues(array($qid));
   return array_shift($queues);
+}
+
+/**
+ * This function exists so that %subqueue will work in hook_menu.
+ */
+function subqueue_load($sqid) {
+  if (!$sqid) {
+    return NULL;
+  }
+  return array_shift(nodequeue_load_subqueues(array($sqid)));
 }
 
 /**
@@ -1974,7 +2014,6 @@ function nodequeue_subqueue_remove_node($sqid, $nid) {
     nodequeue_subqueue_remove($sqid, $pos);
   }
 }
-
 /**
  * Remove a node or node(s) from a nodequeue by position.
  *
@@ -2473,6 +2512,50 @@ function nodequeue_api_info() {
   return module_invoke_all('nodequeue_info');
 }
 
+function nodequeue_api_queue_access($queue, $account = NULL) {
+  if (!$account) {
+    global $user;
+    $account = $user;
+  }
+
+  if ($queue->owner != 'nodequeue') { // Avoids an infinite loop.
+    $function = $queue->owner . '_queue_access';
+    if (function_exists($function)) {
+      $access = $function($queue, $account);
+    }
+  }
+
+  if (!isset($access)) {
+    $access = TRUE;
+  }
+  return $access;
+}
+
+/**
+ * Allows the owning module of a subqueue to restrict access to viewing and
+ * manipulating the queue.
+ */
+function nodequeue_api_subqueue_access($subqueue, $account = NULL, $queue = NULL) {
+  if (!$account) {
+    global $user;
+    $account = $user;
+  }
+  
+  if (!$queue) {
+    $queue = nodequeue_load($subqueue->qid);
+  }
+
+  $function = $queue->owner . '_subqueue_access';
+  if (function_exists($function)) {
+    $access = $function($subqueue, $account, $queue);
+  }
+
+  if (!isset($access)) {
+    $access = TRUE;
+  }
+
+  return $access;
+}
 /**
  * Form builder for the nodequeue settings tab.
  */
