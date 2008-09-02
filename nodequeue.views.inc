@@ -149,8 +149,8 @@ function nodequeue_views_data() {
   // For use with the relationship.
   $data['nodequeue_subqueue']['table']['join'] = array(
     'nodequeue_nodes' => array(
-      'left_field' => 'qid',
-      'field' => 'qid',
+      'left_field' => 'sqid',
+      'field' => 'sqid',
     ),
   );
 
