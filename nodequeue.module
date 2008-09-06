@@ -17,7 +17,7 @@ function nodequeue_perm() {
  * Loads subsidiary includes for other modules.
  */
 function nodequeue_init() {
-  include_once drupal_get_path('module', 'nodequeue') .'/nodequeue.actions.inc';
+  include_once drupal_get_path('module', 'nodequeue') .'/includes/nodequeue.actions.inc';
 }
 
 /**
@@ -267,6 +267,16 @@ function nodequeue_link($type, $node = NULL, $teaser = FALSE) {
   return $links;
 }
 
+/**
+ * Implementation of hook_views_api()
+ */
+
+function nodequeue_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'nodequeue') .'/includes/views',
+  );
+}
 // --------------------------------------------------------------------------
 // Nodequeue Admin operations
 
