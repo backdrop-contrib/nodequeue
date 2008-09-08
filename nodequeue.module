@@ -1511,6 +1511,10 @@ function nodequeue_node_and_queue_access($node, $queue, $subqueue = NULL) {
 }
 
 function nodequeue_node_tab_access($node) {
+  if (!user_access('manipulate queues')) { 
+    //For performance reasons: If the user can't manipulate queues, there is no reason to run the rest of these queries.
+    return FALSE;
+  }
   $queues = nodequeue_load_queues_by_type($node->type, 'tab');
   $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
   if (empty($subqueues)) {
@@ -1522,6 +1526,7 @@ function nodequeue_node_tab_access($node) {
     }
   }
   return (variable_get('nodequeue_use_tab', 1) && !empty($subqueues));
+
 }
 /**
  * Return TRUE if $user can queue(s) for this node.
