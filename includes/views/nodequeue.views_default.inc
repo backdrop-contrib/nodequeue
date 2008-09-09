@@ -8,9 +8,7 @@
  * code and more modifiable later.
  */
 function nodequeue_views_default_views() {
-  drupal_set_message("called");
   $views = array();
-
   $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
   foreach ($queues as $queue) {
     $view = new view;
