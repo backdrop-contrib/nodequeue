@@ -382,7 +382,7 @@ function nodequeue_node_tab($node) {
   $rows = array();
   foreach ($subqueues as $subqueue) {
     $queue = $queues[$subqueue->qid];
-    if (!$subqueue->position) {
+    if (empty($subqueue->position)) {
       $op = l(
         t('Add to queue'),
         "admin/content/nodequeue/$queue->qid/add/$subqueue->sqid/$node->nid",
