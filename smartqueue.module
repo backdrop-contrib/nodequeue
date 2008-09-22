@@ -192,8 +192,11 @@ function smartqueue_taxonomy($op, $type, $array = NULL) {
             "SELECT nq.reference AS reference, sq.reference AS sqref, sq.sqid
             FROM {nodequeue_queue} nq
             INNER JOIN {nodequeue_subqueue} sq ON nq.qid = sq.qid
-            WHERE sq.reference = '%d' OR sq.reference LIKE '%%-%d'
-            OR sq.reference LIKE '%d-%%' OR sq.reference LIKE '%%-%d-%%'",
+            WHERE nq.owner = 'smartqueue_taxonomy'
+            AND (sq.reference = '%d'
+              OR sq.reference LIKE '%%-%d'
+              OR sq.reference LIKE '%d-%%'
+              OR sq.reference LIKE '%%-%d-%%')",
             $tid, $tid, $tid, $tid
           );
           while ($row = db_fetch_object($result)) {
@@ -208,9 +211,13 @@ function smartqueue_taxonomy($op, $type, $array = NULL) {
           $tid = $array['tid'];
           // Find subqueues that contain this term.
           $result = db_query(
-            "SELECT sqid FROM {nodequeue_subqueue}
-            WHERE reference = '%d' OR reference LIKE '%%-%d'
-            OR reference LIKE '%d-%%' OR reference LIKE '%%-%d-%%'",
+            "SELECT sq.sqid FROM {nodequeue_subqueue} sq
+            INNER JOIN {nodequeue_queue} nq ON sq.qid = nq.qid
+            WHERE nq.owner = 'smartqueue_taxonomy'
+            AND (sq.reference = '%d'
+              OR sq.reference LIKE '%%-%d'
+              OR sq.reference LIKE '%d-%%'
+              OR sq.reference LIKE '%%-%d-%%')",
             $tid, $tid, $tid, $tid
           );
           while ($row = db_fetch_object($result)) {
