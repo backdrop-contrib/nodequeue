@@ -56,7 +56,6 @@ function nodequeue_views_data() {
 
   // ----------------------------------------------------------------
   // nodequeue_nodes table
-
   $data['nodequeue_nodes']['table']['group'] = t('Nodequeue');
 
   // The nodequeue_nodes table is how nodequeue connects to the
@@ -145,7 +144,6 @@ function nodequeue_views_data() {
 
   // ----------------------------------------------------------------
   // nodequeue_queue table
-
   $data['nodequeue_queue']['table']['group'] = t('Nodequeue');
 
   // For use with the relationship.
@@ -157,7 +155,7 @@ function nodequeue_views_data() {
   );
 
   $data['nodequeue_queue']['title'] = array(
-    'title' => t('Title'),
+    'title' => t('Queue title'),
     'help' => t('The title of the nodequeue.'),
     'field' => array(
       'handler' => 'views_handler_field',
@@ -183,6 +181,24 @@ function nodequeue_views_data() {
     'nodequeue_nodes' => array(
       'left_field' => 'sqid',
       'field' => 'sqid',
+    ),
+  );
+
+  $data['nodequeue_subqueue']['title'] = array(
+    'title' => t('Subqueue title'),
+    'help' => t('The title of the subqueue.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+     ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
     ),
   );
 
