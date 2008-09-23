@@ -620,9 +620,7 @@ function nodequeue_edit_queue_form(&$form_state, $queue) {
     );
   }
 
-  foreach (node_get_types() as $type => $info) {
-    $nodes[$type] = $info->name;
-  }
+  $nodes = node_get_types('names');
 
   $form['types'] = array(
     '#type' => 'checkboxes',
