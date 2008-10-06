@@ -438,11 +438,40 @@ function nodequeue_view_queues() {
     return $output . t('No nodequeues exist.');
   }
 
+  $header = array(
+    array('data' => t('Title'), 'field' => 'title', 'sort' => 'asc'),
+    array('data' => t('Max nodes'), 'field' => 'size'),
+    array('data' => t('Subqueues'), 'field' => 'subqueues'),
+    array('data' => t('Operation')),
+  );
+  $table_sort = tablesort_init($header);
+
   $qids = array();
-  // For every queue that has exactly 1 subqueue,
+  $sort_primary = array();
+  $sort_secondary = array();
+  $sort_direction_regular = array('asc' => SORT_ASC, 'desc' => SORT_DESC);
+  $sort_direction_reverse = array('asc' => SORT_DESC, 'desc' => SORT_ASC);
   foreach ($queues as $queue) {
+    // If a queue has only one subqueue, store the qid so we can display
+    // the number of nodes in the subqueue.
     if ($queue->subqueues == 1) {
       $qids[] = $queue->qid;
+    }
+    $sort_secondary[] = $queue->title;
+    switch ($table_sort['sql']) {
+      case 'title':
+      default:
+        $sort_primary[] = $queue->title;
+        $sort_direction = $sort_direction_regular;
+        break;
+      case 'size':
+        $sort_primary[] = $queue->size;
+        $sort_direction = $sort_direction_reverse;
+        break;
+      case 'subqueues':
+        $sort_primary[] = $queue->subqueues;
+        $sort_direction = $sort_direction_regular;
+        break;
     }
   }
 
@@ -454,7 +483,14 @@ function nodequeue_view_queues() {
      }
   }
 
-  $header = array(t('Title'), t('Max nodes'), t('Subqueues'), t('Operation'));
+  if (!empty($table_sort)) {
+    if (strtolower($table_sort['sort']) == 'desc') {
+      array_multisort($sort_primary, $sort_direction['desc'], $sort_secondary, $queues); // Re-indexes array keys; key no longer equals qid.
+    }
+    else {
+      array_multisort($sort_primary, $sort_direction['asc'], $sort_secondary, $queues); // Re-indexes array keys; key no longer equals qid.
+    }
+  }
 
   $rows = array();
   foreach ($queues as $queue) {
