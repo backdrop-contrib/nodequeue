@@ -205,7 +205,7 @@ function nodequeue_remove_action_form($context) {
 /**
  * Submit handler for Remove from Nodequeues action configuration.
  */
-function nodequeue_remove_action_submit($form, $form_state) {
+function nodequeue_remove_action_submit($form, &$form_state) {
   return array(
     'qids' => $form_state['values']['qids'],
   );

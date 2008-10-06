@@ -40,43 +40,43 @@ function nodequeue_menu() {
 
   // administrative items
   $items['admin/content/nodequeue'] = array(
-    'title' => t('Nodequeue'),
+    'title' => 'Nodequeue',
     'access callback' => '_nodequeue_access_admin_or_manipulate',
     'page callback' => 'nodequeue_view_queues',
-    'description' => t('Create and maintain simple nodequeues.'),
+    'description' => 'Create and maintain simple nodequeues.',
     'type' => MENU_NORMAL_ITEM
   );
   $items['admin/content/nodequeue/list'] = array(
-    'title' => t('List'),
+    'title' => 'List',
     'access callback' => '_nodequeue_access_admin_or_manipulate',
     'page callback' => 'nodequeue_view_queues',
     'weight' => -1,
     'type' => MENU_DEFAULT_LOCAL_TASK
   );
   $items['admin/content/nodequeue/settings'] = array(
-    'title' => t('Settings'),
+    'title' => 'Settings',
     'access arguments' => $admin_access,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('nodequeue_admin_settings'),
     'type' => MENU_LOCAL_TASK
   );
   $items['nodequeue/autocomplete'] = array(
-    'title' => t('Autocomplete'),
+    'title' => 'Autocomplete',
     'access arguments' => $access,
     'page callback' => 'nodequeue_autocomplete',
     'type' => MENU_CALLBACK
   );
   $items['nodequeue/ajax/add'] = array(
-    'title' => t('ajax add'),
+    'title' => 'ajax add',
     'access arguments' => $access,
     'page callback' => 'nodequeue_ajax_add',
     'type' => MENU_CALLBACK
   );
-  // Add a new nodequeue of a given type
   $info = nodequeue_api_info();
   foreach ($info as $key => $data) {
     $items['admin/content/nodequeue/add/'. $key] = array(
-      'title' => t('Add @type', array('@type' => strtolower($data['title']))),
+      'title' => 'Add @type',
+      'title arguments' => array('@type' => strtolower($data['title'])),
       'access arguments' => $admin_access,
       'page callback' => 'drupal_get_form',
       'page arguments' => array('nodequeue_edit_queue_form', $key),
@@ -87,7 +87,8 @@ function nodequeue_menu() {
   // Note: This path used to set up with a call to nodequeue_load_queues_by_type, passing the result in.  Now, that function is called inside of nodequeue_node_tab.
 
   $items['node/%node/nodequeue'] = array(
-    'title' => variable_get('nodequeue_tab_name', t('Nodequeue')),
+    'title' => '@tab',
+    'title arguments' => array('@tab' => variable_get('nodequeue_tab_name', 'Nodequeue')),
     'access callback' => 'nodequeue_node_tab_access',
     'access arguments' => array(1),
     'page callback' => 'nodequeue_node_tab',
@@ -115,14 +116,14 @@ function nodequeue_menu() {
   );
   // Actual administrative items.
   $items['admin/content/nodequeue/%nodequeue/edit'] = array(
-    'title' => t('Edit'),
+    'title' => 'Edit',
     'access arguments' => $admin_access,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('nodequeue_edit_queue_form', 3),
     'type' => MENU_LOCAL_TASK
   );
   $items['admin/content/nodequeue/%nodequeue/delete'] = array(
-    'title' => t('Delete'),
+    'title' => 'Delete',
     'access arguments' => $admin_access,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('nodequeue_admin_delete', 3),
@@ -189,7 +190,7 @@ function nodequeue_menu() {
     'type' => MENU_CALLBACK
   );
   $items["admin/content/nodequeue/%nodequeue/clear/%subqueue"] = array(
-    'title' => t('Clear'),
+    'title' => 'Clear',
     'access arguments' => array(3, 5),
     'access callback' => 'nodequeue_queue_access',
     'page callback' => 'drupal_get_form',
@@ -806,7 +807,7 @@ function nodequeue_admin_delete(&$form_state, $queue) {
 function nodequeue_admin_delete_submit($formid, &$form_state) {
   if ($form_state['values']['confirm']) {
     nodequeue_delete($form_state['values']['qid']);
-    drupal_set_message("The queue has been deleted.");
+    drupal_set_message(t('The queue has been deleted.'));
   }
   $form_state['redirect'] = 'admin/content/nodequeue';
 }

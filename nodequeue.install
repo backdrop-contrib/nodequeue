@@ -210,7 +210,7 @@ function nodequeue_update_1() {
 
 function nodequeue_update_5000() {
   $ret = array();
-  $ret[] = t(array('success' => TRUE, 'query' => 'Some of the following queries may appear to fail. This is not a problem.'));
+  $ret[] = array('success' => TRUE, 'query' => t('Some of the following queries may appear to fail. This is not a problem.'));
 
   db_add_field($ret, "nodequeue_queue", "link", array(
         'description' => t('The link text to show under a node to add it to the queue.'),

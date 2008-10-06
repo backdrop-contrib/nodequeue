@@ -45,7 +45,7 @@ function smartqueue_author_nodequeue_form_validate($queue, &$form_state, &$form)
   if (!isset($queue->qid)) {
     $rids = !empty($form_state['values']['rids']) ? array_keys(array_filter($form_state['values']['rids'])) : array();
     // Convert this to our reference.
-    form_set_value($form['reference'], implode('-', $rids));
+    form_set_value($form['reference'], implode('-', $rids), $form_state);
   }
 }
 
