@@ -106,7 +106,7 @@ function nodequeue_menu() {
     'type' => MENU_CALLBACK
   );
   $items['admin/content/nodequeue/%nodequeue/view/%subqueue'] = array(
-    'title' => t('View'),
+    'title' => 'View',
     'access arguments' => array(3, 5),
     'access callback' => 'nodequeue_queue_access',
     'page callback' => 'nodequeue_admin_view',
