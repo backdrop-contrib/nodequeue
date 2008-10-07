@@ -3,5 +3,4 @@ name = Smartqueue Author
 description = Creates a node queue for each node author
 package = Nodequeue
 dependencies[] = nodequeue
-core = 6.x
 
