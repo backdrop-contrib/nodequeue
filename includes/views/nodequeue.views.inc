@@ -34,7 +34,7 @@ function nodequeue_views_handlers() {
         'parent' => 'nodequeue_handler_field_all_queues',
       ),
       'nodequeue_handler_field_links' => array(
-        'parent' => 'nodequeue_handler_views_handler_field',
+        'parent' => 'views_handler_field_node_link',
       ),
       'nodequeue_handler_field_queue_tab' => array(
         'parent' => 'views_handler_field_node_link',
