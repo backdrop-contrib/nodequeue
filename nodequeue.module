@@ -1815,13 +1815,15 @@ function subqueue_load($sqid) {
  *
  * @param $sqids
  *   An array of subqueue IDs to load.
+ * @param $bypass_cache
+ *   Boolean value indicating whether to bypass the cache or not.
  */
-function nodequeue_load_subqueues($sqids) {
+function nodequeue_load_subqueues($sqids, $bypass_cache = FALSE) {
   static $cache = array();
   $to_load = array();
 
   foreach ($sqids as $sqid) {
-    if (!isset($cache[$sqid])) {
+    if ($bypass_cache || !isset($cache[$sqid])) {
       $to_load[] = $sqid;
     }
   }
@@ -1850,9 +1852,11 @@ function nodequeue_load_subqueues($sqids) {
  *
  * @param $sqid
  *   The subqueue ID to load.
+ * @param $bypass_cache
+ *   Boolean value indicating whether to bypass the cache or not.
  */
-function nodequeue_load_subqueue($sqid) {
-  $subqueues = nodequeue_load_subqueues(array($sqid));
+function nodequeue_load_subqueue($sqid, $bypass_cache = FALSE) {
+  $subqueues = nodequeue_load_subqueues(array($sqid), $bypass_cache);
   if ($subqueues) {
     return array_shift($subqueues);
   }
