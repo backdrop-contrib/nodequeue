@@ -207,13 +207,27 @@ function nodequeue_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   switch ($op) {
     case 'delete':
       // If a node is being deleted, ensure it's also removed from any queues.
-      $result = db_query("SELECT * FROM {nodequeue_nodes} WHERE nid = %d", $node->nid);
+      $result = db_query("SELECT qid, sqid FROM {nodequeue_nodes} WHERE nid = %d", $node->nid);
       while ($obj = db_fetch_object($result)) {
-        // This removes by nid, not position, because if we happen to have a
-        // node in a queue twice, the 2nd position would be wrong.
-        nodequeue_subqueue_remove_node($obj->sqid, $node->nid);
+        // If the queue is being tracked by translation set and the node is part
+        // of a translation set, don't delete the queue record.
+        // Instead, data will be updated in the 'translation_change' op, below.
+        $queues = nodequeue_load_queues(array($obj->qid));
+        $queue = nodequeue_load_queues($obj->qid);
+        if (!$queue->i18n || empty($node->tnid)) {
+          // This removes by nid, not position, because if we happen to have a
+          // node in a queue twice, the 2nd position would be wrong.
+          nodequeue_subqueue_remove_node($obj->sqid, $node->nid);
+        }
       }
       break;
+    case 'translation_change':
+      if (isset($node->translation_change)) {
+        // If there is only one node remaining, track by nid rather than tnid.
+        // Otherwise, use the new tnid.
+        $content_id = $node->translation_change['new_tnid'] == 0 ? $node->translation_change['remaining_nid'] : $node->translation_change['new_tnid'];
+        db_query("UPDATE {nodequeue_nodes} SET nid = %d WHERE nid = %d", $content_id, $node->translation_change['old_tnid']);
+      }
   }
 }
 
@@ -242,22 +256,30 @@ function nodequeue_link($type, $node = NULL, $teaser = FALSE) {
       unset($subqueues[$id]->position);
     }
 
-    nodequeue_set_subqueue_positions($subqueues, $node->nid);
+    if(!module_exists('translation')) {
+      nodequeue_set_subqueue_positions($subqueues, $node->nid);
+    }
 
     foreach ($subqueues as $subqueue) {
       $queue = $queues[$subqueue->qid];
-      $query_string = nodequeue_get_query_string($node->nid, TRUE);
+      $id = nodequeue_get_content_id($queue, $node);
+      if(module_exists('translation')) {
+        $subqueue = array($subqueue->sqid => $subqueue);
+        nodequeue_set_subqueue_positions($subqueue, $id);
+        $subqueue = array_shift($subqueue);
+      }
+      $query_string = nodequeue_get_query_string($id, TRUE);
       if (!isset($subqueue->position)) {
         $links['nodequeue-ajax-toggle-'. $subqueue->sqid] = array(
           'title' => nodequeue_title_substitute($queue->link, $queue, $subqueue),
-          'href' => "admin/content/nodequeue/$queue->qid/add/$subqueue->sqid/$node->nid",
+          'href' => "admin/content/nodequeue/$queue->qid/add/$subqueue->sqid/$id",
           'attributes' => array('class' => 'nodequeue-ajax-toggle'),
           'query' => $query_string);
       }
       else if ($queue->link_remove) {
         $links['nodequeue-ajax-toggle-'. $subqueue->sqid] = array(
           'title' => nodequeue_title_substitute($queue->link_remove, $queue, $subqueue),
-          'href' => "admin/content/nodequeue/$queue->qid/remove-node/$subqueue->sqid/$node->nid",
+          'href' => "admin/content/nodequeue/$queue->qid/remove-node/$subqueue->sqid/$id",
           'attributes' => array('class' => 'nodequeue-ajax-toggle'),
           'query' => $query_string);
       }
@@ -301,13 +323,21 @@ function nodequeue_js_output($label, $href, $count = NULL, $sqid = NULL) {
 }
 
 /**
+ * Return content id based on i18n settings
+ */
+function nodequeue_get_content_id($queue, $node) {
+  return ($queue->i18n && !empty($node->tnid)) ? $node->tnid : $node->nid;
+}
+
+/**
  * Page callback to add a node to a queue.
  */
 function nodequeue_admin_add_node($queue, $subqueue, $node) {
   if (!nodequeue_check_token($node->nid)) {
     return drupal_goto();
   }
-  nodequeue_subqueue_add($queue, $subqueue, $node->nid);
+  $id = nodequeue_get_content_id($queue, $node);
+  nodequeue_subqueue_add($queue, $subqueue, $id);
 
   // Provide a response if this is javascript.
   if (!empty($_POST['js'])) {
@@ -334,8 +364,8 @@ function nodequeue_admin_remove_node($queue, $subqueue, $node) {
   if (!nodequeue_check_token($node->nid)) {
     return drupal_goto();
   }
-
-  nodequeue_subqueue_remove_node($subqueue->sqid, $node->nid);
+  $id = nodequeue_get_content_id($queue, $node);
+  nodequeue_subqueue_remove_node($subqueue->sqid, $id);
 
   // Provide a response if this is javascript.
   if (!empty($_POST['js'])) {
@@ -665,6 +695,22 @@ function nodequeue_edit_queue_form(&$form_state, $queue) {
     '#default_value' => $queue->types,
     '#options' => $nodes,
     '#description' => t('Check each node type that can be added to this queue.'),
+  );
+
+  $form['i18n'] = array(
+    '#type' => 'radios',
+    '#title' => t('Internationalization'),
+    '#options' => array(
+      '1' => t('Treat translation nodes as a single node'),
+      '0' => t('Manually manage translated nodes'),
+    ),
+    '#default_value' => empty($queue->qid) && module_exists('translation_helpers') ? 0 : $queue->i18n,
+    '#description' => t('Treating translations as a single node allows users to add, remove and manipulate a node
+      in the queue regardless of which translation is acted upon; nodequeue will only act on the original node.
+      When manually managing translation nodes, Nodequeue will ignore the relationship between node translations; 
+      each translation node must be added to the queue separately and will occupy a separate spot in the queue. 
+      Changing this setting will <strong>not</strong> update content that is already in the queue.'),
+    '#access' => module_exists('translation_helpers'),
   );
 
   $form['submit'] = array(
@@ -1474,6 +1520,7 @@ class nodequeue_queue {
   var $show_in_tab = TRUE;
   var $show_in_ui = TRUE;
   var $reference = 0;
+  var $i18n = 1;
 
   var $subqueue_title = '';
   var $reverse = FALSE;
@@ -1634,7 +1681,7 @@ function nodequeue_get_qids($type, $account = NULL) {
       $roles_where .= "AND nr.rid IN (". db_placeholders($roles, 'int') .")";
     }
 
-    $sql = 'SELECT nq.qid, nq.show_in_tab, nq.show_in_links, show_in_ui '.
+    $sql = 'SELECT nq.qid, nq.show_in_tab, nq.show_in_links, nq.show_in_ui, nq.i18n '.
       'FROM {nodequeue_queue} nq '.
       'INNER JOIN {nodequeue_types} nt ON nt.qid = nq.qid '. $roles_join .
       "WHERE nt.type = '%s' ". $roles_where;
@@ -1912,14 +1959,14 @@ function nodequeue_load_subqueues_by_reference($references) {
  */
 function nodequeue_save(&$queue) {
   if (!isset($queue->qid)) {
-    db_query("INSERT INTO {nodequeue_queue} (title, subqueue_title, size, link, link_remove, owner, show_in_links, show_in_tab, show_in_ui, reverse, reference) VALUES ('%s', '%s', %d, '%s', '%s', '%s', %d, %d, %d, %d, '%s')", $queue->title, $queue->subqueue_title, $queue->size, $queue->link, $queue->link_remove, $queue->owner, $queue->show_in_links, $queue->show_in_tab, $queue->show_in_ui, $queue->reverse, $queue->reference);
+    db_query("INSERT INTO {nodequeue_queue} (title, subqueue_title, size, link, link_remove, owner, show_in_links, show_in_tab, show_in_ui, i18n, reverse, reference) VALUES ('%s', '%s', %d, '%s', '%s', '%s', %d, %d, %d, %d, %d, '%s')", $queue->title, $queue->subqueue_title, $queue->size, $queue->link, $queue->link_remove, $queue->owner, $queue->show_in_links, $queue->show_in_tab, $queue->show_in_ui, $queue->i18n, $queue->reverse, $queue->reference);
     $queue->qid = db_last_insert_id('nodequeue_queue', 'qid');
     if (function_exists('views_invalidate_cache')) {
       views_invalidate_cache();
     }
   }
   else {
-    db_query("UPDATE {nodequeue_queue} set size = %d, title = '%s', subqueue_title = '%s', link = '%s', link_remove = '%s', owner = '%s', show_in_links = %d, show_in_tab = %d, show_in_ui = %d, reverse = %d, reference = '%s' WHERE qid = %d", $queue->size, $queue->title, $queue->subqueue_title, $queue->link, $queue->link_remove, $queue->owner, $queue->show_in_links, $queue->show_in_tab, $queue->show_in_ui, $queue->reverse, $queue->reference, $queue->qid);
+    db_query("UPDATE {nodequeue_queue} set size = %d, title = '%s', subqueue_title = '%s', link = '%s', link_remove = '%s', owner = '%s', show_in_links = %d, show_in_tab = %d, show_in_ui = %d, i18n = %d, reverse = %d, reference = '%s' WHERE qid = %d", $queue->size, $queue->title, $queue->subqueue_title, $queue->link, $queue->link_remove, $queue->owner, $queue->show_in_links, $queue->show_in_tab, $queue->show_in_ui, $queue->i18n, $queue->reverse, $queue->reference, $queue->qid);
     db_query("DELETE FROM {nodequeue_roles} WHERE qid = %d", $queue->qid);
     db_query("DELETE FROM {nodequeue_types} WHERE qid = %d", $queue->qid);
     if ($nodes) {

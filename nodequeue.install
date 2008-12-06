@@ -72,6 +72,12 @@ function nodequeue_schema() {
         'type' => 'int',
         'size' => 'tiny',
       ),
+      'i18n' => array(
+        'description' => '',
+        'type' => 'int',
+        'size' => 'tiny',
+        'default' => 1,
+      ),
     ), // fields
     'primary key' => array('qid'),
   ); // nodequeue_queue.
@@ -350,10 +356,32 @@ function nodequeue_update_6000() {
   return $ret;
 }
 
+function nodequeue_update_6001() {
+  $ret = array();
+  db_add_field($ret, 'nodequeue_queue', 'i18n', array('description' => '', 'type' => 'int', 'size' => 'tiny', 'default' => 1));
+  return $ret;
+}
+
 function nodequeue_install() {
   drupal_install_schema('nodequeue');
 }
 
 function nodequeue_uninstall() {
   drupal_uninstall_schema('nodequeue');
+}
+
+/**
+ * Implementation of hook_requirements().
+ *
+ * We need the translation_helpers module to enable internationalization for queues.
+ */
+function nodequeue_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+  if ($phase == 'install' || $phase == 'runtime' && module_exists('translation') && !module_exists('translation_helpers')) {
+    $requirements['flag_translation']['title'] = $t('Nodequeue');
+    $requirements['flag_translation']['severity'] = REQUIREMENT_WARNING;
+    $requirements['flag_translation']['description'] = $t('To have the nodequeue module work with translations, you need to install and enable the !url module.', array('!url' => l('translation_helpers', 'http://drupal.org/project/translation_helpers')));
+  }
+  return $requirements;
 }
