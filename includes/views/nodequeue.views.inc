@@ -125,7 +125,7 @@ function nodequeue_views_data() {
       'handler' => 'views_handler_sort',
     ),
     'argument' => array(
-      'handler' => 'nodequeue_handler_argument_subqueue_qid',
+      'handler' => 'views_handler_argument_numeric',
       'name field' => 'title',
       'name table' => 'nodequeue_subqueue',
       'empty field name' => t('No queue'),
