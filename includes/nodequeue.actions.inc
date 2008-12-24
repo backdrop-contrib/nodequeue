@@ -180,8 +180,8 @@ function action_nodequeue_add($op, $edit = array(), $node) {
  */
 function nodequeue_remove_action_form($context) {
   // Default values for form.
-  if (!isset($edit['qids'])) {
-    $edit['qids'] = array();
+  if (!isset($context['qids'])) {
+    $context['qids'] = array();
   }
 
   $queues = nodequeue_load_queues(nodequeue_get_all_qids(500));
@@ -193,7 +193,7 @@ function nodequeue_remove_action_form($context) {
   $form['qids'] = array(
     '#type' => 'select',
     '#title' => t("Queues"),
-    '#default_value' => $edit['qids'],
+    '#default_value' => $context['qids'],
     '#multiple' => TRUE,
     '#decription' => t('Specify the queues from which the node should be removed. If the queue is a smartqueue, the node shall be removed from all subqueues.'),
     '#required' => TRUE,
