@@ -1744,7 +1744,7 @@ function nodequeue_get_all_qids($page_size = 25, $pager_element = 0) {
  * @param $qids
  *   An array of queue IDs to load.
  */
-function nodequeue_load_queues($qids) {
+function nodequeue_load_queues($qids = array()) {
   static $cache = array();
   $to_load = $queues = array();
 
