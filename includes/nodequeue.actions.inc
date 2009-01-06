@@ -39,7 +39,7 @@ function nodequeue_add_action_form($context) {
     $context['qids'] = '';
   }
 
-  $queues = nodequeue_load_queues(nodequeue_get_all_qids(500));
+  $queues = nodequeue_load_queues(nodequeue_get_all_qids(500, TRUE), TRUE);
   foreach ($queues as $qid => $queue) {
     $options[$qid] = $queue->title;
   }
@@ -75,7 +75,7 @@ function nodequeue_add_action_submit($form, &$form_state) {
  * Action to add a node to a queue.
  */
 function nodequeue_add_action($node, $context) {
-  $queues = nodequeue_load_queues($context['qids']);
+  $queues = nodequeue_load_queues($context['qids'], TRUE);
   // Filter out queues by node type. We choose not to use nodequeue_get_qids() because it checks for access control which only matters if we administering a queue.
   $eligible_queues = array();
   foreach ($queues as $queue) {
@@ -113,7 +113,7 @@ function action_nodequeue_add($op, $edit = array(), $node) {
       break;
 
     case 'do':
-      $queues = nodequeue_load_queues($edit['qids']);
+      $queues = nodequeue_load_queues($edit['qids'], TRUE);
       // Filter out queues by node type. We choose not to use nodequeue_get_qids() because it checks for access control which only matters if we administering a queue.
       $eligible_queues = array();
       foreach ($queues as $queue) {
@@ -140,8 +140,7 @@ function action_nodequeue_add($op, $edit = array(), $node) {
     case 'form':
       // default values for form
       if (!isset($edit['qids'])) $edit['qids'] = '';
-
-      $queues = nodequeue_load_queues(nodequeue_get_all_qids(500));
+      $queues = nodequeue_load_queues(nodequeue_get_all_qids(500, TRUE), TRUE);
       foreach ($queues as $qid => $queue) {
         $options[$qid] = $queue->title;
       }
@@ -184,7 +183,7 @@ function nodequeue_remove_action_form($context) {
     $context['qids'] = array();
   }
 
-  $queues = nodequeue_load_queues(nodequeue_get_all_qids(500));
+  $queues = nodequeue_load_queues(nodequeue_get_all_qids(500, TRUE), TRUE);
   foreach ($queues as $qid => $queue) {
     $options[$qid] = $queue->title;
   }
@@ -258,7 +257,7 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
       // default values for form
       if (!isset($edit['qids'])) $edit['qids'] = array();
 
-      $queues = nodequeue_load_queues(nodequeue_get_all_qids(500));
+      $queues = nodequeue_load_queues(nodequeue_get_all_qids(500, TRUE), TRUE);
       foreach ($queues as $qid => $queue) {
         $options[$qid] = $queue->title;
       }

@@ -1571,12 +1571,12 @@ function nodequeue_queue_access($queue, $subqueue = NULL, $account = NULL) {
  * Fetch a list of available queues for a given location. These queues
  * will be fully loaded and ready to go.
  */
-function nodequeue_load_queues_by_type($type, $location = NULL, $account = NULL) {
-  $qids = nodequeue_get_qids($type, $account);
+function nodequeue_load_queues_by_type($type, $location = NULL, $account = NULL, $bypass_cache = FALSE) {
+  $qids = nodequeue_get_qids($type, $account, $bypass_cache);
   if ($location) {
     nodequeue_filter_qids($qids, $location);
   }
-  return nodequeue_load_queues(array_keys($qids));
+  return nodequeue_load_queues(array_keys($qids), $bypass_cache);
 }
 
 /**
@@ -1661,15 +1661,18 @@ function nodequeue_filter_qids(&$qids, $location) {
  * @return $qids
  *   An array in the format: @code { array($qid => array('qid' => $qid, 'show_in_tab' '
  *   => true/false, 'show_in_links' => true/false }
+ * 
+ * @param $bypass_cache
+ *  Boolean value indicating whether to bypass the cache or not.
  */
-function nodequeue_get_qids($type, $account = NULL) {
+function nodequeue_get_qids($type, $account = NULL, $bypass_cache = FALSE) {
   if (!isset($account)) {
     global $user;
     $account = $user;
   }
 
   static $cache = array();
-  if (!isset($cache[$type])) {
+  if ($bypass_cache || !isset($cache[$type])) {
     $roles_join = $roles_where = '';
     $roles = array();
 
@@ -1708,11 +1711,13 @@ function nodequeue_get_qids($type, $account = NULL) {
  *
  * @return $qids
  *   An array in the format: @code { array($qid => array('qid' => $qid, 'show_in_tab' '
- *   => true/false, 'show_in_links' => true/false }
+ *    => true/false, 'show_in_links' => true/false }
+ * @param $bypass_cache
+ *   Boolean value indicating whether to bypass the cache or not.
  */
-function nodequeue_get_all_qids($page_size = 25, $pager_element = 0) {
+function nodequeue_get_all_qids($page_size = 25, $pager_element = 0, $bypass_cache = FALSE) {
   static $cache = NULL;
-  if (!isset($cache)) {
+  if ($bypass_cache || !isset($cache)) {
     $sql = 'SELECT nq.qid '.
            'FROM {nodequeue_queue} nq '.
            'WHERE nq.show_in_ui = 1 ';
@@ -1743,13 +1748,16 @@ function nodequeue_get_all_qids($page_size = 25, $pager_element = 0) {
  *
  * @param $qids
  *   An array of queue IDs to load.
+ * 
+ * @param $bypass_cache
+ *   Boolean value indicating whether to bypass the cache or not.
  */
-function nodequeue_load_queues($qids = array()) {
+function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
   static $cache = array();
   $to_load = $queues = array();
 
   foreach ($qids as $qid) {
-    if (!isset($cache[$qid])) {
+    if ($bypass_cache || !isset($cache[$qid])) {
       $to_load[] = $qid;
     }
   }
