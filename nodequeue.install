@@ -362,6 +362,19 @@ function nodequeue_update_6001() {
   return $ret;
 }
 
+function nodequeue_update_6002() {
+  $ret = array();
+  db_drop_primary_key($ret, 'nodequeue_queue');
+  db_change_field($ret, 'nodequeue_queue', 'qid', 'qid',
+  array('type' => 'serial', 'not null' => TRUE),
+  array('primary key' => array('qid')));
+
+  db_drop_primary_key($ret, 'nodequeue_subqueue');
+  db_change_field($ret, 'nodequeue_subqueue', 'sqid', 'sqid',
+  array('type' => 'serial', 'not null' => TRUE),
+  array('primary key' => array('sqid')));
+  return $ret;
+}
 function nodequeue_install() {
   drupal_install_schema('nodequeue');
 }
