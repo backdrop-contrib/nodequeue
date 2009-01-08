@@ -1981,9 +1981,6 @@ function nodequeue_save(&$queue) {
     db_query("UPDATE {nodequeue_queue} set size = %d, title = '%s', subqueue_title = '%s', link = '%s', link_remove = '%s', owner = '%s', show_in_links = %d, show_in_tab = %d, show_in_ui = %d, i18n = %d, reverse = %d, reference = '%s' WHERE qid = %d", $queue->size, $queue->title, $queue->subqueue_title, $queue->link, $queue->link_remove, $queue->owner, $queue->show_in_links, $queue->show_in_tab, $queue->show_in_ui, $queue->i18n, $queue->reverse, $queue->reference, $queue->qid);
     db_query("DELETE FROM {nodequeue_roles} WHERE qid = %d", $queue->qid);
     db_query("DELETE FROM {nodequeue_types} WHERE qid = %d", $queue->qid);
-    if ($nodes) {
-      db_query("DELETE FROM {nodequeue_nodes} WHERE qid = %d", $queue->qid);
-    }
   }
 
   if (is_array($queue->roles)) {
