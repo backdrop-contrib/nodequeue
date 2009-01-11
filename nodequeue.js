@@ -398,6 +398,14 @@ Drupal.nodequeue.autoAttach = function() {
           if (data.sqid) {
             $('#nodequeue-count-' + data.sqid).html(data.count);
           }
+          if (data.href.search('remove-node') > -1) {
+            $(a).removeClass('toggle-add');
+            $(a).addClass('toggle-remove');
+          }
+          else {
+            $(a).removeClass('toggle-remove');
+            $(a).addClass('toggle-add');
+          }
           return;
         }
       },

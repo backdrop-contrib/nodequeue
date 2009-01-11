@@ -269,18 +269,19 @@ function nodequeue_link($type, $node = NULL, $teaser = FALSE) {
         $subqueue = array_shift($subqueue);
       }
       $query_string = nodequeue_get_query_string($id, TRUE);
+      $class = 'nodequeue-ajax-toggle nodequeue-toggle-q-'. $queue->qid. ' nodequeue-toggle-sq-'. $subqueue->sqid .' nodequeue-toggle-ref-'. $subqueue->reference;
       if (!isset($subqueue->position)) {
-        $links['nodequeue-ajax-toggle-'. $subqueue->sqid] = array(
+        $links[$class] = array(
           'title' => nodequeue_title_substitute($queue->link, $queue, $subqueue),
           'href' => "admin/content/nodequeue/$queue->qid/add/$subqueue->sqid/$id",
-          'attributes' => array('class' => 'nodequeue-ajax-toggle'),
+          'attributes' => array('class' => $class . ' toggle-add'),
           'query' => $query_string);
       }
       else if ($queue->link_remove) {
-        $links['nodequeue-ajax-toggle-'. $subqueue->sqid] = array(
+        $links[$class] = array(
           'title' => nodequeue_title_substitute($queue->link_remove, $queue, $subqueue),
           'href' => "admin/content/nodequeue/$queue->qid/remove-node/$subqueue->sqid/$id",
-          'attributes' => array('class' => 'nodequeue-ajax-toggle'),
+          'attributes' => array('class' => $class .' toggle-remove'),
           'query' => $query_string);
       }
     }
