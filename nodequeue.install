@@ -345,6 +345,23 @@ function nodequeue_update_5204() {
   return $ret;
 }
 
+function nodequeue_update_5205() {
+  $ret = array();
+  db_drop_primary_key($ret, 'nodequeue_queue');
+  db_change_field($ret, 'nodequeue_queue', 'qid', 'qid',
+  array('type' => 'serial', 'not null' => TRUE),
+  array('primary key' => array('qid')));
+
+  db_drop_primary_key($ret, 'nodequeue_subqueue');
+  db_change_field($ret, 'nodequeue_subqueue', 'sqid', 'sqid',
+  array('type' => 'serial', 'not null' => TRUE),
+  array('primary key' => array('sqid')));
+  //When these quries don't fail, the function fails to return the empty array, causing an array merge error in update.php on line 174.
+  if (empty($ret)) {
+    return array();
+  }
+  return $ret;
+}
 /**
  * There was a discrepancy between the link/link_remove fields created with node_install/node_schema, and the ones created with nodequeue_update_5000.  This forces everyone to 40 characters.
  *
@@ -362,19 +379,8 @@ function nodequeue_update_6001() {
   return $ret;
 }
 
-function nodequeue_update_6002() {
-  $ret = array();
-  db_drop_primary_key($ret, 'nodequeue_queue');
-  db_change_field($ret, 'nodequeue_queue', 'qid', 'qid',
-  array('type' => 'serial', 'not null' => TRUE),
-  array('primary key' => array('qid')));
+//The previous 6002 update has been moved to 5205.
 
-  db_drop_primary_key($ret, 'nodequeue_subqueue');
-  db_change_field($ret, 'nodequeue_subqueue', 'sqid', 'sqid',
-  array('type' => 'serial', 'not null' => TRUE),
-  array('primary key' => array('sqid')));
-  return $ret;
-}
 function nodequeue_install() {
   drupal_install_schema('nodequeue');
 }
