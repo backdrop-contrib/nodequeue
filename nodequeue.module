@@ -775,6 +775,9 @@ function nodequeue_edit_queue_form(&$form_state, $queue) {
  * Validate function for the nodequeue_queue form.
  */
 function nodequeue_edit_queue_form_validate($form, &$form_state) {
+  if (empty($form_state['values']['title'])) {
+    form_set_error('title', t('Please enter a title for this queue.'));
+  }
   $queue = (object) $form_state['values'];
   // fix checkboxes
   $queue->roles = array_keys(array_filter($queue->roles));
