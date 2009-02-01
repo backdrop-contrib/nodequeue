@@ -1612,7 +1612,6 @@ function nodequeue_node_tab_access($node) {
     }
   }
   return (variable_get('nodequeue_use_tab', 1) && !empty($subqueues));
-
 }
 /**
  * Return TRUE if $user can queue(s) for this node.
@@ -2419,7 +2418,21 @@ function nodequeue_node_titles($sqid, $title = '', $backward = true, $from = 0, 
   return node_title_list($result, $title);
 }
 
-function nodequeue_nodes($sqid, $backward = true, $teaser = true, $links = true, $from = 0, $count = 0) {
+/**
+ * Get node_view output from a nodequeue
+ */
+function nodequeue_view_nodes($sqid, $backward = TRUE, $teaser = TRUE, $links = TRUE, $from = 0, $count = 0) {
+  $nodes = nodequeue_load_nodes($sqid, $backward, $from, $count);
+  foreach ($nodes as $node) {
+    $output .= node_view($node, $teaser, FALSE, $links);
+  }
+  return $output;
+}
+
+/**
+ * Load an array of node objects belonging to a particular nodequeue.
+ */
+function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5) {
   $orderby = ($backward ? "DESC" : "ASC");
   $sql = db_rewrite_sql("SELECT n.nid FROM {node} n INNER JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.sqid = %d AND n.status = 1 ORDER BY nn.position $orderby");
   if ($count) {
@@ -2430,23 +2443,41 @@ function nodequeue_nodes($sqid, $backward = true, $teaser = true, $links = true,
   }
 
   while ($nid = db_fetch_object($result)) {
-    $node = node_load($nid->nid);
-    $output .= node_view($node, $teaser, false, $links);
+    $nodes[] = node_load($nid->nid);
   }
-  return $output;
+
+  return $nodes;
 }
 
-function nodequeue_fetch_front($sqid, $teaser = true, $links = true) {
-  return nodequeue_nodes($sqid, false, $teaser, $links, 0, 1);
+/**
+ * Load the first node of a queue
+ */
+function nodequeue_load_front($sqid) {
+  $nodes = nodequeue_load_nodes($sqid, FALSE, 0, 1);
+  return $nodes;
 }
 
-function nodequeue_fetch_back($sqid, $teaser = true, $links = true) {
-  return nodequeue_nodes($sqid, true, $teaser, $links, 0, 1);
+/**
+ * Load the last node of a queue
+ */
+function nodequeue_load_back($sqid, $teaser = TRUE, $links = TRUE) {
+  return nodequeue_load_nodes($sqid, TRUE, 0, 1);
 }
 
-function nodequeue_fetch_random($sqid, $teaser = true, $links = true) {
+/**
+ * View a random node from a queue
+ */
+function nodequeue_view_random_node($sqid, $teaser = TRUE, $links = TRUE) {
   $count = db_result(db_query(db_rewrite_sql("SELECT COUNT(n.nid) FROM {node} n INNER JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.sqid = %d AND n.status = 1"), $sqid));
-  return nodequeue_nodes($sqid, false, $teaser, $links, rand(0, $count - 1), 1);
+  return nodequeue_view_nodes($sqid, FALSE, $teaser, $links, rand(0, $count - 1), 1);
+}
+
+/**
+ * Load a random node object from a queue
+ */
+function nodequeue_load_random_node($sqid) {
+  $count = db_result(db_query(db_rewrite_sql("SELECT COUNT(n.nid) FROM {node} n INNER JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.sqid = %d AND n.status = 1"), $sqid));
+  return array_shift(nodequeue_load_nodes($sqid, TRUE, rand(0, $count - 1), 1));
 }
 
 /**
