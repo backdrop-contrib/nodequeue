@@ -2096,7 +2096,7 @@ function nodequeue_remove_subqueue($sqid) {
  * @param $nid
  *   The node ID
  */
-function nodequeue_subqueue_add($queue, $subqueue, $nid) {
+function nodequeue_subqueue_add($queue, &$subqueue, $nid) {
   // If adding this would make the queue too big, pop the front node
   // (or nodes) out.
 
@@ -2106,6 +2106,7 @@ function nodequeue_subqueue_add($queue, $subqueue, $nid) {
   }
 
   db_query("INSERT INTO {nodequeue_nodes} (sqid, qid, nid, position, timestamp) VALUES (%d, %d, %d, %d, %d)", $subqueue->sqid, $queue->qid, $nid, $subqueue->count + 1, time());
+  $subqueue->count++;
 }
 
 /**
