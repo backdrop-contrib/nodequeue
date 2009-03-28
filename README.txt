@@ -45,61 +45,96 @@ to print backward:
 The '' in the line above is an optional title field. Feel free to put
 something here, but it's not terribly necessary in a block.
 
-To Create a Page to Display Node Teasers of a Queue
+Programatically displaying nodes from a Queue
 ===================================================
+The following funcitons can be used to display nodes from a subqueue, based on their position.
+For more customized displays of content from a queue, please use the Views module (http://drupal.org/project/views).
+For the most up to date Nodequeue API information, see http://drupal.org/node/293117.
+Programmatic Ways of Displaying Content from a Queue
+
+Nodequeue provides several functions which simplify getting a loaded node object from the front, back or a random position in a queue. For more selecting or displaying content in a more specific or complicated way, the Views module is probably your best bet.
+
+Please note that there are some differences between the functions available in the 5.x-2.x and 6.x.-2.x versions of Nodequeue.
+To Create a Block to Display Node Titles of a Queue
+
+You'll need the Queue ID, which is easily extracted from the URL on the queue administration page.
+
+Create a new block, and insert the following PHP snippet into the block:
+
+<?php
+print nodequeue_node_titles($subqueue_id);
+?>
+
+If you want this queue to be printed in the reverse order, you can tell it to print backward:
+
+<?php
+print nodequeue_node_titles($subqueue_id, '', TRUE);
+?>
+
+The '' in the line above is an optional title field. Feel free to put something here, but it's not terribly necessary in a block.
+To Display a list of teasers from a queue:
 
 Like above, you'll need the Queue ID.
 
-Create a new page (or a new dashboard!) or any node type you like, really, 
-and set the input filter to PHP. Insert the following PHP snippet:
+Create a new page (or a new dashboard!) or any node type you like, really, and set the input filter to PHP. Insert the following PHP snippet:
 
-   <?php print nodequeue_nodes(QUEUEID); ?>
+With Nodequeue 6.x-2.x:
 
-There are a few more options available here; changing the order of the nodes,
-whether or not to use teasers or full nodes, whether or not to display the
-links, and how much of the queue to display. See below.
+<?php
+print nodequeue_view_nodes($subqueue_id);
+?>
 
-To Show Just The First or Last Element of a Queue
-=================================================
+With Nodequeue 5.x-2.x
 
-Starting with the examples above, but use the following:
+<?php
+print nodequeue_nodes($subqueue_id);
+?>
 
-   <?php print nodequeue_fetch_front(QUEUEID); ?>
+There are a few more options available here; changing the order of the nodes, whether or not to use teasers or full nodes, whether or not to display the links, and how much of the queue to display. See below.
+To render the first or last node from a queue
 
-or
+With Nodequeue 6.x-2.x:
+<?php
+$node = nodequeue_load_front($subqueue_id);
+$rendered_node = node_view($node);
+ 
+?>
 
-   <?php print nodequeue_fetch_back(QUEUEID); ?>
+With Nodequeue 5.x-2.x:
+<?php
+$rendered_node = nodequeue_fetch_front($subqueue_id);
+?>
 
-Remember that the front of the queue will have the least recently added
-nodes (unless it was rearranged manually), and the back will have the
-most recently added.
+Or
 
-Available Functions and Descriptions
-====================================
+With Nodequeue 6.x-2.x:
 
-nodequeue_node_titles($qid, $title = '', $backward = true, $from = 0, $count = 0)
-    Display a title list of the queue. If backward is true (the default) the
-    list will be from back (newest) to front (oldest).
+<?php
+$node = nodequeue_load_back($subqueue_id);
+$rendered_node = node_view($node);
+ 
+?>
 
-nodequeue_nodes($qid, $backward = true, $teasers = true, $links = true, 
-         $from = 0, $count = 0) 
-    Display the nodes of a queue. If backward is true (the default) the
-    list will be from back (newest) to front (oldest). If $count
-    is set to non-zero, it will use a range. For example, passing 
-    $from = 2 and $count = 2 will show the 3rd and 4th elements of
-    the queue. ($count starts at 0, not 1.)
+With Nodequeue 5.x-2.x:
+<?php
+$rendered_node = nodequeue_fetch_back($subqueue_id);
+?>
+To render a random node from a queue
 
-    if $teasers is true, the node teaser will be shown; otherwise the full
-    node will be shown.
+With Nodequeue 6.x-2.x:
 
-nodequeue_fetch_front($qid, $teasers = true, $links = true) 
-    Fetch the node at the front of the queue.
+<?php
+$node = nodequeue_load_random_node($subqueue_id);
+$rendered_node = node_view($node);
+?>
 
-nodequeue_fetch_back($qid, $teasers = true, $links = true) 
-    Fetch the node at the back of the queue.
+With Nodequeue 5.x-2.x:
 
-function nodequeue_fetch_random($qid, $teasers = true, $links = true) 
-    Fetch a random node from the queue
+<?php
+$rendered_node = nodequeue_fetch_random($subqueue_id);
+?>
+
+Remember that the front of the queue will have the least recently added nodes (unless it was rearranged manually), and the back will have the most recently added.
 
 Actions Module Integration
 ==========================
