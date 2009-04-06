@@ -1559,12 +1559,12 @@ function nodequeue_queue_access($queue, $subqueue = NULL, $account = NULL) {
     return FALSE;
   }
 
-  if (!nodequeue_api_queue_access($queue, $account)) {
-    return FALSE;
-  }
-
   if ($subqueue) {
     return nodequeue_api_subqueue_access($subqueue, $account);
+  }
+
+  if (!nodequeue_api_queue_access($queue, $account)) {
+    return FALSE;
   }
 
   $roles = array_keys((array) $account->roles) + array(DRUPAL_AUTHENTICATED_RID);
