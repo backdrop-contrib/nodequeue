@@ -96,6 +96,7 @@ function nodequeue_schema() {
         'type' => 'int',
         'size' => 'big',
         'unsigned' => TRUE,
+        'not null' => TRUE
       ),
     ), // fields
     'indexes' => array(
@@ -117,6 +118,7 @@ function nodequeue_schema() {
         'description' => t('Node Type'),
         'type' => 'varchar',
         'length' => 255,
+        'not null' => FALSE
       ),
     ), // fields
     'indexes' => array(
@@ -149,12 +151,14 @@ function nodequeue_schema() {
         'type' => 'varchar',
         'length' => 255,
         'default' => '0',
+        'not null' => FALSE
       ),
       'title' => array(
         'description' => '',
         'type' => 'varchar',
         'length' => 255,
         'default' => '',
+        'not null' => FALSE
       ),
     ), // fields
     'primary key' => array('sqid'),
@@ -184,11 +188,13 @@ function nodequeue_schema() {
         'description' => t('Node id in this subqueue'),
         'type' => 'int',
         'unsigned' => TRUE,
+        'not null' => FALSE
       ),
       'position' => array(
         'description' => t('The position of the node in this subqueue.'),
         'type' => 'int',
         'unsigned' => TRUE,
+        'not null' => FALSE
       ),
       'timestamp' => array(
         'description' => t(''),
