@@ -804,7 +804,7 @@ function nodequeue_edit_queue_form_submit($formid, &$form_state) {
   }
 
   // Modify show_in_links based on whether or not links are available.
-  $queue->show_in_links = !empty($queue->link) && !empty($queue->link_remove);
+  $queue->show_in_links = !empty($queue->link) || !empty($queue->link_remove);
 
   nodequeue_api_queue_form_submit($queue, $form_state);
 
