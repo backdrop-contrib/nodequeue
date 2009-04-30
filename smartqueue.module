@@ -7,7 +7,7 @@
 function smartqueue_nodequeue_info() {
   return array('smartqueue_taxonomy' => array(
     'title' => t('Taxonomy queue'),
-    'description' => t('Each particular grouping of taxonomy terms from the selected vocabularlies have their own unique subqueue. You can place nodes into any of these subqueues based on which terms that node has been tagged with. Using this with large or too many taxonomies may degrade performance.'),
+    'description' => t('Each particular grouping of taxonomy terms from the selected vocabularies have their own unique subqueue. You can place nodes into any of these subqueues based on which terms that node has been tagged with. Using this with large or too many taxonomies may degrade performance.'),
     ));
 }
 
