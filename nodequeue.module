@@ -213,7 +213,7 @@ function nodequeue_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         // of a translation set, don't delete the queue record.
         // Instead, data will be updated in the 'translation_change' op, below.
         $queues = nodequeue_load_queues(array($obj->qid));
-        $queue = nodequeue_load_queues($obj->qid);
+        $queue = nodequeue_load_queues(array($obj->qid));
         if (!$queue->i18n || empty($node->tnid)) {
           // This removes by nid, not position, because if we happen to have a
           // node in a queue twice, the 2nd position would be wrong.
