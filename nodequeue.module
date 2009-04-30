@@ -815,6 +815,7 @@ function nodequeue_edit_queue_form_submit($formid, &$form_state) {
   nodequeue_check_subqueue_sizes($queue);
 
   if ($queue->new) {
+    $form_state['values']['qid'] = $qid;
     drupal_set_message(t('The queue has been created.'));
   }
   else {
