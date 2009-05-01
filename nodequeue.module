@@ -294,13 +294,89 @@ function nodequeue_link($type, $node = NULL, $teaser = FALSE) {
 /**
  * Implementation of hook_views_api()
  */
-
 function nodequeue_views_api() {
   return array(
     'api' => 2,
     'path' => drupal_get_path('module', 'nodequeue') .'/includes/views',
   );
 }
+
+/**
+ * Implementation of hook_form_$form-id_alter().
+ */
+function nodequeue_form_apachesolr_search_bias_form_alter(&$form, $form_state) {
+  // setup for the form building
+  $weights = drupal_map_assoc(array('21.0', '13.0', '8.0', '5.0', '3.0', '2.0', '1.0', '0.8', '0.5', '0.3', '0.2', '0.1'));
+  $weights['0'] = t('Normal');
+  $queues = nodequeue_load_subqueues_by_queue(array_keys(nodequeue_get_all_qids()));
+  
+  // build the form
+  $form['biasing']['nodequeue_boost'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Nodequeue Biasing'),
+    '#weight' => -5,
+    '#collapsible' => TRUE, 
+    '#collapsed' => TRUE, 
+  );
+  $form['biasing']['nodequeue_boost']['nodequeue_apachesolr_boost'] = array(
+    '#type' => 'item',
+    '#description' => t("Specify to bias the search result when a node is in a queue. Any value except <em>Normal</em> will increase the socre for the given queue in the search results"),
+  );
+  foreach ($queues as $sqid => $queue) {
+    $boost = variable_get("nodequeue_apachesolr_boost_$sqid", 0);
+    // add in setting for each queue
+    $form['biasing']['nodequeue_boost']['nodequeue_apachesolr_boost']["nodequeue_apachesolr_boost_$sqid"] = array(
+      '#type' => 'select',
+      '#title' => t('Weight for %title nodequeue', array('%title' => $queue->title)),
+      '#options' => $weights,
+      '#default_value' => $boost,
+    );
+  }
+}
+
+/**
+ * Implementation of hook_apachesolr_update_index().
+ */
+function nodequeue_apachesolr_update_index(&$document, $node) {
+  $queues = nodequeue_load_queues(array_keys(nodequeue_get_all_qids()));
+  $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
+
+  nodequeue_set_subqueue_positions($subqueues, $node->nid);
+  foreach ($subqueues as $sqid => $subqueue) {
+    if (!empty($subqueue->position)) {
+      $key = _nodequeue_solr_qid_key();
+      $document->$key = $sqid;
+    }
+  }
+}
+
+/**
+ * return the apachesolr index key for group id
+ */
+function _nodequeue_solr_qid_key() {
+  $qid_key = array(
+    'index_type' => 'sint',
+    'multiple' => TRUE,
+    'name' => "nodequeue",
+  );
+  
+  return apachesolr_index_key($qid_key);
+}
+
+/**
+ * Implementation of hook_apachesolr_modify_query().
+ */
+function nodequeue_apachesolr_modify_query($query, &$params, $caller) {
+  $queues = nodequeue_load_subqueues_by_queue(array_keys(nodequeue_get_all_qids()));
+  foreach ($queues as $sqid => $queue) {
+    $boost = variable_get("nodequeue_apachesolr_boost_$sqid", 0);
+    if (!empty($boost)) {
+      $params['bq'][] = _nodequeue_solr_qid_key() . ":$sqid^$boost";
+      $params['facet.field'][] = _nodequeue_solr_qid_key();
+    }
+  }
+}
+
 // --------------------------------------------------------------------------
 // Nodequeue Admin operations
 
@@ -1923,9 +1999,12 @@ function nodequeue_load_subqueues_by_queue($qids, $page_size = 0) {
  *   A keyed array of references to load. The key is the $qid and each value
  *   is another array of references.
  */
-function nodequeue_load_subqueues_by_reference($references) {
+function nodequeue_load_subqueues_by_reference($references, $bypass_cache = FALSE) {
   static $cache = array();
   $subqueues = array();
+  if ($bypass_cache) {
+    $cache = array();
+  }
 
   // build strings for the query based upon the qids and references.
   $keys = $values = array();
@@ -2108,6 +2187,9 @@ function nodequeue_subqueue_add($queue, &$subqueue, $nid) {
 
   db_query("INSERT INTO {nodequeue_nodes} (sqid, qid, nid, position, timestamp) VALUES (%d, %d, %d, %d, %d)", $subqueue->sqid, $queue->qid, $nid, $subqueue->count + 1, time());
   $subqueue->count++;
+  if (module_exists('apachesolr')) {
+    apachesolr_mark_node($nid);
+  }
 }
 
 /**
@@ -2123,6 +2205,9 @@ function nodequeue_subqueue_add($queue, &$subqueue, $nid) {
 function nodequeue_subqueue_remove_node($sqid, $nid) {
   if ($pos = nodequeue_get_subqueue_position($sqid, $nid)) {
     nodequeue_subqueue_remove($sqid, $pos);
+    if (module_exists('apachesolr')) {
+      apachesolr_mark_node($nid);
+    }
   }
 }
 /**
@@ -2291,6 +2376,7 @@ function nodequeue_set_subqueue_positions(&$subqueues, $nid) {
 function nodequeue_get_subqueues_by_node($queues, $node) {
   // Determine which subqueues are valid for each queue.
   $references= array();
+  static $last_nid = 0;
   foreach ($queues as $queue) {
     if ($result = nodequeue_api_subqueues($queue, $node)) {
       $references[$queue->qid] = is_array($result) ? $result : array($result);
@@ -2300,8 +2386,11 @@ function nodequeue_get_subqueues_by_node($queues, $node) {
   if (empty($references)) {
     return;
   }
-
-  return nodequeue_load_subqueues_by_reference($references);
+  // only allow the static cache to be used if the nid is the same as the last
+  $subqueues = nodequeue_load_subqueues_by_reference($references, ($last_nid != $node->nid));
+  $last_nid = $node->nid;
+  
+  return $subqueues;
 }
 
 /**
