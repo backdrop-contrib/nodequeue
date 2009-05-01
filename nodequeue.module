@@ -976,7 +976,7 @@ function nodequeue_arrange_subqueue($queue, $subqueue) {
   $output .= '<tr>';
   $output .= '<th class="nodequeue-node">'. t('Node') .'</th>';
   $output .= '<th class="nodequeue-author">'. t('Author') .'</th>';
-  $output .= '<th class="nodequeue-date">'. t('Date') .'</th>';
+  $output .= '<th class="nodequeue-date">'. t('Date Created') .'</th>';
   $output .= '<th class="nodequeue-operation">'. t('Operation') .'</th>';
   $output .= '</thead>';
   $output .= '<tbody>'. $body .'</tbody>';
