@@ -18,14 +18,11 @@ in a nodes links area to add/remove them from the queue.
 When a node is added to the queue, it is added to the back of the queue. If a
 queue is full when a node is added, the front of the queue is removed. 
 
-It is highly recommended that you use the Views module to display your queues.
-However, if you choose not to, here is an alternative:
+Nodequeue has support for nodes with i18n Internationalizations.
+You must install the Translation Helpers module from http://drupal.org/project/translation_helpers to use this functionality.
 
-In order to actually do something useful with a node queue, the admin is
-required to use a small PHP snippet. This is a very small snippet, and while
-it would have been possible to write code to avoid this, the PHP allows
-a much greater flexibility to the admin than to keep it all configured
-through menus, though it is somewhat less intuitive.
+It is highly recommended that you use the Views module to display your queues.
+However, if you choose not to, here is an alternative: Writing a PHP snippet.
 
 To Create a Block to Display Node Titles of a Queue
 ===================================================
