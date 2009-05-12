@@ -2544,15 +2544,14 @@ function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5) {
  * Load the first node of a queue
  */
 function nodequeue_load_front($sqid) {
-  $nodes = nodequeue_load_nodes($sqid, FALSE, 0, 1);
-  return $nodes;
+  return array_shift(nodequeue_load_nodes($sqid, FALSE, 0, 1));
 }
 
 /**
  * Load the last node of a queue
  */
 function nodequeue_load_back($sqid, $teaser = TRUE, $links = TRUE) {
-  return nodequeue_load_nodes($sqid, TRUE, 0, 1);
+  return array_shift(nodequeue_load_nodes($sqid, TRUE, 0, 1));
 }
 
 /**
@@ -2560,7 +2559,7 @@ function nodequeue_load_back($sqid, $teaser = TRUE, $links = TRUE) {
  */
 function nodequeue_view_random_node($sqid, $teaser = TRUE, $links = TRUE) {
   $count = db_result(db_query(db_rewrite_sql("SELECT COUNT(n.nid) FROM {node} n INNER JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.sqid = %d AND n.status = 1"), $sqid));
-  return nodequeue_view_nodes($sqid, FALSE, $teaser, $links, rand(0, $count - 1), 1);
+  return array_shift(nodequeue_view_nodes($sqid, FALSE, $teaser, $links, rand(0, $count - 1), 1));
 }
 
 /**
