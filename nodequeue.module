@@ -421,7 +421,7 @@ function nodequeue_admin_add_node($queue, $subqueue, $node) {
     if (isset($_GET['tab'])) {
       nodequeue_js_output(t('Remove from queue'),
         url("admin/content/nodequeue/$queue->qid/remove-node/$subqueue->sqid/$node->nid", array('query' => nodequeue_get_query_string($node->nid, TRUE, array('tab')))),
-        nodequeue_subqueue_size_text($queue->size, $queue->size ? min($subqueue->count + 1, $queue->size) : $subqueue->count + 1, FALSE),
+        nodequeue_subqueue_size_text($queue->size, $queue->size ? min($subqueue->count, $queue->size) : $subqueue->count, FALSE),
         $subqueue->sqid);
     }
     else {
