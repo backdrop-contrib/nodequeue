@@ -1834,7 +1834,7 @@ function nodequeue_get_all_qids($page_size = 25, $pager_element = 0, $bypass_cac
  */
 function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
   static $cache = array();
-  $to_load = $queues = array();
+  $to_load = $loaded = array();
 
   foreach ($qids as $qid) {
     if ($bypass_cache || !isset($cache[$qid])) {
@@ -1846,30 +1846,39 @@ function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
     $placeholders = db_placeholders($to_load, 'int');
     $result = db_query("SELECT q.*, COUNT(s.sqid) AS subqueues FROM {nodequeue_queue} q LEFT JOIN {nodequeue_subqueue} s ON q.qid = s.qid WHERE q.qid IN ($placeholders) GROUP BY q.qid", $to_load);
     while ($queue = db_fetch_object($result)) {
-      $cache[$queue->qid] = $queue;
+      $loaded[$queue->qid] = $queue;
       // ensure valid defaults:
-      $cache[$queue->qid]->types = array();
-      $cache[$queue->qid]->roles = array();
-      $cache[$queue->qid]->count = 0;
+      $loaded[$queue->qid]->types = array();
+      $loaded[$queue->qid]->roles = array();
+      $loaded[$queue->qid]->count = 0;
     }
 
     $result = db_query("SELECT qid, rid FROM {nodequeue_roles} WHERE qid IN ($placeholders)", $to_load);
     while ($obj = db_fetch_object($result)) {
-      $cache[$obj->qid]->roles[] = $obj->rid;
+      $loaded[$obj->qid]->roles[] = $obj->rid;
     }
 
     $result = db_query("SELECT qid, type FROM {nodequeue_types} WHERE qid IN ($placeholders)", $to_load);
     while ($obj = db_fetch_object($result)) {
-      $cache[$obj->qid]->types[] = $obj->type;
+      $loaded[$obj->qid]->types[] = $obj->type;
     }
   }
 
-  foreach ($qids as $qid) {
-    if (isset($cache[$qid])) {
-      $queues[$qid] = $cache[$qid];
-    }
+  if ($bypass_cache) {
+    return $loaded;
   }
-  return $queues;
+  else {
+    if (!empty($loaded)) {
+      $cache += $loaded;
+    }
+    $queues = array();
+    foreach ($qids as $qid) {
+      if (isset($cache[$qid])) {
+        $queues[$qid] = $cache[$qid];
+      }
+    }
+    return $queues;
+  }
 }
 
 /**
