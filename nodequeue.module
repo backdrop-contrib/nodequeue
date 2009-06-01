@@ -1627,12 +1627,12 @@ function nodequeue_queue_access($queue, $subqueue = NULL, $account = NULL) {
   }
 
   // Automatically true if all queues.
-  if (user_access('manipulate all queues')) {
+  if (user_access('manipulate all queues', $account)) {
     return TRUE;
   }
 
   // Automatically false if they can't manipulate queues at all.
-  if (!user_access('manipulate queues') || empty($queue->roles)) {
+  if (!user_access('manipulate queues', $account) || empty($queue->roles)) {
     return FALSE;
   }
 
