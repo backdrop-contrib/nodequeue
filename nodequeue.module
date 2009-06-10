@@ -972,7 +972,7 @@ function nodequeue_admin_view($queue, $subqueue = NULL) {
   return nodequeue_arrange_subqueue($queue, $subqueue);
 }
 
-function nodequeue_arrange_subqueue_entry($queue, $subqueue, $node) {
+function nodequeue_arrange_subqueue_entry($queue, $subqueue, $node, $nids_visible = array()) {
   $qid = $queue->qid;
   $sqid = $subqueue->sqid;
   $query_string = nodequeue_get_query_string($node->position, TRUE);
@@ -1014,7 +1014,12 @@ function nodequeue_arrange_subqueue_entry($queue, $subqueue, $node) {
     ), 'query' => $query_string, 'html' => TRUE));
 
   $output = '<tr id="nodequeue-row-'. $node->position .'" class="nodequeue-row '. ($node->position % 2 ? 'odd' : 'even') .'">';
-  $output .= '<td>'. l($node->title, "node/$node->nid") .'</td>';
+  if (in_array($node->nid, $nids_visible)) {
+    $output .= '<td>'. l($node->title, "node/$node->nid") .'</td>';
+  }
+  else {
+    $output .= '<td>' . t('Restricted Node - NID: @nid', array('@nid' => $node->nid)) .'</td>';
+  }
   $output .= '<td>'. theme('username', $node) .'</td>';
   $output .= '<td>'. format_date($node->created) .'</td>';
   $output .= '<td>'. $buttons .'</td>';
@@ -1029,16 +1034,27 @@ function nodequeue_arrange_subqueue($queue, $subqueue) {
   $qid = $queue->qid;
   $sqid = $subqueue->sqid;
   $output = '';
-
-  $order = $queue->reverse ? 'DESC' : 'ASC';
-  $result = db_query("SELECT DISTINCT(n.nid), n.title, n.uid, u.name, n.created, nq.position FROM {node} n LEFT JOIN {users} u on n.uid = u.uid LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = %d ORDER BY nq.position $order", $sqid);
-
   $body = '';
+  $order = $queue->reverse ? 'DESC' : 'ASC';
+  $nids_visible = array();
+  
+  //Get the list of nodes in the subqueue.
+  //First, get a list of nodes taking into account node access restrictions
+  if (!user_access('administer nodes')) {
+    $node_status_sql = ' AND n.status = 1';
+  }
+  $query_restricted = db_query(db_rewrite_sql("SELECT DISTINCT(n.nid) FROM {node} n LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = %d$node_status_sql ORDER BY nq.position $order"), $sqid); 
+  while ($result_restricted = db_fetch_object($query_restricted)) {
+    $nids_visible[$result_restricted->nid] = $result_restricted->nid;
+  }
 
+  //Then, get an unrestricted list of nodes in the subqueue.
+  //Titles are not displayed for nodes that are not present in the result set of both queries.
+  $result = db_query("SELECT DISTINCT(n.nid), n.title, n.uid, u.name, n.created, nq.position FROM {node} n LEFT JOIN {users} u on n.uid = u.uid LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = %d ORDER BY nq.position $order", $sqid);
   $nids = array();
   while ($node = db_fetch_object($result)) {
     $nids[$node->position] = $node->nid;
-    $body .= nodequeue_arrange_subqueue_entry($queue, $subqueue, $node);
+    $body .= nodequeue_arrange_subqueue_entry($queue, $subqueue, $node, $nids_visible);
   }
 
   $output = '<p>'. t('Max nodes in queue: @size', array('@size' => $queue->size ? $queue->size : t("Infinite"))) .'</p>';

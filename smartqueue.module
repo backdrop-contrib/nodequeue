@@ -16,7 +16,7 @@ function smartqueue_nodequeue_info() {
  */
 function smartqueue_taxonomy_nodequeue_form($queue, &$form) {
   foreach (taxonomy_get_vocabularies() as $vid => $vocabulary) {
-    $options[$vid] = $vocabulary->name;
+    $options[$vid] = check_plain($vocabulary->name);
   }
   $form['placeholder']['vocabularies'] = array(
     '#type' => 'checkboxes',
