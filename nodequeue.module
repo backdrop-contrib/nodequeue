@@ -2506,9 +2506,12 @@ function nodequeue_nodequeue_form_submit(&$queue, $form_state) {
 /**
  * in general it's preferable to use Views for this functionality.
  */
-function nodequeue_node_titles($sqid, $title = '', $backward = true, $from = 0, $count = 0) {
+function nodequeue_node_titles($sqid, $title = '', $backward = true, $from = 0, $count = 0, $published_only = FALSE) {
   $orderby = ($backward ? "DESC" : "ASC");
-  $sql = db_rewrite_sql("SELECT n.nid, n.title FROM {node} n LEFT JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.sqid = %d AND n.status = 1 ORDER BY nn.position $orderby");
+  if ($published_only) {
+    $published_sql = 'AND n.status = 1';
+  }
+  $sql = db_rewrite_sql("SELECT n.nid, n.title FROM {node} n LEFT JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.sqid = %d $published_sql ORDER BY nn.position $orderby");
   if ($count) {
     $result = db_query_range($sql, $sqid, $from, $count);
   }
@@ -2532,9 +2535,12 @@ function nodequeue_view_nodes($sqid, $backward = TRUE, $teaser = TRUE, $links = 
 /**
  * Load an array of node objects belonging to a particular nodequeue.
  */
-function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5) {
+function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5, $published_only = FALSE) {
   $orderby = ($backward ? "DESC" : "ASC");
-  $sql = db_rewrite_sql("SELECT n.nid FROM {node} n INNER JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.sqid = %d AND n.status = 1 ORDER BY nn.position $orderby");
+  if ($published_only) {
+    $published_sql = 'AND n.status = 1';
+  }
+  $sql = db_rewrite_sql("SELECT n.nid FROM {node} n INNER JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.sqid = %d $published_sql ORDER BY nn.position $orderby");
   if ($count) {
     $result = db_query_range($sql, $sqid, $from, $count);
   }
