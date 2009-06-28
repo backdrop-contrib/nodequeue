@@ -2590,7 +2590,7 @@ function nodequeue_load_back($sqid, $teaser = TRUE, $links = TRUE) {
  */
 function nodequeue_view_random_node($sqid, $teaser = TRUE, $links = TRUE) {
   $count = db_result(db_query(db_rewrite_sql("SELECT COUNT(n.nid) FROM {node} n INNER JOIN {nodequeue_nodes} nn ON n.nid = nn.nid WHERE nn.sqid = %d AND n.status = 1"), $sqid));
-  return array_shift(nodequeue_view_nodes($sqid, FALSE, $teaser, $links, rand(0, $count - 1), 1));
+  return nodequeue_view_nodes($sqid, FALSE, $teaser, $links, rand(0, $count - 1), 1);
 }
 
 /**
