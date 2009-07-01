@@ -1378,10 +1378,9 @@ function nodequeue_arrange_subqueue_form_add_submit($form, &$form_state) {
  * javascript is disabled in the client, and is a fallback technique.
  */
 function nodequeue_admin_up($queue, $subqueue, $pos) {
-  if (!is_numeric($pos) || !is_numeric($subqueue) || !nodequeue_check_token($pos)) {
+  if (!is_numeric($pos) || !is_object($subqueue) || !nodequeue_check_token($pos)) {
     return drupal_goto();
   }
-  $subqueue = nodequeue_load_subqueue($subqueue);
   // This function is safe if $pos is out of bounds.
   if (!$queue->reverse) {
     nodequeue_queue_up($subqueue, $pos);
@@ -1398,10 +1397,9 @@ function nodequeue_admin_up($queue, $subqueue, $pos) {
  * javascript is disabled in the client, and is a fallback technique.
  */
 function nodequeue_admin_down($queue, $subqueue, $pos) {
-  if (!is_numeric($pos) || !is_numeric($subqueue) || !nodequeue_check_token($pos)) {
+  if (!is_numeric($pos) || !is_object($subqueue) || !nodequeue_check_token($pos)) {
     return drupal_goto();
   }
-  $subqueue = nodequeue_load_subqueue($subqueue);
   // This function is safe if $pos is out of bounds.
   if ($queue->reverse) {
     nodequeue_queue_up($subqueue, $pos);
@@ -1418,10 +1416,9 @@ function nodequeue_admin_down($queue, $subqueue, $pos) {
  * only if javascript is disabled in the client, and is a fallback technique.
  */
 function nodequeue_admin_front($queue, $subqueue, $pos) {
-  if (!is_numeric($pos) || !is_numeric($subqueue) || !nodequeue_check_token($pos)) {
+  if (!is_numeric($pos) || !is_object($subqueue) || !nodequeue_check_token($pos)) {
     return drupal_goto();
   }
-  $subqueue = nodequeue_load_subqueue($subqueue);
   // This function is safe if $pos is out of bounds.
   if (!$queue->reverse) {
     nodequeue_queue_front($subqueue, $pos);
@@ -1438,10 +1435,9 @@ function nodequeue_admin_front($queue, $subqueue, $pos) {
  * only if javascript is disabled in the client, and is a fallback technique.
  */
 function nodequeue_admin_back($queue, $subqueue, $pos) {
-  if (!is_numeric($pos) || !is_numeric($subqueue) || !nodequeue_check_token($node->nid)) {
+  if (!is_numeric($pos) || !is_object($subqueue) || !nodequeue_check_token($pos)) {
     return drupal_goto();
   }
-  $subqueue = nodequeue_load_subqueue($subqueue);
   // This function is safe if $pos is out of bounds.
   if ($queue->reverse) {
     nodequeue_queue_front($subqueue, $pos);
@@ -1461,7 +1457,7 @@ function nodequeue_admin_back($queue, $subqueue, $pos) {
  * multiple times.
  */
 function nodequeue_admin_remove($queue, $subqueue, $pos) {
-  if (!is_numeric($pos) || !is_numeric($subqueue) || !nodequeue_check_token($node->nid)) {
+  if (!is_numeric($pos) || !is_object($subqueue) || !nodequeue_check_token($pos)) {
     return drupal_goto();
   }
 
