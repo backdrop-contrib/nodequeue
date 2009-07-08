@@ -1036,18 +1036,10 @@ function nodequeue_arrange_subqueue($queue, $subqueue) {
   $output = '';
   $body = '';
   $order = $queue->reverse ? 'DESC' : 'ASC';
-  $nids_visible = array();
-  
-  //Get the list of nodes in the subqueue.
-  //First, get a list of nodes taking into account node access restrictions
-  if (!user_access('administer nodes')) {
-    $node_status_sql = ' AND n.status = 1';
-  }
-  $query_restricted = db_query(db_rewrite_sql("SELECT DISTINCT(n.nid) FROM {node} n LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = %d$node_status_sql ORDER BY nq.position $order"), $sqid); 
-  while ($result_restricted = db_fetch_object($query_restricted)) {
-    $nids_visible[$result_restricted->nid] = $result_restricted->nid;
-  }
 
+  //Get the list of nodes in the subqueue.
+  //First, get a list of nodes taking into account node access restrictions.
+  $nids_visible = nodequeue_nids_visible($subqueue->sqid);
   //Then, get an unrestricted list of nodes in the subqueue.
   //Titles are not displayed for nodes that are not present in the result set of both queries.
   $result = db_query("SELECT DISTINCT(n.nid), n.title, n.uid, u.name, n.created, nq.position FROM {node} n LEFT JOIN {users} u on n.uid = u.uid LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = %d ORDER BY nq.position $order", $sqid);
@@ -1580,14 +1572,34 @@ function _nodequeue_ajax_add($sqid, $position, $string) {
   }
 
   $node->position = $position;
+  $nids_visible = nodequeue_nids_visible($subqueue->sqid);
   return array(
     'status' => 1,
     'extra' => $node->nid,
     'max' => $queue->size,
-    'data' => nodequeue_arrange_subqueue_entry($queue, $subqueue, $node),
+    'data' => nodequeue_arrange_subqueue_entry($queue, $subqueue, $node, $nids_visible),
   );
 }
 
+/*
+ * Get the list of nodes in the subqueue, taking into account node access restrictions.
+ */
+function nodequeue_nids_visible($sqid = -1, $account = NULL) {
+  if (!$account) {
+    global $user;
+    $account = $user;
+  }
+  $nids_visible = array();
+  if (!user_access('administer nodes', $account)) {
+    $node_status_sql = ' AND n.status = 1';
+  }
+
+  $query_restricted = db_query(db_rewrite_sql("SELECT DISTINCT(n.nid) FROM {node} n LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = %d $node_status_sql ORDER BY nq.position $order"), $sqid); 
+  while ($result_restricted = db_fetch_object($query_restricted)) {
+    $nids_visible[$result_restricted->nid] = $result_restricted->nid;
+  }
+  return $nids_visible;
+}
 // --------------------------------------------------------------------------
 // Nodequeue manipulation API.
 
@@ -2725,8 +2737,12 @@ function nodequeue_api_autocomplete($queue, $subqueue, $string) {
     return $matches;
   }
 
+  global $user;
+  if (!user_access('administer nodes', $user)) {
+    $where = 'n.status = 1 AND ';
+  }
 
-  $where = "n.type IN (". db_placeholders($queue->types, 'varchar') .')';
+  $where .= "n.type IN (". db_placeholders($queue->types, 'varchar') .')';
   $where_args = $queue->types;
 
   // Run a match to see if they're specifying by nid.
