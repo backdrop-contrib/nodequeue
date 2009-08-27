@@ -1023,18 +1023,7 @@ function nodequeue_arrange_subqueue($queue, $subqueue = NULL) {
 function _nodequeue_dragdrop_get_nodes($queue, $subqueue) {
   $order = $queue->reverse ? 'DESC' : 'ASC';
 
-  // get a list of nodes taking into account node access restrictions
-  // titles of restricted nodes are not displayed in the nodequeue table
-  $node_status_sql = '';
-  if (!user_access('administer nodes')) {
-    $node_status_sql = ' AND n.status = 1';
-  }
-  $result = db_query(db_rewrite_sql('SELECT DISTINCT(n.nid) FROM {node} n LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = %d '. $node_status_sql .' ORDER BY nq.position '. $order), $subqueue->sqid);
-
-  $visible = array();
-  while ($node = db_fetch_object($result)) {
-    $visible[$node->nid] = $node->nid;
-  }
+  $visible = nodequeue_nids_visible($subqueue->sqid);
 
   // get a list of all nodes in the subqueue, regardless of access restrictions
   $result = db_query('SELECT DISTINCT(n.nid), n.title, n.uid, u.name, n.created, nq.position FROM {node} n LEFT JOIN {users} u on n.uid = u.uid LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = %d ORDER BY nq.position '. $order, $subqueue->sqid);
@@ -1385,7 +1374,7 @@ function nodequeue_nids_visible($sqid = -1, $account = NULL) {
   }
   $nids_visible = array();
   if (!user_access('administer nodes', $account)) {
-    $node_status_sql = ' AND (n.status = 1)';
+    $node_status_sql = ' AND (n.status = 1 || n.uid = %d)';
   }
 
   $query_restricted = db_query(db_rewrite_sql("SELECT DISTINCT(n.nid) FROM {node} n LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = %d $node_status_sql ORDER BY nq.position $order"), $sqid, $account->uid);
@@ -2354,6 +2343,7 @@ function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5, $
     $result = db_query($sql, $sqid);
   }
 
+  $nodes = array();
   while ($nid = db_fetch_object($result)) {
     $nodes[] = node_load($nid->nid);
   }
@@ -2517,14 +2507,15 @@ function nodequeue_api_autocomplete($queue, $subqueue, $string) {
   if (empty($string)) {
     return $matches;
   }
-
+  $where_args = array();
   global $user;
   if (!user_access('administer nodes', $user)) {
-    $where = 'n.status = 1 AND ';
+    $where = '(n.status = 1 || n.uid = %d) AND ';
+    $where_args = array($user->uid);
   }
-
+  
   $where .= "n.type IN (". db_placeholders($queue->types, 'varchar') .')';
-  $where_args = $queue->types;
+  $where_args = array_merge($where_args, $queue->types);
 
   // Run a match to see if they're specifying by nid.
   $preg_matches = array();
