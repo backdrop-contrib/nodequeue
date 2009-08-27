@@ -2006,6 +2006,9 @@ function nodequeue_subqueue_add($queue, &$subqueue, $nid) {
   if (module_exists('apachesolr')) {
     apachesolr_mark_node($nid);
   }
+
+  // Invoke the hook to notify other modules of the node addition.
+  module_invoke_all('nodequeue_add', $subqueue->sqid, $nid);
 }
 
 /**
@@ -2024,6 +2027,9 @@ function nodequeue_subqueue_remove_node($sqid, $nid) {
     if (module_exists('apachesolr')) {
       apachesolr_mark_node($nid);
     }
+
+    // Invoke the hook to notify other modules of the node removal.
+    module_invoke_all('nodequeue_remove', $sqid, $nid);
   }
 }
 /**
@@ -2047,9 +2053,17 @@ function nodequeue_subqueue_remove($sqid, $start, $end = NULL) {
     $end = $start;
   }
 
+  // Retrieve the nodes that are being removed.
+  $result = db_query("SELECT nid FROM {nodequeue_nodes} WHERE sqid = %d AND position >= %d AND position <= %d", $sqid, $start, $end);
+
   $diff = $end - $start + 1;
   db_query("DELETE FROM {nodequeue_nodes} WHERE sqid = %d AND position >= %d AND position <= %d", $sqid, $start, $end);
   db_query("UPDATE {nodequeue_nodes} SET position = position - %d WHERE sqid = %d AND position > %d",  $diff, $sqid, $end);
+  
+  // Invoke the hook to let other modules know that the nodes were removed.
+  while($node = db_fetch_object($result)) {
+    module_invoke_all('nodequeue_remove', $sqid, $node->nid);
+  }
 }
 
 /**
@@ -2113,6 +2127,10 @@ function nodequeue_queue_swap($subqueue, $pos1, $pos2) {
 
   db_query("UPDATE {nodequeue_nodes} SET position = %d WHERE position = %d AND sqid = %d", $pos1, $pos2,  $subqueue->sqid);
   db_query("UPDATE {nodequeue_nodes} SET position = %d WHERE nid = %d AND sqid = %d", $pos2, $nid, $subqueue->sqid);
+
+  // notify other modules of the swap
+  module_invoke_all('nodequeue_swap', $sqid, $nid);
+
 }
 
 /**
