@@ -2189,6 +2189,9 @@ function nodequeue_get_subqueue_position($sqid, $nid) {
  * Get the position of a node in several subqueues.
  */
 function nodequeue_set_subqueue_positions(&$subqueues, $nid) {
+  if (empty($subqueues)) {
+    return;
+  }
   $placeholders = db_placeholders($subqueues, 'int');
   $args = array_keys($subqueues);
   $args[] = $nid;
