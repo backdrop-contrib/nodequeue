@@ -280,7 +280,7 @@ function nodequeue_update_5201() {
   // Create the nodequeue_subqueue table.
   $ret[] = update_sql("UPDATE {nodequeue_queue} SET owner = 'nodequeue', show_in_ui = 1, show_in_tab = 1, show_in_links = 1, reference = 0");
   
-  db_add_table($ret, 'nodequeue_subqueue', array(
+  db_create_table($ret, 'nodequeue_subqueue', array(
     'description' => t('Subqueues are minor queues that inherit all of the properties of the parent queue. A parent queue must have at least 1 subqueue to do anything. Reference is for the use of whatever is creating the subqueues in order to link it to some other ID easily.'),
     'fields' => array(
       'sqid' => array(
