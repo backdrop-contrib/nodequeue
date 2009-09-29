@@ -355,10 +355,12 @@ function nodequeue_apachesolr_update_index(&$document, $node) {
   $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
 
   nodequeue_set_subqueue_positions($subqueues, $node->nid);
-  foreach ($subqueues as $sqid => $subqueue) {
-    if (!empty($subqueue->position)) {
-      $key = _nodequeue_solr_qid_key();
-      $document->$key = $sqid;
+  if (is_array($subqueues)) {
+    foreach ($subqueues as $sqid => $subqueue) {
+      if (!empty($subqueue->position)) {
+        $key = _nodequeue_solr_qid_key();
+        $document->$key = $sqid;
+      }
     }
   }
 }
