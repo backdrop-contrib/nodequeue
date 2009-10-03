@@ -387,6 +387,22 @@ function nodequeue_update_6001() {
 
 //The previous 6002 update has been moved to 5205.
 
+/*
+ * Remove invalid entries from the nodequeue_nodes table created as a result of bugs like http://drupal.org/node/593858.
+ */
+function nodequeue_update_6003() {
+  $ret = array();
+  $invalid = db_result(db_query("SELECT count(nid) FROM {nodequeue_nodes} WHERE nid = 0"));
+  if (!empty($invalid)) {
+    db_query("DELETE FROM {nodequeue_nodes} WHERE nid = 0");
+    $t = get_t();
+    $ret[] = array('success' => TRUE, 'query' => $t("Deleted @invalid invalid entries from the {nodequeue_nodes} table.", array('@invalid' => $invalid)));
+  }
+  else {
+    $ret[] = array('success' => TRUE, 'query' => "No invalid entries found in the {nodequeue_nodes} table.");
+  }
+  return $ret;
+}
 function nodequeue_install() {
   drupal_install_schema('nodequeue');
 }
