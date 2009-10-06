@@ -2004,7 +2004,7 @@ function nodequeue_subqueue_add($queue, &$subqueue, $nid) {
     // (or nodes) out.
     if (!empty($queue->size)) {
       // 0 means infinity so never do this if false
-      nodequeue_check_subqueue_size($queue, $subqueue, $queue->size - 1);
+      nodequeue_check_subqueue_size($queue, $subqueue, $queue->size);
     }
     if (module_exists('apachesolr')) {
       apachesolr_mark_node($nid);
