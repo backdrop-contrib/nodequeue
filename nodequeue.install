@@ -207,6 +207,7 @@ function nodequeue_schema() {
     'indexes' => array(
       '{nodequeue_nodes}_sqid_idx' => array('sqid', 'position'),
       '{nodequeue_subqueue}_nid_idx' => array('nid'),
+      '{nodequeue_nodes}_qid_nid_idx' => array('qid', 'nid'),
     ), // indexes
   ); // nodequeue_nodes
   
@@ -403,6 +404,16 @@ function nodequeue_update_6003() {
   }
   return $ret;
 }
+
+/**
+ * Add a new index to {nodequeue_nodes}
+ */
+function nodequeue_update_6004() {
+  $ret = array();
+  db_add_index($ret, 'nodequeue_nodes', '{nodequeue_nodes}_qid_nid_idx', array('qid', 'nid'));
+  return $ret;
+}
+
 function nodequeue_install() {
   drupal_install_schema('nodequeue');
 }
