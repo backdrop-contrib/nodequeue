@@ -2317,6 +2317,11 @@ function nodequeue_nodequeue_form_submit(&$queue, $form_state) {
     // A 0 will set the reference to the sqid of the queue.
     $queue->add_subqueue = array(0 => $queue->title);
   }
+  //If the qid is set at this point, we're saving an existing queue.
+  if (isset($queue->qid)) {
+    //We don't check to see if the title has been updated since the $queue object already matches $form_state['values'].
+    db_query("UPDATE {nodequeue_subqueue} SET title = '%s' WHERE qid = %d", array($form_state['values']['title'], $queue->qid));
+  }
 }
 
 // --------------------------------------------------------------------------
