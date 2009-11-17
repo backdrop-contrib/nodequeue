@@ -2224,7 +2224,7 @@ function nodequeue_get_subqueues_by_node($queues, $node) {
   }
 
   if (empty($references)) {
-    return;
+    return array();
   }
   // only allow the static cache to be used if the nid is the same as the last
   $subqueues = nodequeue_load_subqueues_by_reference($references, ($last_nid != $node->nid));
