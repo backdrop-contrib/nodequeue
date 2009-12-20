@@ -110,7 +110,6 @@ With Nodequeue 6.x-2.x:
 <?php
 $node = nodequeue_load_back($subqueue_id);
 $rendered_node = node_view($node);
- 
 ?>
 
 With Nodequeue 5.x-2.x:
