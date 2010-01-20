@@ -175,7 +175,6 @@ function smartqueue_taxonomy_get_terms($vid) {
 
 
 // TODO:
-// * Automatically add subqueues when terms are created.
 // * Handle vocabulary changes (maybe?)
 /**
  * Implementation of hook_taxonomy.
