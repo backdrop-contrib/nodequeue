@@ -9,6 +9,10 @@
  */
 function nodequeue_views_default_views() {
   $views = array();
+   if (variable_get('nodequeue_automatic_views_generation', TRUE) == '') {
+    return $views;
+  }
+  
   $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
   foreach ($queues as $queue) {
     $view = new view;
