@@ -4,11 +4,12 @@
  * Specialized relationship handler to add nodequeues.
  */
 class nodequeue_handler_relationship_nodequeue extends views_handler_relationship {
-  function options(&$options) {
-    parent::options($options);
+  function option_definition() {
+    $options = parent::option_definition();
 
-    $options['limit'] = FALSE;
-    $options['qids'] = array();
+    $options['limit']['default'] = FALSE;
+    $options['qids']['default'] = array();
+    return $options;
   }
 
   /**
