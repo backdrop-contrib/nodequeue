@@ -351,6 +351,10 @@ function nodequeue_form_apachesolr_search_bias_form_alter(&$form, $form_state) {
  * Implementation of hook_apachesolr_update_index().
  */
 function nodequeue_apachesolr_update_index(&$document, $node) {
+  if (empty($document)) {
+    return;
+  }
+
   $queues = nodequeue_load_queues(array_keys(nodequeue_get_all_qids()));
   $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
 
