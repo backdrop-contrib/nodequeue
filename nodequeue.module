@@ -1677,6 +1677,8 @@ function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
     while ($obj = db_fetch_object($result)) {
       $loaded[$obj->qid]->types[] = $obj->type;
     }
+
+    drupal_alter('nodequeue', $loaded, 'load_queues');
   }
 
   if ($bypass_cache) {
