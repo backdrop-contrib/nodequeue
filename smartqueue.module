@@ -250,6 +250,10 @@ function smartqueue_taxonomy($op, $type, $array = NULL) {
         // If a term was deleted, we need to delete any subqueues containing it.
         case 'delete':
           $tid = $array['tid'];
+          if (empty($tid)) {
+            // Don't proceed and delete all subqueues.
+            return;
+          }
           // Find subqueues that contain this term.
           $result = db_query(
             "SELECT sq.sqid FROM {nodequeue_subqueue} sq
