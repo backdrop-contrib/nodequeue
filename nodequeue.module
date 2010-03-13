@@ -1710,7 +1710,7 @@ function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
  */
 function nodequeue_load($qid) {
   $queues = nodequeue_load_queues(array($qid));
-  return array_shift($queues);
+  return !empty($queues) ? array_shift($queues) : array();
 }
 
 /**
