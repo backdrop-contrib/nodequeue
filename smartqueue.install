@@ -32,9 +32,10 @@ function smartqueue_uninstall() {
   drupal_uninstall_schema('smartqueue');
 }
 
-function smartqueue_update_6001() {
+function smartqueue_update_6002() {
   $ret = array();
-  db_query('INSERT INTO {smartqueue} (qid) SELECT qid FROM {nodequeue_queue}');
-
+  $schema = drupal_get_schema('smartqueue');
+  db_create_table($ret, 'smartqueue', $schema);
+  $ret[] = update_sql('INSERT INTO {smartqueue} (qid) SELECT qid FROM {nodequeue_queue}');
   return $ret;
 }
