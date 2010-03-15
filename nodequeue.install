@@ -414,6 +414,16 @@ function nodequeue_update_6004() {
   return $ret;
 }
 
+/*
+ * Rename the 'nodequeue_automatic_views_generation'
+ * to 'nodequeue_view_per_queue'.
+ */
+function nodequeue_update_6005() {
+  $ret = array();
+  $ret[] = update_sql("UPDATE {system} set name = 'nodequeue_view_per_queue' where name = 'nodequeue_automatic_views_generation'");
+  return $ret;
+}
+
 function nodequeue_install() {
   drupal_install_schema('nodequeue');
 }
