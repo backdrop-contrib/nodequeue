@@ -965,7 +965,7 @@ function nodequeue_admin_delete_submit($formid, &$form_state) {
 /**
  * Page callback to view a queue.
  */
-function nodequeue_admin_view($queue, $subqueue = NULL) {
+function nodequeue_admin_view($queue, $subqueue = array()) {
   drupal_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)));
   $qid = $queue->qid;
 
@@ -1380,6 +1380,7 @@ function _nodequeue_autocomplete($sqid, $string) {
  * Get the list of nodes in the subqueue, taking into account node access restrictions.
  */
 function nodequeue_nids_visible($sqid = -1, $account = NULL) {
+  $node_status_sql = '';
   if (!$account) {
     global $user;
     $account = $user;
@@ -1389,7 +1390,7 @@ function nodequeue_nids_visible($sqid = -1, $account = NULL) {
     $node_status_sql = ' AND (n.status = 1 || n.uid = %d)';
   }
 
-  $query_restricted = db_query(db_rewrite_sql("SELECT DISTINCT(n.nid) FROM {node} n LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = %d $node_status_sql ORDER BY nq.position $order"), $sqid, $account->uid);
+  $query_restricted = db_query(db_rewrite_sql("SELECT DISTINCT(n.nid) FROM {node} n LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = %d $node_status_sql ORDER BY nq.position ASC"), $sqid, $account->uid);
   while ($result_restricted = db_fetch_object($query_restricted)) {
     $nids_visible[$result_restricted->nid] = $result_restricted->nid;
   }
