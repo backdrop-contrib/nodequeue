@@ -9,7 +9,7 @@
  */
 function nodequeue_views_default_views() {
   $views = array();
-   if (variable_get('nodequeue_automatic_views_generation', TRUE) == '') {
+   if (variable_get('nodequeue_view_per_queue', 1) == 1) {
     return $views;
   }
   
