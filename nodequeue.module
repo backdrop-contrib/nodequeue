@@ -2662,6 +2662,13 @@ function nodequeue_admin_settings() {
     '#default_value' => variable_get('nodequeue_tab_name', t('Nodequeue')),
     '#description' => t('If nodes will have a menu tab for manipulating related nodequeues, what should that tab be called?'),
   );
+  $form['nodequeue_view_per_queue'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Automatically create one view per queue'),
+    '#description' => t("Nodequeue can create a view for each queue. \n
+      If you wish to have fewer views, you can disable this option and use a single view with an argument for the qid."),
+    '#default_value' => variable_get('nodequeue_view_per_queue', 1),
+  );
   return system_settings_form($form);
 }
 
