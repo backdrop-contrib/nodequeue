@@ -1,0 +1,40 @@
+<?php
+// $Id$
+
+function smartqueue_schema() {
+  $schema['smartqueue'] = array(
+    'description' => t('Table for smartqueues, storing global information for each queue.'),
+    'fields' => array(
+      'qid' => array(
+        'description' => t('The primary identifier for a queue.'),
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE
+      ),
+      'use_parents' => array(
+        'description' => t("Whether a queue is to use the terms' parents when displaying the queue selection."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('qid'),
+  );
+  
+  return $schema;
+}
+
+function smartqueue_install() {
+  drupal_install_schema('smartqueue');
+}
+
+function smartqueue_uninstall() {
+  drupal_uninstall_schema('smartqueue');
+}
+
+function smartqueue_update_6001() {
+  $ret = array();
+  db_query('INSERT INTO {smartqueue} (qid) SELECT qid FROM {nodequeue_queue}');
+
+  return $ret;
+}
