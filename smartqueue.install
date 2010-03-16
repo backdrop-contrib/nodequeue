@@ -32,9 +32,27 @@ function smartqueue_uninstall() {
   drupal_uninstall_schema('smartqueue');
 }
 
-function smartqueue_update_6002() {
+function smartqueue_update_6003() {
   $ret = array();
-  $schema = drupal_get_schema('smartqueue');
+  // Don't use hook_schema for database updates per http://drupal.org/node/150220.
+  $schema = array(
+    'description' => t('Table for smartqueues, storing global information for each queue.'),
+    'fields' => array(
+      'qid' => array(
+        'description' => t('The primary identifier for a queue.'),
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE
+      ),
+      'use_parents' => array(
+        'description' => t("Whether a queue is to use the terms' parents when displaying the queue selection."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('qid'),
+  );
   db_create_table($ret, 'smartqueue', $schema);
   $ret[] = update_sql('INSERT INTO {smartqueue} (qid) SELECT qid FROM {nodequeue_queue}');
   return $ret;
