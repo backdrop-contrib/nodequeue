@@ -197,7 +197,7 @@ function nodequeue_schema() {
         'not null' => FALSE
       ),
       'timestamp' => array(
-        'description' => t(''),
+        'description' => "The time that the item's position in the subqueue was updated.",
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
