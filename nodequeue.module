@@ -1069,7 +1069,7 @@ function nodequeue_arrange_subqueue_form($form_state, $queue, $nodes, $subqueue)
       $form[$node->nid]['date'] = array('#value' => '');
     }
 
-    $form[$node->nid]['edit'] = array('#value' => l(t('edit'), 'node/'. $node->nid .'/edit', array('attributes' => array('title' => t('Edit this node')))));
+    $form[$node->nid]['edit'] = array('#value' => l(t('edit'), 'node/'. $node->nid .'/edit', array('attributes' => array('title' => t('Edit this node')), 'query' => drupal_get_destination())));
     $form[$node->nid]['position'] = array(
       '#type' => 'position',
       '#delta' => $count,
