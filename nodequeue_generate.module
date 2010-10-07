@@ -13,7 +13,7 @@ function nodequeue_generate_menu() {
 }
 
 function nodequeue_generate_form() {
-  $form['help'] = array('#value' => '<p>'. t('Select which nodequeues shall be <strong>emptied</strong> and re-populated with new nodes.'). '</p>');
+  $form['help'] = array('#value' => '<p>' . t('Select which nodequeues shall be <strong>emptied</strong> and re-populated with new nodes.') . '</p>');
 
   $queues = nodequeue_load_queues(nodequeue_get_all_qids(25));
   if (empty($queues)) {
@@ -57,7 +57,7 @@ function nodequeue_generate_form() {
 }
 
 /**
- * Implements hook_theme
+ * Implements hook_theme().
  *
  * @return unknown
  */
@@ -82,8 +82,8 @@ function theme_nodequeue_generate_form($form) {
     );
   }
   $header = array(theme('table_select_header_cell'), t('Title'), t('Max nodes'), t('Subqueues'));
-  $output .= theme('table', $header, $rows);
-  $output .= theme('pager', NULL, 25);
+  $output .= theme('table', array('header' => $header, 'rows' => $rows));
+  $output .= theme('pager', array('tags' => NULL));
   $output .= drupal_render($form);
 
   return $output;
@@ -91,9 +91,7 @@ function theme_nodequeue_generate_form($form) {
 
 function nodequeue_generate_form_submit($form, &$form_state) {
   $qids = array_keys(array_filter($form_state['values']['rows']['cb']));
-  // Empty the queue
-  $placeholders = implode(', ', array_fill(0, count($qids), '%d'));
-  db_query("DELETE FROM {nodequeue_nodes} WHERE qid IN ($placeholders)", $qids);
+  db_query("DELETE FROM {nodequeue_nodes} WHERE qid IN (:qids)", array(':qids' => $qids));
 
   $queues = nodequeue_load_queues($qids);
   $subqueues = nodequeue_load_subqueues_by_queue($qids);
@@ -111,7 +109,7 @@ function nodequeue_generate_form_submit($form, &$form_state) {
     if ($queues[$subqueue->qid]->owner == 'nodequeue') {
       $sql = "SELECT n.nid FROM {node} n WHERE n.status = 1 AND n.type IN ($placeholders) ORDER BY RAND()";
       $result = db_query_range($sql, $args, 0, $form_state['values']['rows'][$subqueue->qid]['limit']);
-      while ($row = db_fetch_object($result)) {
+      foreach ($result as $row) {
         nodequeue_subqueue_add($subqueue, $subqueue, $row->nid);
       }
     }
@@ -119,7 +117,7 @@ function nodequeue_generate_form_submit($form, &$form_state) {
       $args[] = $subqueue->reference;
       $sql = "SELECT tn.nid FROM {term_node} tn INNER JOIN {node} n ON tn.nid=n.nid WHERE n.status = 1 AND n.type IN ($placeholders) AND tn.tid = %d ORDER BY RAND()";
       $result = db_query_range($sql, $args, 0, $form_state['values']['rows'][$subqueue->qid]['limit']);
-      while ($row = db_fetch_object($result)) {
+      foreach ($result as $row) {
         nodequeue_subqueue_add($subqueue, $subqueue, $row->nid);
       }
     }
@@ -134,7 +132,7 @@ function nodequeue_generate_form_submit($form, &$form_state) {
  *
  * @param vids
  *   An array of vocabulary ids.
-**/
+ **/
 function nodequeue_generate_rehash($vids) {
   // Delete existing smartqueue taxonomy subqueues
   db_query("DELETE ns FROM nodequeue_subqueue ns INNER JOIN nodequeue_queue nq ON ns.qid=nq.qid WHERE nq.owner = 'smartqueue_taxonomy'");

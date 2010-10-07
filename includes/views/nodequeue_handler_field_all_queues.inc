@@ -1,6 +1,6 @@
 <?php
 //$Id$
-  /**
+/**
  * Field handler for all queues.
  *
  * @ingroup views_field_handlers
@@ -30,7 +30,7 @@ class nodequeue_handler_field_all_queues extends views_handler_field_prerender_l
     $form['limit'] = array(
       '#type' => 'checkbox',
       '#title' => t('Limit to queues'),
-      '#default_value'=> $this->options['limit'],
+      '#default_value' => $this->options['limit'],
     );
 
     $options = array();
@@ -65,12 +65,12 @@ class nodequeue_handler_field_all_queues extends views_handler_field_prerender_l
 
       $result = db_query("SELECT nn.nid, nn.qid, nq.title FROM {nodequeue_nodes} nn INNER JOIN {nodequeue_queue} nq ON nq.qid = nn.qid WHERE nn.nid IN (" . implode(', ', $nids) . ")$queue ORDER BY nq.title");
 
-      while ($queue = db_fetch_object($result)) {
+      foreach ($result as $queue) {
         if (empty($this->options['link_to_queue'])) {
           $this->items[$queue->nid][$queue->qid] = check_plain($queue->title);
         }
         else {
-          $this->items[$queue->nid][$queue->qid] = l($queue->title, "admin/content/nodequeue/$queue->qid");
+          $this->items[$queue->nid][$queue->qid] = l($queue->title, "admin/structure/nodequeue/$queue->qid");
         }
       }
     }

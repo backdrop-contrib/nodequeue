@@ -30,7 +30,7 @@ function smartqueue_taxonomy_nodequeue_form($queue, &$form) {
     '#title' => t('Assume parent term for hierarchical vocabs'),
     '#description' => t("Instead of using the node's terms for nodequeue assignment use the top-most parents of a term. This has no effect if there in non-hierarchical vocabularies."),
     '#default_value' => isset($queue->use_parents) ? $queue->use_parents : 0,
-  );  
+  );
 
   $form['subqueue_title'] = array(
     '#type' => 'textfield',
@@ -67,7 +67,7 @@ function smartqueue_taxonomy_nodequeue_form_validate($queue, &$form_state, &$for
  * Implementation of hook_nodequeue_form_submit_finish()
  */
 function smartqueue_taxonomy_nodequeue_form_submit_finish($queue, $form_state) {
-  $qid = db_result(db_query('SELECT qid FROM {smartqueue} WHERE qid = %d', $queue->qid));
+  $qid = db_query('SELECT qid FROM {smartqueue} WHERE qid = %d', $queue->qid)->fetchField();
   if ($qid) {
     db_query('UPDATE {smartqueue} SET use_parents = %d  WHERE qid = %d', $form_state['values']['use_parents'], $queue->qid);
   }
@@ -88,7 +88,7 @@ function smartqueue_taxonomy_nodequeue_subqueues(&$queue, $node) {
     // This unfortunate scar is needed because $node->taxonomy looks different when saving a node versus loading.
     if (!is_object($value)) {
       // $node comes from a node form submission
-      foreach ((array)$value as $tid) {
+      foreach ((array) $value as $tid) {
         if (isset($vids[$key])) {
           $vids[$key][] = $tid;
         }
@@ -154,9 +154,8 @@ function smartqueue_nodequeue_alter(&$data, $type) {
   switch ($type) {
     case 'load_queues':
       $qids = array_keys($data);
-      $placeholders = db_placeholders($qids);
-      $result = db_query("SELECT qid, use_parents FROM {smartqueue} WHERE qid IN ($placeholders)", $qids);
-      while ($queue = db_fetch_object($result)) {
+      $result = db_query("SELECT qid, use_parents FROM {smartqueue} WHERE qid IN (:qids)", array(':qids' => $qids));
+      foreach ($result as $queue) {
         $data[$queue->qid]->use_parents = $queue->use_parents;
       }
       break;
@@ -170,7 +169,7 @@ function smartqueue_nodequeue_alter(&$data, $type) {
 function smartqueue_build_string($arrays) {
   $array = array_shift($arrays);
   $term = '';
-  if (empty($arrays))  {
+  if (empty($arrays)) {
     return $array;
   }
 
@@ -207,8 +206,8 @@ function smartqueue_taxonomy_get_terms($vid) {
   static $cache = array();
   if (!isset($cache[$vid])) {
     $cache[$vid] = array();
-    $result = db_query("SELECT tid, name FROM {term_data} WHERE vid = %d", $vid);
-    while ($term = db_fetch_object($result)) {
+    $result = db_query("SELECT tid, name FROM {term_data} WHERE vid = :vid", array(':vid' => $vid));
+    foreach ($result as $tern) {
       $cache[$vid][$term->tid] = $term->name;
     }
   }
@@ -224,7 +223,7 @@ function smartqueue_taxonomy_get_terms($vid) {
 function smartqueue_taxonomy($op, $type, $array = NULL) {
   switch ($type) {
     case 'term':
-      switch ($op){
+      switch ($op) {
         // If a term was updated, we need to update any relevant nodequeue titles.
         case 'update':
           $tid = $array['tid'];
@@ -240,14 +239,14 @@ function smartqueue_taxonomy($op, $type, $array = NULL) {
               OR sq.reference LIKE '%%-%d-%%')",
             $tid, $tid, $tid, $tid
           );
-          while ($row = db_fetch_object($result)) {
+          foreach ($result as $row) {
             // Note that $row already contains the needed $row->reference.
             $title = smartqueue_taxonomy_nodequeue_subqueue_title($row, $row->sqref);
             nodequeue_subqueue_update_title($row->sqid, $title);
           }
           break;
 
-        // If a term was deleted, we need to delete any subqueues containing it.
+          // If a term was deleted, we need to delete any subqueues containing it.
         case 'delete':
           $tid = $array['tid'];
           if (empty($tid)) {
@@ -265,7 +264,7 @@ function smartqueue_taxonomy($op, $type, $array = NULL) {
               OR sq.reference LIKE '%%-%d-%%')",
             $tid, $tid, $tid, $tid
           );
-          while ($row = db_fetch_object($result)) {
+          foreach ($result as $row) {
             nodequeue_remove_subqueue($row->sqid);
           }
           break;
@@ -279,8 +278,8 @@ function smartqueue_taxonomy($op, $type, $array = NULL) {
  * Get the top-level parents of the given taxonomy terms.
  *
  * @param $tids, an array of taxonomy IDs
- * 
- * @return an array of taxonomy IDs 
+ *
+ * @return an array of taxonomy IDs
  */
 function smartqueue_taxonomy_get_parents($tids) {
   if ($tids) {
@@ -288,7 +287,7 @@ function smartqueue_taxonomy_get_parents($tids) {
     $result = db_query(db_rewrite_sql("SELECT t.tid, t.* FROM {term_data} t INNER JOIN {term_hierarchy} h ON h.parent = t.tid WHERE h.tid IN ($placeholders) ORDER BY weight, name", 't', 'tid'), $tids);
     $parents = array();
     // this will filter out duplicates.
-    while ($parent = db_fetch_object($result)) {
+    foreach ($result as $parent) {
       $parents[$parent->tid] = $parent->tid;
     }
     if (count($parents)) {

@@ -21,7 +21,7 @@
 function nodequeue_views_handlers() {
   return array(
   'info' => array(
-    'path' => drupal_get_path('module', 'nodequeue') .'/includes/views',
+    'path' => drupal_get_path('module', 'nodequeue') . '/includes/views',
     ),
     'handlers' => array(
       'nodequeue_handler_argument_subqueue_qid' => array(
@@ -49,7 +49,7 @@ function nodequeue_views_handlers() {
   );
 }
 /**
- * Implementation of hook_views_data()
+ * Implements hook_views_data().
  */
 function nodequeue_views_data() {
   $data = array();
@@ -219,12 +219,12 @@ function nodequeue_views_data() {
       'handler' => 'views_handler_argument_string',
     ),
   );
-  
+
   return $data;
 }
 
 /**
- * Implementation of hook_views_data_alter().
+ * Implements hook_views_data_alter().
  */
 function nodequeue_views_data_alter(&$data) {
   // queue relationship

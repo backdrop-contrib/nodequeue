@@ -1,9 +1,15 @@
 <?php
 // $Id$
 
+/**
+ * @file
+ * Install, update and uninstall functions for the nodequeue module.
+ *
+ */
+
 function smartqueue_schema() {
   $schema['smartqueue'] = array(
-    'description' => t('Table for smartqueues, storing global information for each queue.'),
+    'description' => 'Table for smartqueues, storing global information for each queue.',
     'fields' => array(
       'qid' => array(
         'description' => t('The primary identifier for a queue.'),
@@ -12,7 +18,7 @@ function smartqueue_schema() {
         'not null' => TRUE
       ),
       'use_parents' => array(
-        'description' => t("Whether a queue is to use the terms' parents when displaying the queue selection."),
+        'description' => "Whether a queue is to use the terms' parents when displaying the queue selection.",
         'type' => 'int',
         'size' => 'tiny',
         'default' => 0,
@@ -20,32 +26,24 @@ function smartqueue_schema() {
     ),
     'primary key' => array('qid'),
   );
-  
+
   return $schema;
-}
-
-function smartqueue_install() {
-  drupal_install_schema('smartqueue');
-}
-
-function smartqueue_uninstall() {
-  drupal_uninstall_schema('smartqueue');
 }
 
 function smartqueue_update_6003() {
   $ret = array();
   // Don't use hook_schema for database updates per http://drupal.org/node/150220.
   $schema = array(
-    'description' => t('Table for smartqueues, storing global information for each queue.'),
+    'description' => 'Table for smartqueues, storing global information for each queue.',
     'fields' => array(
       'qid' => array(
-        'description' => t('The primary identifier for a queue.'),
+        'description' => 'The primary identifier for a queue.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE
       ),
       'use_parents' => array(
-        'description' => t("Whether a queue is to use the terms' parents when displaying the queue selection."),
+        'description' => "Whether a queue is to use the terms' parents when displaying the queue selection.",
         'type' => 'int',
         'size' => 'tiny',
         'default' => 0,
@@ -53,7 +51,7 @@ function smartqueue_update_6003() {
     ),
     'primary key' => array('qid'),
   );
-  db_create_table($ret, 'smartqueue', $schema);
-  $ret[] = update_sql('INSERT INTO {smartqueue} (qid) SELECT qid FROM {nodequeue_queue}');
+  db_create_table('smartqueue', $schema);
+  update_sql('INSERT INTO {smartqueue} (qid) SELECT qid FROM {nodequeue_queue}');
   return $ret;
 }

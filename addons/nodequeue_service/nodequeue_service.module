@@ -1,18 +1,24 @@
 <?php
 // $Id$
+
 /**
  * @author Greg Harvey - http://www.drupaler.co.uk
  */
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_permission().
  */
-function nodequeue_service_perm() {
-  return array('get nodequeues');
+function nodequeue_service_permission() {
+  return array(
+    'get nodequeues' => array(
+      'title' => t('get nodequeues'),
+      'description' => t('TODO Add a description for get nodequeues'),
+    ),
+  );
 }
 
 /**
- * Implementation of hook_service().
+ * Implements hook_service().
  */
 function nodequeue_service_service() {
   return array(

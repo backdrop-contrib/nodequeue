@@ -7,24 +7,26 @@
  */
 
 /**
- * Implementation of hook_action_info().
+ * Implements hook_action_info().
  */
 function nodequeue_action_info() {
   return array(
     'nodequeue_add_action' => array(
       'type' => 'node',
-      'description' => t('Add to Nodequeues'),
+      'label' => t('Add to Nodequeues'),
       'configurable' => TRUE,
-      'hooks' => array(
-        'nodeapi' => array('insert', 'update'),
+      'triggers' => array(
+        'nodeapi_insert',
+        'nodeapi_update',
       ),
     ),
     'nodequeue_remove_action' => array(
       'type' => 'node',
-      'description' => t('Remove from Nodequeues'),
+      'label' => t('Remove from Nodequeues'),
       'configurable' => TRUE,
-      'hooks' => array(
-        'nodeapi' => array('insert', 'update'),
+      'triggers' => array(
+        'nodeapi_insert',
+        'nodeapi_update',
       ),
     ),
   );
@@ -57,7 +59,7 @@ function nodequeue_add_action_form($context) {
     );
   }
   else {
-    drupal_set_message(t('Please <a href="!url">create</a> a nodequeue first.', array('!url' => url('admin/content/nodequeue'))));
+    drupal_set_message(t('Please <a href="!url">create</a> a nodequeue first.', array('!url' => url('admin/structure/nodequeue'))));
   }
   return $form;
 }
@@ -102,7 +104,7 @@ function nodequeue_add_action($node, $context) {
  * Old-style action to add a node to a queue.
  */
 function action_nodequeue_add($op, $edit = array(), $node) {
-  switch($op) {
+  switch ($op) {
     case 'metadata':
       return array(
         'description' => t('Add to Nodequeues'),
@@ -136,10 +138,12 @@ function action_nodequeue_add($op, $edit = array(), $node) {
       }
       break;
 
-    // return an HTML config form for the action
+      // return an HTML config form for the action
     case 'form':
       // default values for form
-      if (!isset($edit['qids'])) $edit['qids'] = '';
+      if (!isset($edit['qids'])) {
+        $edit['qids'] = '';
+      }
       $queues = nodequeue_load_queues(nodequeue_get_all_qids(500, TRUE), TRUE);
       foreach ($queues as $qid => $queue) {
         $options[$qid] = $queue->title;
@@ -158,13 +162,13 @@ function action_nodequeue_add($op, $edit = array(), $node) {
           );
       }
       else {
-        drupal_set_message(t('Please <a href="!url">create</a> a nodequeue first.', array('!url' => url('admin/content/nodequeue'))));
+        drupal_set_message(t('Please <a href="!url">create</a> a nodequeue first.', array('!url' => url('admin/structure/nodequeue'))));
       }
       return $form;
 
-     // validate the HTML form
+      // validate the HTML form
 
-    // process the HTML form to store configuration
+      // process the HTML form to store configuration
     case 'submit':
       $params = array(
         'qids' => $edit['qids']
@@ -217,7 +221,7 @@ function nodequeue_remove_action($node, $context) {
   $args = $qids;
   $args[] = $node->nid;
   $result = db_query("SELECT * FROM {nodequeue_nodes} WHERE qid IN ($placeholders) AND nid = %d", $args);
-  while ($obj = db_fetch_object($result)) {
+  foreach ($result as $obj) {
     // This removes by nid, not position, because if we happen to have a
     // node in a queue twice, the 2nd position would be wrong.
     nodequeue_subqueue_remove_node($obj->sqid, $node->nid);
@@ -228,7 +232,7 @@ function nodequeue_remove_action($node, $context) {
  * Old-style action to remove a node from a queue.
  */
 function action_nodequeue_remove($op, $edit = array(), $node) {
-  switch($op) {
+  switch ($op) {
     case 'metadata':
       return array(
         'description' => t('Remove from Nodequeues'),
@@ -245,17 +249,19 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
       $args = $qids;
       $args[] = $node->nid;
       $result = db_query("SELECT * FROM {nodequeue_nodes} WHERE qid IN ($placeholders) AND nid = %d", $args);
-      while ($obj = db_fetch_object($result)) {
+      foreach ($result as $obj) {
         // This removes by nid, not position, because if we happen to have a
         // node in a queue twice, the 2nd position would be wrong.
         nodequeue_subqueue_remove_node($obj->sqid, $node->nid);
       }
       break;
 
-    // return an HTML config form for the action
+      // return an HTML config form for the action
     case 'form':
       // default values for form
-      if (!isset($edit['qids'])) $edit['qids'] = array();
+      if (!isset($edit['qids'])) {
+        $edit['qids'] = array();
+      }
 
       $queues = nodequeue_load_queues(nodequeue_get_all_qids(500, TRUE), TRUE);
       foreach ($queues as $qid => $queue) {
@@ -275,9 +281,9 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
       return $form;
       break;
 
-     // validate the HTML form
+      // validate the HTML form
 
-    // process the HTML form to store configuration
+      // process the HTML form to store configuration
     case 'submit':
       $params = array(
         'qids' => $edit['qids']

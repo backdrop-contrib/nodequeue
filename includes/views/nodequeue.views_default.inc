@@ -9,7 +9,7 @@
  */
 function nodequeue_views_default_views() {
   $views = array();
-   if (variable_get('nodequeue_view_per_queue', 1) != 1) {
+  if (variable_get('nodequeue_view_per_queue', 1) != 1) {
     return $views;
   }
 
@@ -25,12 +25,12 @@ function nodequeue_views_default_views() {
     $view->api_version = 2;
     $view->disabled = FALSE; // Edit this to true to make a default view disabled initially
     $view->display = array();
-      $display = new views_display;
-      $display->id = 'default';
-      $display->display_title = t('Defaults');
-      $display->display_plugin = 'default';
-      $display->position = '1';
-      $display->display_options = array(
+    $display = new views_display;
+    $display->id = 'default';
+    $display->display_title = t('Defaults');
+    $display->display_plugin = 'default';
+    $display->position = '1';
+    $display->display_options = array(
       'style_plugin' => 'default',
       'style_options' => array(),
       'row_plugin' => 'node',
@@ -93,12 +93,12 @@ function nodequeue_views_default_views() {
       'use_more' => 1,
     );
     $view->display['default'] = $display;
-      $display = new views_display;
-      $display->id = 'page';
-      $display->display_title = t('Page');
-      $display->display_plugin = 'page';
-      $display->position = '2';
-      $display->display_options = array(
+    $display = new views_display;
+    $display->id = 'page';
+    $display->display_title = t('Page');
+    $display->display_plugin = 'page';
+    $display->position = '2';
+    $display->display_options = array(
       'defaults' => array(
         'access' => TRUE,
         'title' => TRUE,
@@ -136,12 +136,12 @@ function nodequeue_views_default_views() {
       'path' => "nodequeue/$queue->qid",
     );
     $view->display['page'] = $display;
-      $display = new views_display;
-      $display->id = 'block';
-      $display->display_title = t('Block');
-      $display->display_plugin = 'block';
-      $display->position = '3';
-      $display->display_options = array(
+    $display = new views_display;
+    $display->id = 'block';
+    $display->display_title = t('Block');
+    $display->display_plugin = 'block';
+    $display->position = '3';
+    $display->display_options = array(
       'defaults' => array(
         'access' => TRUE,
         'title' => TRUE,

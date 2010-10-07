@@ -24,7 +24,7 @@ class nodequeue_handler_relationship_nodequeue extends views_handler_relationshi
     $form['limit'] = array(
       '#type' => 'checkbox',
       '#title' => t('Limit to one or more queues (recommended)'),
-      '#default_value'=> $this->options['limit'],
+      '#default_value' => $this->options['limit'],
     );
 
     $options = array();

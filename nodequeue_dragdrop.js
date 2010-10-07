@@ -7,8 +7,6 @@ Drupal.behaviors.nodequeueDrag = function(context) {
     $('td.position').each(function(i){
       $(this).html(i + 1);
     });
-    
-    nodequeueUpdateNodePositions();
   }
 }
 
@@ -19,7 +17,12 @@ Drupal.behaviors.nodequeueReverse = function(context) {
       $('.nodequeue-dragdrop tbody').prepend(this);
     });
 
-    nodequeueUpdateNodePositions();
+    // ...and update node positions
+    var size = $('.node-position').size();
+    $('.node-position').each(function(i){
+      var val = $(this).val();
+      $(this).val(size - val + 1);
+    });
 
     nodequeueInsertChangedWarning();
     nodequeueRestripeTable();
@@ -37,7 +40,15 @@ Drupal.behaviors.nodequeueShuffle = function(context) {
       $('.nodequeue-dragdrop tbody').prepend(this);
     });
 
-    nodequeueUpdateNodePositions();
+    var reverse = Drupal.settings.nodequeue.reverse;
+ 
+    // ...and update node positions
+    var size = reverse ? $('.node-position').size() : 1;
+    $('.node-position').each(function(i){
+      var val = $(this).val();
+      $(this).val(size);
+      reverse ? size-- : size++;
+    });
 
     nodequeueInsertChangedWarning();
     nodequeueRestripeTable();
@@ -97,24 +108,6 @@ Drupal.behaviors.nodequeueClearTitle = function(context) {
 			this.value = this.defaultValue;
 		}
   });
-}
-
-/**
- * Updates node positions after nodequeue has been rearranged. It cares about the
- * reverse order and populates nodes the other way round.
- * @return
- */
-function nodequeueUpdateNodePositions() {
-   
-  var reverse = Drupal.settings.nodequeue.reverse; //check if reverse option is set
-  
-  var size = reverse ? $('.node-position').size() : 1;
-  $('.node-position').each(function(i){
-    var val = $(this).val();
-    $(this).val(size);
-    reverse ? size-- : size++;
-  });	
-	
 }
 
 /**

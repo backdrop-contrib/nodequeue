@@ -1,8 +1,9 @@
-core            = "6.x"
+core = 7.x
 dependencies[]  = services
 dependencies[]  = nodequeue
 description     = "Provides a nodequeue service."
 name            = "Nodequeue Service"
 package         = "Nodequeue"
 
-
+files[] = nodequeue_service.inc
+files[] = nodequeue_service.module
