@@ -13,7 +13,7 @@ function nodequeue_views_default_views() {
     return $views;
   }
 
-  $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
+  $queues = nodequeue_load_queues(nodequeue_get_all_qids());
   foreach ($queues as $queue) {
     $view = new view;
     $view->name = "nodequeue_$queue->qid";

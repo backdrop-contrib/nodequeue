@@ -34,7 +34,7 @@ class nodequeue_handler_field_all_queues extends views_handler_field_prerender_l
     );
 
     $options = array();
-    $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
+    $queues = nodequeue_load_queues(nodequeue_get_all_qids());
     foreach ($queues as $queue) {
       $options[$queue->qid] = $queue->title;
     }
@@ -46,8 +46,11 @@ class nodequeue_handler_field_all_queues extends views_handler_field_prerender_l
       '#title' => t('Queues'),
       '#options' => $options,
       '#default_value' => $this->options['qids'],
-      '#process' => array('expand_checkboxes', 'views_process_dependency'),
-      '#dependency' => array('edit-options-limit' => array(TRUE)),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="options[limit]"]' => array('checked' => TRUE)
+        ),
+      ),
     );
   }
 

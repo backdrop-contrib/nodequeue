@@ -16,38 +16,6 @@
  * really quite simple.
  */
 
-
-
-function nodequeue_views_handlers() {
-  return array(
-  'info' => array(
-    'path' => drupal_get_path('module', 'nodequeue') . '/includes/views',
-    ),
-    'handlers' => array(
-      'nodequeue_handler_argument_subqueue_qid' => array(
-         'parent' => 'views_handler_filter_numeric',
-       ),
-      'nodequeue_handler_field_all_queues' => array(
-        'parent' => 'views_handler_field_prerender_list',
-      ),
-      'nodequeue_handler_field_all_subqueues' => array(
-        'parent' => 'nodequeue_handler_field_all_queues',
-      ),
-      'nodequeue_handler_field_links' => array(
-        'parent' => 'views_handler_field_node_link',
-      ),
-      'nodequeue_handler_field_queue_tab' => array(
-        'parent' => 'views_handler_field_node_link',
-      ),
-      'nodequeue_handler_filter_in_queue' => array(
-        'parent' => 'views_handler_filter_boolean_operator',
-      ),
-      'nodequeue_handler_relationship_nodequeue' => array(
-        'parent' => 'views_handler_relationship',
-      ),
-    ),
-  );
-}
 /**
  * Implements hook_views_data().
  */

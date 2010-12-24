@@ -19,7 +19,7 @@ class nodequeue_handler_relationship_nodequeue extends views_handler_relationshi
   function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
-    $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
+    $queues = nodequeue_load_queues(nodequeue_get_all_qids());
 
     $form['limit'] = array(
       '#type' => 'checkbox',
@@ -28,20 +28,21 @@ class nodequeue_handler_relationship_nodequeue extends views_handler_relationshi
     );
 
     $options = array();
-    $queues = nodequeue_load_queues(nodequeue_get_all_qids(NULL));
+
     foreach ($queues as $queue) {
       $options[$queue->qid] = $queue->title;
     }
 
     $form['qids'] = array(
-      '#prefix' => '<div><div id="edit-options-qids">',
-      '#suffix' => '</div></div>',
       '#type' => 'checkboxes',
       '#title' => t('Queues'),
       '#options' => $options,
       '#default_value' => $this->options['qids'],
-      '#process' => array('expand_checkboxes', 'views_process_dependency'),
-      '#dependency' => array('edit-options-limit' => array(TRUE)),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="options[limit]"]' => array('checked' => TRUE)
+        ),
+      ),
     );
   }
 

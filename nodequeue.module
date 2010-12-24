@@ -1124,8 +1124,9 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
         'class' => array('nodequeue-remove'),
         'id' => 'nodequeue-remove-' . $node->nid,
       ),
+      'query' => nodequeue_get_query_string($node->nid, TRUE),
     );
-    $form['nodes'][$node->nid]['remove'] = array('#markup' => l(t('remove'), '', $attr));
+    $form['nodes'][$node->nid]['remove'] = array('#markup' => l(t('remove'), 'admin/structure/nodequeue/' . $queue->qid . '/remove-node/' . $subqueue->sqid . '/' . $node->nid, $attr));
   }
 
   // add a textfield for adding nodes to the queue
@@ -2377,7 +2378,7 @@ function nodequeue_queue_back($subqueue, $position) {
 function nodequeue_get_subqueue_position($sqid, $nid) {
   // We use MIN to make sure we always get the closes to the front of the
   // queue in case the queue has nodes in it multiple times.
-  $pos = db_query("SELECT MIN(position) FROM {nodequeue_nodes} WHERE sqid = %d AND nid = %d", $sqid, $nid)->fetchField();
+  $pos = db_query("SELECT MIN(position) FROM {nodequeue_nodes} WHERE sqid = :sqid AND nid = :nid", array(':sqid' => $sqid, ':nid' => $nid))->fetchField();
   return $pos;
 }
 
