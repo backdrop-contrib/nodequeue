@@ -1923,7 +1923,7 @@ function nodequeue_save(&$queue) {
     'link' => $queue->link,
     'link_remove' => $queue->link_remove,
     'owner' => $queue->owner,
-    'show_in_links' => $queue->show_in_links,
+    'show_in_links' => ($queue->show_in_links) ? 1 : 0,
     'show_in_tab' => $queue->show_in_tab,
     'show_in_ui' => $queue->show_in_ui,
     'i18n' => $queue->i18n,
