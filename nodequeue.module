@@ -613,11 +613,11 @@ function nodequeue_view_queues() {
     if ($queue->subqueues == 1) {
       $qids[] = $queue->qid;
     }
-    $sort_secondary[] = $queue->title;
+    $sort_secondary[] = drupal_strtolower($queue->title);
     switch ($table_sort['sql']) {
       case 'title':
       default:
-        $sort_primary[] = $queue->title;
+        $sort_primary[] = drupal_strtolower($queue->title);
         $sort_direction = $sort_direction_regular;
         break;
       case 'size':
