@@ -193,11 +193,6 @@ function nodequeue_node_delete($node) {
 }
 
 /**
- * Implements hook_nodeapi().
- */
-function nodequeue_nodeapi_OLD(&$node, $op, $teaser = NULL, $page = NULL) { }
-
-/**
  * Implements hook_link().
  */
 function nodequeue_link($type, $node = NULL, $teaser = FALSE) {
