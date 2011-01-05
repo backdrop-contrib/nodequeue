@@ -2027,11 +2027,13 @@ function nodequeue_delete($qid) {
 /**
  * Add a new subqueue to a queue.
  *
- * @param $qid
- *   The queue id. This should not be the full queue object.
+ * @param $queue
+ *   The queue object that is the parent of this subqueue.
+ * @param $title
+ *   The title of the subqueue.
  * @param $reference
  *   A reference that uniquely identifies this subqueue. If NULL it will
- *   be assigned to the sqid.
+ *   be assigned the sqid.
  */
 function nodequeue_add_subqueue(&$queue, $title, $reference = NULL) {
   if (empty($reference)) {
