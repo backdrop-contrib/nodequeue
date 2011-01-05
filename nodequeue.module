@@ -1779,7 +1779,8 @@ function subqueue_load($sqid) {
   if (!$sqid) {
     return NULL;
   }
-  return array_shift(nodequeue_load_subqueues(array($sqid)));
+  $queues = nodequeue_load_subqueues(array($sqid));
+  return !empty($queues) ? array_shift($queues) : array();
 }
 
 /**
