@@ -193,13 +193,12 @@ function nodequeue_node_delete($node) {
 }
 
 /**
- * Implements hook_link().
+ * Implements hook_node_view().
  */
-function nodequeue_link($type, $node = NULL, $teaser = FALSE) {
-  $links = array();
 
-  if ($type == 'node' &&
-      variable_get('nodequeue_links', FALSE) &&
+function nodequeue_node_view(&$node, $view_mode) {
+  $links = array();
+  if (variable_get('nodequeue_links', FALSE) &&
       user_access('manipulate queues')) {
     $queues = nodequeue_load_queues_by_type($node->type, 'links');
     $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
@@ -249,7 +248,12 @@ function nodequeue_link($type, $node = NULL, $teaser = FALSE) {
     drupal_add_js(drupal_get_path('module', 'nodequeue') . '/nodequeue.js');
     drupal_add_css(drupal_get_path('module', 'nodequeue') . '/nodequeue.css');
   }
-  return $links;
+  if (!empty($links)) {
+    $node->content['links']['nodequeue'] = array(
+      '#links' => $links,
+      '#theme' => 'links__node__nodequeue',
+    );
+  }
 }
 
 /**
