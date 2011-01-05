@@ -132,7 +132,7 @@ function nodequeueRestripeTable() {
  * Add a row to the nodequeue table explaining that the queue is empty.
  */
 function nodequeuePrependEmptyMessage() {
-  $('.nodequeue-dragdrop tbody').prepend('<tr class="odd"><td colspan="6">No nodes in this queue.</td></tr>');
+  $('.nodequeue-dragdrop tbody').prepend('<tr class="odd"><td colspan="6">'+Drupal.t('No nodes in this queue.')+'</td></tr>');
 }
 
 /**
