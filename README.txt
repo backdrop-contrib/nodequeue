@@ -1,4 +1,3 @@
-$Id$
 The Node Queue module allows an administrator to arbitrarily put nodes in a
 group for some purpose; examples of this might be to highlight one particular
 node, as in a typical news site's Lead Article. Another use might be to create

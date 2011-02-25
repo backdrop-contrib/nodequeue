@@ -1,5 +1,4 @@
 <?php
-//$Id$
 /**
  * Handler to filter for nodes that are not in a queue.
  */

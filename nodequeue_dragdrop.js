@@ -1,4 +1,3 @@
-// $Id$
 
 Drupal.behaviors.nodequeueDrag = function(context) {
   var tableDrag = Drupal.tableDrag['nodequeue-dragdrop'];

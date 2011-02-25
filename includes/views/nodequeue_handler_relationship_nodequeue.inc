@@ -1,5 +1,4 @@
 <?php
-//$Id$
 /**
  * Specialized relationship handler to add nodequeues.
  */

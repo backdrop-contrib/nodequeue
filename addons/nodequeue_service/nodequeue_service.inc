@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * @author Greg Harvey - http://www.drupaler.co.uk

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * @file nodequeue.actions.inc

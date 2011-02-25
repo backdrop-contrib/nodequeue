@@ -1,4 +1,3 @@
-// $Id$
 
 /**
  * Nodequeue object

@@ -1,4 +1,3 @@
-; $Id$
 name = Nodequeue
 description = Create queues which can contain nodes in arbitrary order
 package = Nodequeue

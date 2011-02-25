@@ -1,4 +1,3 @@
-; $Id$
 name = Smartqueue taxonomy
 description = Creates a node queue for each taxonomy vocabulary
 package = Nodequeue
