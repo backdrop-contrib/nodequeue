@@ -270,7 +270,7 @@ function nodequeue_theme() {
       'variables' => array(),
     ),
     'nodequeue_subqueue_count_text' => array(
-      'variables' => array(),
+      'variables' => array('count' => 0),
     ),
   );
 }
@@ -2444,7 +2444,7 @@ function nodequeue_subqueue_size_text($max, $count, $long = TRUE) {
   }
   else {
     if ($long) {
-      $message = theme('nodequeue_subqueue_count_text', $count);
+      $message = theme('nodequeue_subqueue_count_text', array('count' => $count));
     }
     else {
       $message = $count;
@@ -3053,6 +3053,6 @@ function theme_nodequeue_subqueue_full_text() {
  *
  * @ingroup themeable
  */
-function theme_nodequeue_subqueue_count_text($count) {
-  return t('@count in queue', array('@count' => $count));
+function theme_nodequeue_subqueue_count_text($variables) {
+  return t('@count in queue', array('@count' => $variables['count']));
 }
