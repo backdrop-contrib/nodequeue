@@ -2162,11 +2162,9 @@ function nodequeue_subqueue_remove_node($sqid, $nid) {
     if (module_exists('apachesolr')) {
       apachesolr_mark_node($nid);
     }
-
-    // Invoke the hook to notify other modules of the node removal.
-    module_invoke_all('nodequeue_remove', $sqid, $nid);
   }
 }
+
 /**
  * Remove a node or node(s) from a nodequeue by position.
  *
