@@ -2,7 +2,6 @@ name = Nodequeue
 description = Create queues which can contain nodes in arbitrary order
 package = Nodequeue
 core = 7.x
-files[] = nodequeue.module
 
 ; Includes
 files[] = includes/views/nodequeue.views.inc
