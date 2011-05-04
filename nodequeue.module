@@ -418,16 +418,16 @@ function _nodequeue_solr_qid_key() {
 /**
  * Implements hook_apachesolr_modify_query().
  */
-function nodequeue_apachesolr_modify_query($query, &$params, $caller) {
+function nodequeue_apachesolr_modify_query(DrupalSolrQueryInterface $query, $caller = 'apachesolr_search') {
   $queues = nodequeue_load_subqueues_by_queue(array_keys(nodequeue_get_all_qids()));
   $added = FALSE;
   foreach ($queues as $sqid => $queue) {
     $boost = variable_get("nodequeue_apachesolr_boost_$sqid", 0);
     if (!empty($boost)) {
-      $params['bq'][] = _nodequeue_solr_qid_key() . ":$sqid^$boost";
+      $query->params['bq'][] = _nodequeue_solr_qid_key() . ":$sqid^$boost";
       if (!$added) {
         // Only want to add the facet.field once. no need to repeat it
-        $params['facet.field'][] = _nodequeue_solr_qid_key();
+        $query->params['facet.field'][] = _nodequeue_solr_qid_key();
         $added = TRUE;
       }
     }
