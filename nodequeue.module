@@ -602,9 +602,20 @@ function nodequeue_node_tab($node) {
  * Display a list of queues and their status for the administrator.
  */
 function nodequeue_view_queues() {
-  // TODO Please change this theme call to use an associative array for the $variables parameter.
-  // TODO Please change this theme call to use an associative array for the $variables parameter.
-  $output = theme('advanced_help_topic', 'nodequeue', 'about', 'icon') . '&nbsp;' . theme('advanced_help_topic', 'nodequeue', 'about', t('Click here for information about this module'));
+  $output = '';
+
+  if (module_exists('advanced_help')) {
+    $output .= theme('advanced_help_topic', array(
+      'module' => 'nodequeue',
+      'topic' => 'about',
+    ));
+    $output .= '&nbsp;' . theme('advanced_help_topic', array(
+      'module' => 'nodequeue',
+      'topic' => 'about',
+      'type' => t('Click here for information about this module'),
+    ));
+    $output = '<p>' . $output . '</p>';
+  }
 
   // Fetch all of the queues.
   $queues = nodequeue_load_queues(nodequeue_get_all_qids(25));
