@@ -2817,7 +2817,7 @@ function nodequeue_api_autocomplete($queue, $subqueue, $string) {
   }
   else {
     // Build the constant parts of the query.
-    $query->where('LOWER(n.title) LIKE LOWER(:string)', array(':string' => $string . '%'));
+    $query->where('LOWER(n.title) LIKE LOWER(:string)', array(':string' => '%' . db_like($string) . '%'));
   }
 
   // Call to the API.
