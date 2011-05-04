@@ -2128,8 +2128,8 @@ function nodequeue_remove_subqueue($sqid) {
  * @param $queue
  *   The parent queue of the subqueue. This is required so that we can
  *   pop nodes out if the queue breaks size limits.
- * @param $sqid
- *   The subqueue ID to add the node to.
+ * @param $subqueue
+ *   The subqueue to add the node to.
  * @param $nid
  *   The node ID
  */
@@ -2148,13 +2148,13 @@ function nodequeue_subqueue_add($queue, &$subqueue, $nid) {
     // If adding this would make the queue too big, pop the front node
     // (or nodes) out.
     if (!empty($queue->size)) {
-      // 0 means infinity so never do this if false
+      // 0 means infinity so never do this if FALSE.
       nodequeue_check_subqueue_size($queue, $subqueue, $queue->size);
     }
     if (module_exists('apachesolr')) {
       apachesolr_mark_node($nid);
     }
-    //Invoke the hook to notify other modules of the node addition.
+    // Invoke the hook to notify other modules of the node addition.
     module_invoke_all('nodequeue_add', $subqueue->sqid, $nid);
   }
 }
