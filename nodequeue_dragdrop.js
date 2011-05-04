@@ -106,18 +106,20 @@ Drupal.behaviors.nodequeueRemoveNode = {
   }
 }
 
-Drupal.behaviors.nodequeueClearTitle = function(context) {
-  $('#edit-add-nid').focus(function(){
-    if (this.value == this.defaultValue) {
-			this.value = '';
-      $(this).css('color', '#000');
-		}
-  }).blur(function(){
-    if (!this.value.length) {
-      $(this).css('color', '#999');
-			this.value = this.defaultValue;
-		}
-  });
+Drupal.behaviors.nodequeueClearTitle = {
+  attach: function(context) {
+    $('#edit-add-nid').focus(function() {
+      if (this.value == this.defaultValue) {
+        this.value = '';
+        $(this).css('color', '#000');
+      }
+    }).blur(function(){
+      if (!this.value.length) {
+        this.value = this.defaultValue;
+        $(this).css('color', '#999');
+      }
+    });
+  }
 }
 
 /**
