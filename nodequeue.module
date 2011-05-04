@@ -154,18 +154,18 @@ function nodequeue_menu() {
     'weight' => 5,
     'type' => MENU_CALLBACK
   );
-  $items["admin/structure/nodequeue/%nodequeue/add/%subqueue/%node"] = array(
-    'access arguments' => array(6, 3, 5),
+  $items['nodequeue/%nodequeue/add-node/%subqueue/%node'] = array(
+    'access arguments' => array(4, 1, 3),
     'access callback' => 'nodequeue_node_and_queue_access',
     'page callback' => 'nodequeue_admin_add_node',
-    'page arguments' => array(3, 5, 6),
+    'page arguments' => array(1, 3, 4),
     'type' => MENU_CALLBACK
   );
-  $items["admin/structure/nodequeue/%nodequeue/remove-node/%subqueue/%node"] = array(
-    'access arguments' => array(6, 3, 5),
+  $items['nodequeue/%nodequeue/remove-node/%subqueue/%node'] = array(
+    'access arguments' => array(4, 1, 3),
     'access callback' => 'nodequeue_node_and_queue_access',
     'page callback' => 'nodequeue_admin_remove_node',
-    'page arguments' => array(3, 5, 6),
+    'page arguments' => array(1, 3, 4),
     'type' => MENU_CALLBACK
   );
   $items["admin/structure/nodequeue/%nodequeue/clear/%subqueue"] = array(
@@ -247,14 +247,14 @@ function nodequeue_node_view($node, $view_mode) {
       if (!isset($subqueue->position)) {
         $links[$class] = array(
           'title' => nodequeue_title_substitute($queue->link, $queue, $subqueue),
-          'href' => "admin/structure/nodequeue/$queue->qid/add/$subqueue->sqid/$id",
+          'href' => "nodequeue/$queue->qid/add-node/$subqueue->sqid/$id",
           'attributes' => array('class' => array($class . ' toggle-add')),
           'query' => $query_string);
       }
       else if ($queue->link_remove) {
         $links[$class] = array(
           'title' => nodequeue_title_substitute($queue->link_remove, $queue, $subqueue),
-          'href' => "admin/structure/nodequeue/$queue->qid/remove-node/$subqueue->sqid/$id",
+          'href' => "nodequeue/$queue->qid/remove-node/$subqueue->sqid/$id",
           'attributes' => array('class' => array($class . ' toggle-remove')),
           'query' => $query_string);
       }
@@ -477,13 +477,13 @@ function nodequeue_admin_add_node($queue, $subqueue, $node) {
   if (!empty($_POST['js'])) {
     if (isset($_GET['tab'])) {
       nodequeue_js_output(t('Remove from queue'),
-        url("admin/structure/nodequeue/$queue->qid/remove-node/$subqueue->sqid/$node->nid", array('query' => nodequeue_get_query_string($node->nid, TRUE, array('tab' => '1')))),
+        url("nodequeue/$queue->qid/remove-node/$subqueue->sqid/$node->nid", array('query' => nodequeue_get_query_string($node->nid, TRUE, array('tab' => '1')))),
         nodequeue_subqueue_size_text($queue->size, $queue->size ? min($subqueue->count, $queue->size) : $subqueue->count, FALSE),
         $subqueue->sqid);
     }
     else {
       nodequeue_js_output(nodequeue_title_substitute($queue->link_remove, $queue, $subqueue),
-        url("admin/structure/nodequeue/$queue->qid/remove-node/$subqueue->sqid/$node->nid", array('query' => nodequeue_get_query_string($node->nid, TRUE))));
+        url("nodequeue/$queue->qid/remove-node/$subqueue->sqid/$node->nid", array('query' => nodequeue_get_query_string($node->nid, TRUE))));
     }
   }
 
@@ -505,13 +505,13 @@ function nodequeue_admin_remove_node($queue, $subqueue, $node) {
   if (!empty($_POST['js'])) {
     if (isset($_GET['tab'])) {
       nodequeue_js_output(t('Add to queue'),
-        url("admin/structure/nodequeue/$queue->qid/add/$subqueue->sqid/$node->nid", array('query' => nodequeue_get_query_string($node->nid, TRUE, array('tab' => '1')))),
+        url("nodequeue/$queue->qid/add-node/$subqueue->sqid/$node->nid", array('query' => nodequeue_get_query_string($node->nid, TRUE, array('tab' => '1')))),
         nodequeue_subqueue_size_text($queue->size, $subqueue->count - 1, FALSE),
         $subqueue->sqid);
     }
     else {
       nodequeue_js_output(nodequeue_title_substitute($queue->link, $queue, $subqueue),
-        url("admin/structure/nodequeue/$queue->qid/add/$subqueue->sqid/$node->nid", array('query' => nodequeue_get_query_string($node->nid, TRUE))));
+        url("nodequeue/$queue->qid/add-node/$subqueue->sqid/$node->nid", array('query' => nodequeue_get_query_string($node->nid, TRUE))));
     }
   }
 
@@ -550,7 +550,7 @@ function nodequeue_node_tab($node) {
     if (empty($subqueue->position)) {
       $op = l(
         t('Add to queue'),
-        "admin/structure/nodequeue/$queue->qid/add/$subqueue->sqid/$node->nid",
+        "nodequeue/$queue->qid/add-node/$subqueue->sqid/$node->nid",
         array('attributes' => array('class' => array('nodequeue-ajax-toggle')),
           'query' => nodequeue_get_query_string($node->nid, TRUE, array('tab' => '1')))
       );
@@ -558,7 +558,7 @@ function nodequeue_node_tab($node) {
     else {
       $op = l(
         t('Remove from queue'),
-        "admin/structure/nodequeue/$queue->qid/remove-node/$subqueue->sqid/$node->nid",
+        "nodequeue/$queue->qid/remove-node/$subqueue->sqid/$node->nid",
         array('attributes' => array('class' => array('nodequeue-ajax-toggle')),
           'query' => nodequeue_get_query_string($node->nid, TRUE, array('tab' => '1')))
       );
@@ -1139,7 +1139,7 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
       ),
       'query' => nodequeue_get_query_string($node->nid, TRUE),
     );
-    $form['nodes'][$node->nid]['remove'] = array('#markup' => l(t('remove'), 'admin/structure/nodequeue/' . $queue->qid . '/remove-node/' . $subqueue->sqid . '/' . $node->nid, $attr));
+    $form['nodes'][$node->nid]['remove'] = array('#markup' => l(t('remove'), 'nodequeue/' . $queue->qid . '/remove-node/' . $subqueue->sqid . '/' . $node->nid, $attr));
   }
 
   // add a textfield for adding nodes to the queue
