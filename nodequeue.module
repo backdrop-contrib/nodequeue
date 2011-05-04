@@ -185,6 +185,18 @@ function subqueue_to_arg() {
 }
 
 /**
+ * Implements hook_admin_paths().
+ */
+function nodequeue_admin_paths() {
+  if (variable_get('node_admin_theme')) {
+    $paths = array(
+      'node/*/nodequeue' => TRUE,
+    );
+    return $paths;
+  }
+}
+
+/**
  * Implements hook_node_delete.
  */
 function nodequeue_node_delete($node) {
