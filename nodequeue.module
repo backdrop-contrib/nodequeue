@@ -359,16 +359,19 @@ function nodequeue_views_api() {
   );
 }
 
+// --------------------------------------------------------------------------
+// Nodequeue Apache Solr Search Integration
+
 /**
- * Implements hook_form_$form-id_alter().
+ * Implements hook_form_FORM_ID_alter().
  */
-function nodequeue_form_apachesolr_search_bias_form_alter(&$form, $form_state) {
-  // setup for the form building
+function nodequeue_form_apachesolr_search_bias_form_alter(&$form, &$form_state, $form_id) {
+  // Setup for the form building.
   $weights = drupal_map_assoc(array('21.0', '13.0', '8.0', '5.0', '3.0', '2.0', '1.0', '0.8', '0.5', '0.3', '0.2', '0.1'));
   $weights['0'] = t('Normal');
   $queues = nodequeue_load_subqueues_by_queue(array_keys(nodequeue_get_all_qids()));
 
-  // build the form
+  // Build the form.
   $form['biasing']['nodequeue_boost'] = array(
     '#type' => 'fieldset',
     '#title' => t('Nodequeue Biasing'),
@@ -382,7 +385,7 @@ function nodequeue_form_apachesolr_search_bias_form_alter(&$form, $form_state) {
   );
   foreach ($queues as $sqid => $queue) {
     $boost = variable_get("nodequeue_apachesolr_boost_$sqid", 0);
-    // add in setting for each queue
+    // Add in setting for each queue.
     $form['biasing']['nodequeue_boost']['nodequeue_apachesolr_boost']["nodequeue_apachesolr_boost_$sqid"] = array(
       '#type' => 'select',
       '#title' => t('Weight for %title nodequeue', array('%title' => $queue->title)),
@@ -415,7 +418,7 @@ function nodequeue_apachesolr_update_index(&$document, $node) {
 }
 
 /**
- * return the apachesolr index key for group id
+ * Returns the apachesolr index key for group id.
  */
 function _nodequeue_solr_qid_key() {
   $qid_key = array(
@@ -428,9 +431,9 @@ function _nodequeue_solr_qid_key() {
 }
 
 /**
- * Implements hook_apachesolr_modify_query().
+ * Implements hook_apachesolr_query_alter().
  */
-function nodequeue_apachesolr_modify_query(DrupalSolrQueryInterface $query, $caller = 'apachesolr_search') {
+function nodequeue_apachesolr_query_alter(DrupalSolrQueryInterface $query) {
   $queues = nodequeue_load_subqueues_by_queue(array_keys(nodequeue_get_all_qids()));
   $added = FALSE;
   foreach ($queues as $sqid => $queue) {
@@ -438,7 +441,7 @@ function nodequeue_apachesolr_modify_query(DrupalSolrQueryInterface $query, $cal
     if (!empty($boost)) {
       $query->params['bq'][] = _nodequeue_solr_qid_key() . ":$sqid^$boost";
       if (!$added) {
-        // Only want to add the facet.field once. no need to repeat it
+        // Only want to add the facet.field once. no need to repeat it.
         $query->params['facet.field'][] = _nodequeue_solr_qid_key();
         $added = TRUE;
       }
