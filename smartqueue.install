@@ -2,16 +2,18 @@
 
 /**
  * @file
- * Install, update and uninstall functions for the nodequeue module.
- *
+ * Install, update and uninstall functions for the smartqueue module.
  */
 
+/**
+ * Implements hook_schema().
+ */
 function smartqueue_schema() {
   $schema['smartqueue'] = array(
     'description' => 'Table for smartqueues, storing global information for each queue.',
     'fields' => array(
       'qid' => array(
-        'description' => t('The primary identifier for a queue.'),
+        'description' => 'The primary identifier for a queue.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE
@@ -29,6 +31,9 @@ function smartqueue_schema() {
   return $schema;
 }
 
+/**
+ * Implements hook_update_N().
+ */
 function smartqueue_update_6003() {
   $ret = array();
   // Don't use hook_schema for database updates per http://drupal.org/node/150220.
