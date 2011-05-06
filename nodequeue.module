@@ -1253,7 +1253,10 @@ function nodequeue_arrange_subqueue_form_submit($form, &$form_state, $reverse = 
   $nodes = array();
   foreach ($form_state['values']['nodes'] as $nid => $element) {
     if (is_numeric($nid)) {
-      $nodes[$form_state['values']['nodes'][$nid]['position']] = $nid;
+      $nodes[$form_state['values']['nodes'][$nid]['position']] = array(
+        'nid' => $nid,
+        'data' => $form_state['values']['nodes'][$nid]
+      );
     }
   }
 
@@ -1309,17 +1312,18 @@ function nodequeue_save_subqueue_order($nodes, $qid, $sqid) {
   $clean = array();
   $count = 1;
   ksort($nodes);
-  foreach ($nodes as $pos => $nid) {
-    if (!is_numeric($nid) || $nid < 1) {
+  module_invoke_all('nodequeue_sort_alter', $sqid, $nodes);
+  foreach ($nodes as $pos => $node) {
+    if (!is_numeric($node['nid']) || $node['nid'] < 1) {
       return array(NODEQUEUE_INVALID_NID, 'Invalid nid value. New subqueue order not saved.');
     }
     if (is_numeric($pos)) {
-      $clean[$count] = $nid;
+      $clean[$count] = $node;
       $count++;
     }
     else if ($pos == 'r') {
       // call nodequeue_remove hook
-      module_invoke_all('nodequeue_remove', $sqid, $nid);
+      module_invoke_all('nodequeue_remove', $sqid, $node['nid']);
     }
     else {
       return array(NODEQUEUE_INVALID_POSITION, 'Invalid position value. New subqueue order not saved.');
@@ -1327,22 +1331,27 @@ function nodequeue_save_subqueue_order($nodes, $qid, $sqid) {
   }
   $nodes = $clean;
 
-  if (count(array_unique($nodes)) < count($nodes)) {
+  if (count(array_unique($nodes, SORT_REGULAR)) < count($nodes)) {
     return array(NODEQUEUE_DUPLICATE_POSITION, 'Duplicate position values are not allowed. New subqueue order not saved.');
+  }
+  // Allow other modules to alter the order of nodes.
+  foreach (module_implements('nodequeue_save_subqueue_order_alter') as $module) {
+    $function = $module . '_nodequeue_save_subqueue_order_alter';
+    $function($sqid, $nodes);
   }
 
   // clear the queue and save the new positions
   db_delete('nodequeue_nodes')
     ->condition('sqid', $sqid)
     ->execute();
-  foreach ($nodes as $pos => $nid) {
+  foreach ($nodes as $pos => $node) {
     $args = array();
     if ($pos != 'r') {
       $query = db_insert('nodequeue_nodes')
         ->fields(array(
           'sqid' => $sqid,
           'qid' => $qid,
-          'nid' => $nid,
+          'nid' => $node['nid'],
           'position' => $pos,
           'timestamp' => $now,
         ))
