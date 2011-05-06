@@ -40,7 +40,6 @@ function smartqueue_taxonomy_nodequeue_form($queue, &$form) {
     '#description' => t('What to display for the subqueue title; use %subqueue to embed the actual subqueue title. This is used to distinguish multiple nodequeues with subqueues from each other, as internal subqueue title is filled automatically.'),
   );
 
-
   if (!empty($queue->qid)) {
     $form['placeholder']['vocabularies']['#disabled'] = TRUE;
     $form['placeholder']['vocabularies']['#default_value'] = explode('-', $queue->reference);
@@ -282,20 +281,24 @@ function smartqueue_taxonomy($op, $type, $array = NULL) {
  */
 function smartqueue_taxonomy_get_parents($tids) {
   if ($tids) {
-    $placeholders = db_placeholders($tids);
-    $result = db_query(db_rewrite_sql("SELECT t.tid, t.* FROM {term_data} t INNER JOIN {term_hierarchy} h ON h.parent = t.tid WHERE h.tid IN ($placeholders) ORDER BY weight, name", 't', 'tid'), $tids);
-    $parents = array();
-    // this will filter out duplicates.
-    foreach ($result as $parent) {
-      $parents[$parent->tid] = $parent->tid;
+    $top_level_tids = array();
+    foreach ($tids as $tid) {
+      $result = db_query(db_rewrite_sql("SELECT t.tid, t.* FROM {term_data} t INNER JOIN {term_hierarchy} h ON h.parent = t.tid WHERE h.tid = %d ORDER BY weight, name", 't', 'tid'), $tid);
+      $parents = array();
+      // This will filter out some duplicates.
+      while ($parent = db_fetch_object($result)) {
+        $parents[$parent->tid] = $parent->tid;
+      }
+      if (count($parents)) {
+        $parent_tid = smartqueue_taxonomy_get_parents($parents);
+        $top_level_tids = array_merge($parent_tid, $top_level_tids);
+      }
+      // When there aren't any matches, hand back the original tids.
+      else {
+        $top_level_tids[] = $tid;
+      }
     }
-    if (count($parents)) {
-      return smartqueue_taxonomy_get_parents($parents);
-    }
-    // we there weren't any matches, hand back the original tids.
-    else {
-      return $tids;
-    }
+    return array_unique($top_level_tids);
   }
   else {
     return array();
