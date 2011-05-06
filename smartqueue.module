@@ -41,7 +41,7 @@ function smartqueue_taxonomy_nodequeue_form($queue, &$form) {
   );
 
 
-  if ($queue->qid) {
+  if (!empty($queue->qid)) {
     $form['placeholder']['vocabularies']['#disabled'] = TRUE;
     $form['placeholder']['vocabularies']['#default_value'] = explode('-', $queue->reference);
   }
