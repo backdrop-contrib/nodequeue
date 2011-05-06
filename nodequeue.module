@@ -547,9 +547,7 @@ function nodequeue_node_tab($node) {
   }
   $header = array();
   $header[] = array('data' => t('Title'), 'class' => array('nodequeue-title'));
-  if (variable_get('nodequeue_tab_display_max', 1)) {
-    $header[] = array('data' => t('Max nodes'), 'class' => array('nodequeue-max-nodes'));
-  }
+  $header[] = array('data' => t('Max nodes'), 'class' => array('nodequeue-max-nodes'));
   $header[] = array('data' => t('In queue'), 'class' => array('nodequeue-in-queue'));
   $header[] = array('data' => t('Operation'), 'class' => array('nodequeue-operation'));
   $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
@@ -580,9 +578,10 @@ function nodequeue_node_tab($node) {
       'class' => array('nodequeue-title'),
       'data' => l(nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue), "admin/structure/nodequeue/$queue->qid/view/$subqueue->sqid"),
     );
-    if (variable_get('nodequeue_tab_display_max', 1)) {
-      $row[] = array('class' => array('nodequeue-max-nodes'), 'data' => $queue->size ? $queue->size : t('Infinite'));
-    }
+    $row[] = array(
+      'class' => array('nodequeue-max-nodes'),
+      'data' => $queue->size ? $queue->size : t('Infinite')
+    );
     $row[] = array(
       'id' => 'nodequeue-count-' . $subqueue->sqid,
       'class' => array('nodequeue-in-queue'),
@@ -2920,11 +2919,6 @@ function nodequeue_admin_settings($form, &$form_state) {
     '#type' => 'checkbox',
     '#title' => t('Create a menu tab for each node that could belong to any queues'),
     '#default_value' => variable_get('nodequeue_use_tab', 1),
-  );
-  $form['nodequeue_tab_display_max'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Include a column on the nodequeue tab for the maximum number of nodes in each queue'),
-    '#default_value' => variable_get('nodequeue_tab_display_max', 1),
   );
   $form['nodequeue_tab_name'] = array(
     '#type' => 'textfield',
