@@ -280,20 +280,3 @@ function nodequeue_update_6005() {
   $ret[] = update_sql("UPDATE {system} set name = 'nodequeue_view_per_queue' where name = 'nodequeue_automatic_views_generation'");
   return $ret;
 }
-
-/**
- * Implements hook_requirements().
- *
- * We need the translation_helpers module to enable internationalization for queues.
- */
-function nodequeue_requirements($phase) {
-  $requirements = array();
-  $t = get_t();
-  if (($phase == 'install' || $phase == 'runtime') && module_exists('translation') && !module_exists('translation_helpers')) {
-    $requirements['nodequeue_translation']['title'] = $t('Nodequeue');
-    $requirements['nodequeue_translation']['severity'] = REQUIREMENT_WARNING;
-    $requirements['nodequeue_translation']['description'] = $t('To have the nodequeue module work with translations, you need to install and enable the !url module.', array('!url' => l('translation_helpers', 'http://drupal.org/project/translation_helpers')));
-    $requirements['nodequeue_translation']['value'] = $t('Translation helpers module not found.');
-  }
-  return $requirements;
-}
