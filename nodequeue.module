@@ -1708,40 +1708,39 @@ function nodequeue_get_qids($type, $account = NULL, $bypass_cache = FALSE) {
 }
 
 /**
- * Get an array all qids using the pager query. This administrative list
+ * Get an array of qids using the pager query. This administrative list
  * does no permission checking, so should only be available to users who
  * have passed the 'administer queues' check.
  *
  * @param $page_size
- *   The page size to use. If 0 will be all queues.
+ *   The page size to use. If this is 0 or NULL, all queues will be returned.
+ *   Defaults to 0.
  * @param $pager_element
  *   In the rare event this should use another pager element, set this..
- *
- * @return $qids
- *   An array in the format: @code { array($qid => array('qid' => $qid, 'show_in_tab' '
- *    => true/false, 'show_in_links' => true/false }
  * @param $bypass_cache
  *   Boolean value indicating whether to bypass the cache or not.
+ *
+ * @return $qids
+ *   An array in the format: @code { array($qid => $qid) }
  */
-function nodequeue_get_all_qids($page_size = 25, $pager_element = 0, $bypass_cache = FALSE) {
-  static $cache = NULL;
-  if ($bypass_cache || !isset($cache)) {
-    $result = db_select('nodequeue_queue', 'nq')
-      ->extend('PagerDefault')
-      ->extend('TableSort')
-      ->fields('nq', array('qid'))
-      ->limit($page_size)
-      ->execute();
+function nodequeue_get_all_qids($page_size = 0, $pager_element = 0, $bypass_cache = FALSE) {
+  $cache = &drupal_static(__FUNCTION__, array());
+  if ($bypass_cache || empty($cache[$page_size])) {
+    $query = db_select('nodequeue_queue', 'nq')
+      ->fields('nq', array('qid'));
 
-    $qids = array();
-    if (!empty($result)) {
-      foreach ($result as $qid) {
-        $qids[$qid->qid] = $qid->qid;
-      }
+    if (!empty($page_size)) {
+      $query->extend('PagerDefault')
+        ->extend('TableSort')
+        ->limit($page_size)
+        ->element($pager_element);
     }
-    $cache = $qids;
+
+    $qids = $query->execute()->fetchAllKeyed(0, 0);
+
+    $cache[$page_size] = $qids;
   }
-  return $cache;
+  return $cache[$page_size];
 }
 
 /**
