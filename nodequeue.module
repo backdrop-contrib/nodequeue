@@ -1527,7 +1527,7 @@ class nodequeue_queue {
   var $i18n = 0;
 
   var $subqueue_title = '';
-  var $reverse = FALSE;
+  var $reverse = 0;
 
   // runtime
   var $subqueues = array();

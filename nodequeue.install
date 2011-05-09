@@ -78,6 +78,7 @@ function nodequeue_schema() {
         'description' => '',
         'type' => 'int',
         'size' => 'tiny',
+        'default' => 0,
       ),
       'i18n' => array(
         'description' => '',
