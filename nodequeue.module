@@ -180,10 +180,6 @@ function nodequeue_menu() {
   return $items;
 }
 
-function subqueue_to_arg() {
-  return '';
-}
-
 /**
  * Implements hook_admin_paths().
  */
