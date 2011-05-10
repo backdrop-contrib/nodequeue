@@ -181,6 +181,13 @@ function nodequeue_menu() {
 }
 
 /**
+ * Helper function for a _menu_translate() bug.
+ */
+function subqueue_to_arg() {
+  return '';
+}
+
+/**
  * Implements hook_admin_paths().
  */
 function nodequeue_admin_paths() {
