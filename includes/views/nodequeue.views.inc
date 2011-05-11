@@ -109,6 +109,24 @@ function nodequeue_views_data() {
     ),
   );
 
+  $data['nodequeue_queue']['name'] = array(
+    'title' => t('Queue machine name'),
+    'help' => t('The machine name of the queue.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
+    ),
+  );
+
   // ----------------------------------------------------------------
   // nodequeue_queue table
   $data['nodequeue_queue']['table']['group'] = t('Nodequeue');

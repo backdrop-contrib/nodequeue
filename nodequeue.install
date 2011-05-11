@@ -18,6 +18,11 @@ function nodequeue_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE
       ),
+      'name' => array(
+        'description' => 'The machine name for the queue.',
+        'type' => 'varchar',
+        'length' => 128,
+      ),
       'title' => array(
         'description' => 'Title of a queue.',
         'type' => 'varchar',
@@ -88,6 +93,9 @@ function nodequeue_schema() {
       ),
     ), // fields
     'primary key' => array('qid'),
+    'unique keys' => array(
+      'name' => array('name'),
+    ),
   ); // nodequeue_queue.
   $schema['nodequeue_roles'] = array(
     'description' => 'Defines the roles which are allowed to use a particular nodequeue.',
@@ -330,6 +338,60 @@ function nodequeue_update_7200() {
       foreach($indices as $name => $columns) {
         db_add_index($table, $name, $columns);
       }
+    }
+  }
+}
+
+/**
+ * Provide machine names and auto-generation of machine names for existing
+ * queues.
+ */
+function nodequeue_update_7201() {
+  // Check that the name field hasn't been created by a 6.x-2.x-dev version
+  // prior to 6.x-2.10.
+  if (!db_field_exists('nodequeue_queue', 'name')) {
+    $name_field = array(
+      'description' => 'The machine name for the queue.',
+      'type' => 'varchar',
+      'length' => 128,
+    );
+    db_add_field('nodequeue_queue', 'name', $name_field);
+    db_add_unique_key('nodequeue_queue', 'name', array('name'));
+
+    // Auto-generate machine names for existing queues and subqueues. Existing
+    // queues will be given the first 128 characters of the title, with all
+    // spaces replaced with underline characters, made lowercase and trimmed
+    // of excess whitespace. Nodequeues with empty titles will receive a name
+    // like 'queue_$qid'.
+    $result = db_query("SELECT qid, title FROM {nodequeue_queue}");
+    foreach ($result as $queue) {
+      if (!empty($queue->title)) {
+        // Basic formatting.
+        $new_name = strtolower(trim(substr($queue->title, 0, 128)));
+        // Regex to strip out all unwanted characters.
+        $new_name = preg_replace('/[^a-z0-9_]+/', '_', $new_name);
+
+        // Check if this queue name already exists.
+        if (nodequeue_machine_name_exists($new_name)) {
+          $tmp_name = $new_name;
+          $i = 0;
+          do {
+            // Append an incrementing numeric suffix until we find a unique name.
+            $unique_suffix = '_' . $i;
+            $new_name = truncate_utf8($tmp_name, 128 - drupal_strlen($unique_suffix, TRUE)) . $unique_suffix;
+            $i++;
+          } while (nodequeue_machine_name_exists($new_name));
+        }
+      }
+      else {
+        // Default to a name like 'queue_$qid' for queues that don't have a title.
+        $new_name = 'queue_' . $queue->qid;
+      }
+
+      db_update('nodequeue_queue')
+        ->fields(array('name' => $new_name))
+        ->condition('qid', $queue->qid)
+        ->execute();
     }
   }
 }

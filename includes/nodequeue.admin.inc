@@ -325,9 +325,26 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
     '#title' => t('Title'),
     '#default_value' => $queue->title,
     '#size' => 50,
+    '#required' => TRUE,
     '#maxlength' => 64,
     '#description' => t('Enter the name of the queue'),
   );
+
+  $form['name'] = array(
+    '#type' => 'machine_name',
+    '#maxlength' => 32,
+    '#machine_name' => array(
+      'exists' => 'nodequeue_machine_name_exists',
+      'source' => array('title'),
+    ),
+    '#description' => t('A unique machine-readable name for this queue. It must only contain lowercase letters, numbers, and underscores.'),
+  );
+
+  if (isset($queue->name)) {
+    $form['name']['#default_value'] = $queue->name;
+    $form['name']['#disabled'] = TRUE;
+    $form['name']['#value'] = $queue->name;
+  }
 
   // This is a value; as the default nodequeue implementation has just one
   // queue per nodequeue, this field is totally redundant. Plugins can

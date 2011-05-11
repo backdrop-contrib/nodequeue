@@ -480,6 +480,7 @@ function nodequeue_apachesolr_query_alter(DrupalSolrQueryInterface $query) {
  * always check to see if our variables are empty or not.
  */
 class nodequeue_queue {
+  var $name = '';
   var $title = '';
   var $size = 0;
   var $link = '';
@@ -841,10 +842,51 @@ function nodequeue_load_subqueues_by_reference($references, $bypass_cache = FALS
 }
 
 /**
+ * Return a queue by its machine name. This is obviously not ideal due to the
+ * extra queries, but probably preferable to changing current API calls.
+ *
+ * @param $name
+ *   The queue machine name
+ *
+ * @return
+ *   The queue definition, or an empty array if no queue was found with the
+ *   given machine name.
+ */
+function nodequeue_load_queue_by_name($name) {
+  $map = nodequeue_get_qid_map();
+  if (isset($map[$name])) {
+    $queues = nodequeue_load_queues(array($map[$name]));
+    if ($queues) {
+      return current($queues);
+    }
+  }
+
+  return array();
+}
+
+/**
+ * Return a map of queue name to qid values to aid in various lookups.
+ *
+ * @return array
+ *   A array of qids, keyed by machine name.
+ */
+function nodequeue_get_qid_map() {
+  static $map = array();
+  if (!$map) {
+    $result = db_query("SELECT qid, name FROM {nodequeue_queue}");
+    while ($get = $result->fetchObject()) {
+      $map[$get->name] = $get->qid;
+    }
+  }
+  return $map;
+}
+
+/**
  * Save a nodequeue. This does not save subqueues; those must be added separately.
  */
 function nodequeue_save(&$queue) {
   $nodequeue_queue_fields = array(
+    'name' => $queue->name,
     'title' => $queue->title,
     'subqueue_title' => $queue->subqueue_title,
     'size' => $queue->size,
@@ -1971,7 +2013,16 @@ function nodequeue_get_content_id($queue, $node) {
   return ($queue->i18n && !empty($node->tnid)) ? $node->tnid : $node->nid;
 }
 
-/*
+/**
+ * Determine if the machine name is in use.
+ */
+function nodequeue_machine_name_exists($machine_name) {
+  $queue_exists = db_query_range('SELECT 1 FROM {nodequeue_queue} WHERE name = :name', 0, 1, array(':name' => $machine_name))->fetchField();
+
+  return $queue_exists;
+}
+
+/**
  * Get the list of nodes in the subqueue, taking into account node access restrictions.
  */
 function nodequeue_nids_visible($sqid = -1, $account = NULL) {
