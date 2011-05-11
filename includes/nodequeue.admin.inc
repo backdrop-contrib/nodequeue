@@ -340,7 +340,7 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
     '#description' => t('A unique machine-readable name for this queue. It must only contain lowercase letters, numbers, and underscores.'),
   );
 
-  if (isset($queue->name)) {
+  if (!empty($queue->name)) {
     $form['name']['#default_value'] = $queue->name;
     $form['name']['#disabled'] = TRUE;
     $form['name']['#value'] = $queue->name;
