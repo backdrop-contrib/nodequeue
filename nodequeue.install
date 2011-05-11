@@ -108,8 +108,8 @@ function nodequeue_schema() {
       ),
     ), // fields
     'indexes' => array(
-      '{nodequeue_roles}_qid_idx' => array('qid'),
-      '{nodequeue_roles}_rid_idx' => array('rid'),
+      'qid' => array('qid'),
+      'rid' => array('rid'),
     ), // indexes
   ); // nodequeue_roles
   $schema['nodequeue_types'] = array(
@@ -130,8 +130,8 @@ function nodequeue_schema() {
       ),
     ), // fields
     'indexes' => array(
-      '{nodequeue_types}_qid_idx' => array('qid'),
-      '{nodequeue_types}_type_idx' => array('type'),
+      'qid' => array('qid'),
+      'type' => array('type'),
     ), // indexes
   ); // nodequeue_types
 
@@ -171,9 +171,9 @@ function nodequeue_schema() {
     ), // fields
     'primary key' => array('sqid'),
     'indexes' => array(
-      '{nodequeue_subqueue}_qid_idx' => array('qid'),
-      '{nodequeue_subqueue}_reference_idx' => array('reference'),
-      '{nodequeue_subqueue}_title_idx' => array('title'),
+      'qid' => array('qid'),
+      'reference' => array('reference'),
+      'title' => array('title'),
     ), // indexes
   ); // nodequeue_subqueue
 
@@ -213,9 +213,9 @@ function nodequeue_schema() {
       ),
     ), // fields
     'indexes' => array(
-      '{nodequeue_nodes}_sqid_idx' => array('sqid', 'position'),
-      '{nodequeue_subqueue}_nid_idx' => array('nid'),
-      '{nodequeue_nodes}_qid_nid_idx' => array('qid', 'nid'),
+      'sqid' => array('sqid', 'position'),
+      'nid' => array('nid'),
+      'qid_nid' => array('qid', 'nid'),
     ), // indexes
   ); // nodequeue_nodes
 
@@ -280,4 +280,56 @@ function nodequeue_update_6005() {
   $ret = array();
   $ret[] = update_sql("UPDATE {system} set name = 'nodequeue_view_per_queue' where name = 'nodequeue_automatic_views_generation'");
   return $ret;
+}
+
+/**
+ * Renaming indices so that they're consistent with what Schema module would
+ * expect.
+ */
+function nodequeue_update_7200() {
+  // Check if the indices weren't already renamed by a 6.x-2.x-dev version
+  // prior to 6.x-2.10.
+  if (!db_index_exists('nodequeue_nodes', 'sqid')) {
+    // Delete existing indexes
+    $del_indices = array(
+      'nodequeue_roles' => array('qid', 'rid'),
+      'nodequeue_types' => array('qid', 'type'),
+      'nodequeue_subqueue' => array('qid', 'reference', 'title'),
+      'nodequeue_nodes' => array('sqid', 'qid_nid'),
+    );
+    foreach($del_indices as $table => $indices) {
+      foreach($indices as $k => $index) {
+        db_drop_index($table, $table . "_" . $index . "_idx");
+      }
+    }
+    // Naming convention incorrect for this one
+    db_drop_index("nodequeue_nodes", "nodequeue_subqueue_nid_idx");
+
+    // Create new indexes
+    $add_indexes = array(
+       'nodequeue_roles' => array(
+         'qid' => array('qid'),
+         'rid' => array('rid'),
+       ),
+       'nodequeue_types' => array(
+         'qid' => array('qid'),
+         'type' => array('type'),
+       ),
+       'nodequeue_subqueue' => array(
+         'qid' => array('qid'),
+         'reference' => array('reference'),
+         'title' => array('title'),
+       ),
+       'nodequeue_nodes' => array(
+         'sqid' => array('sqid', 'position'),
+         'qid_nid' => array('qid', 'nid'),
+         'nid' => array('nid'),
+       ),
+    );
+    foreach($add_indexes as $table => $indices) {
+      foreach($indices as $name => $columns) {
+        db_add_index($table, $name, $columns);
+      }
+    }
+  }
 }
