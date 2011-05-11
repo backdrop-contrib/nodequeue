@@ -692,12 +692,12 @@ function _nodequeue_dragdrop_get_nodes($queue, $subqueue) {
 function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $subqueue) {
   $form = array('#tree' => TRUE);
 
-  // prepare the main part of the form which will be themed as a table
+  // Prepare the main part of the form which will be themed as a table.
   $count = count($nodes);
   $form['nodes'] = array();
   $form['nodes']['#theme'] = 'nodequeue_arrange_subqueue_form_table';
 
-  // Theme function needs these
+  // Theme function needs these.
   $form['nodes']['#queue']    = (array) $queue;
   $form['nodes']['#subqueue'] = (array) $subqueue;
 
@@ -737,9 +737,10 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
     $form['nodes'][$node->nid]['remove'] = array('#markup' => l(t('remove'), 'nodequeue/' . $queue->qid . '/remove-node/' . $subqueue->sqid . '/' . $node->nid, $attr));
   }
 
-  // add a textfield for adding nodes to the queue
+  // Textfield for adding nodes to the queue.
   $form['add'] = array(
-    '#type'   => 'markup',
+    '#type' => 'container',
+    '#attributes' => array('class' => array('container-inline')),
   );
   $form['add']['nid'] = array(
     '#type' => 'textfield',
@@ -749,37 +750,38 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
   );
   $form['add']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Add node & save queue'),
+    '#value' => t('Add content'),
     '#submit' => array('nodequeue_arrange_subqueue_form_add_submit'),
   );
 
-  // add submit, reverse, shuffle, and clear buttons
-  $form['submit'] = array(
+  // Submit, reverse, shuffle, and clear actions.
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save')
   );
-  $form['reverse'] = array(
+  $form['actions']['reverse'] = array(
     '#type' => 'submit',
     '#value' => t('Reverse'),
     '#submit' => array('nodequeue_arrange_subqueue_form_reverse_submit'),
   );
-  $form['shuffle'] = array(
+  $form['actions']['shuffle'] = array(
     '#type' => 'submit',
     '#value' => t('Shuffle'),
     '#submit' => array('nodequeue_arrange_subqueue_form_shuffle_submit'),
   );
-  $form['clear'] = array(
+  $form['actions']['clear'] = array(
     '#type' => 'submit',
     '#value' => t('Clear'),
     '#submit' => array('nodequeue_arrange_subqueue_form_clear_submit'),
   );
-  //$form['#validate'][] = 'nodequeue_arrange_subqueue_form_add_validate';
-  // disable all buttons if the queue is empty
+
+  // Disable all buttons if the queue is empty.
   if ($count == 0) {
-    $form['submit']['#disabled']  = TRUE;
-    $form['reverse']['#disabled'] = TRUE;
-    $form['shuffle']['#disabled'] = TRUE;
-    $form['clear']['#disabled']   = TRUE;
+    $form['actions']['submit']['#disabled']  = TRUE;
+    $form['actions']['reverse']['#disabled'] = TRUE;
+    $form['actions']['shuffle']['#disabled'] = TRUE;
+    $form['actions']['clear']['#disabled']   = TRUE;
   }
 
   return $form;
