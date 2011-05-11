@@ -102,7 +102,7 @@ function nodequeue_menu() {
       'page arguments' => array('nodequeue_edit_queue_form', $key),
       'access arguments' => $admin_access,
       'file' => 'includes/nodequeue.admin.inc',
-      'type' => MENU_LOCAL_TASK
+      'type' => MENU_LOCAL_ACTION
     );
   }
   $items['node/%node/nodequeue'] = array(
