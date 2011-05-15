@@ -906,7 +906,9 @@ function nodequeue_save_subqueue_order($nodes, $qid, $sqid) {
   }
   $nodes = $clean;
 
-  if (count(array_unique($nodes, SORT_REGULAR)) < count($nodes)) {
+  array_walk($clean, create_function('&$node', '$node = serialize($node);'));
+
+  if (count(array_unique($clean)) < count($nodes)) {
     return array(NODEQUEUE_DUPLICATE_POSITION, 'Duplicate position values are not allowed. New subqueue order not saved.');
   }
   // Allow other modules to alter the order of nodes.
