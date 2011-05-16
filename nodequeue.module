@@ -277,14 +277,18 @@ function nodequeue_node_view($node, $view_mode) {
           'title' => nodequeue_title_substitute($queue->link, $queue, $subqueue),
           'href' => "nodequeue/$queue->qid/add-node/$subqueue->sqid/$id",
           'attributes' => array('class' => array($class . ' toggle-add')),
-          'query' => $query_string);
+          'query' => $query_string,
+          'purl' => array('disabled' => TRUE),
+        );
       }
       else if ($queue->link_remove) {
         $links[$class] = array(
           'title' => nodequeue_title_substitute($queue->link_remove, $queue, $subqueue),
           'href' => "nodequeue/$queue->qid/remove-node/$subqueue->sqid/$id",
           'attributes' => array('class' => array($class . ' toggle-remove')),
-          'query' => $query_string);
+          'query' => $query_string,
+          'purl' => array('disabled' => TRUE),
+        );
       }
     }
     drupal_add_js(drupal_get_path('module', 'nodequeue') . '/nodequeue.js');
