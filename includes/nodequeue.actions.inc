@@ -216,10 +216,14 @@ function nodequeue_remove_action_submit($form, &$form_state) {
 function nodequeue_remove_action($node, $context) {
   $qids = $context['qids'];
   // If a node is being deleted, ensure it's also removed from any queues.
-  $placeholders = implode(',', array_fill(0, count($qids), '%d'));
   $args = $qids;
-  $args[] = $node->nid;
-  $result = db_query("SELECT * FROM {nodequeue_nodes} WHERE qid IN ($placeholders) AND nid = %d", $args);
+  $result = db_select('nodequeue_nodes', 'n')
+    ->fields('n')
+    ->condition('nid', $node->nid)
+    ->condition('qid', $args)
+    ->execute()
+    ->fetchAll();
+
   foreach ($result as $obj) {
     // This removes by nid, not position, because if we happen to have a
     // node in a queue twice, the 2nd position would be wrong.
@@ -244,10 +248,14 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
     case 'do':
       $qids = $edit['qids'];
       // If a node is being deleted, ensure it's also removed from any queues.
-      $placeholders = implode(',', array_fill(0, count($qids), '%d'));
       $args = $qids;
-      $args[] = $node->nid;
-      $result = db_query("SELECT * FROM {nodequeue_nodes} WHERE qid IN ($placeholders) AND nid = %d", $args);
+      $result = db_select('nodequeue_nodes', 'n')
+        ->fields('n')
+        ->condition('nid', $node->nid)
+        ->condition('qid', $args)
+        ->execute()
+        ->fetchAll();
+
       foreach ($result as $obj) {
         // This removes by nid, not position, because if we happen to have a
         // node in a queue twice, the 2nd position would be wrong.
