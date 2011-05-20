@@ -15,8 +15,9 @@ function nodequeue_action_info() {
       'label' => t('Add to Nodequeues'),
       'configurable' => TRUE,
       'triggers' => array(
-        'nodeapi_insert',
-        'nodeapi_update',
+        'node_presave',
+        'node_insert',
+        'node_update',
       ),
     ),
     'nodequeue_remove_action' => array(
@@ -24,8 +25,7 @@ function nodequeue_action_info() {
       'label' => t('Remove from Nodequeues'),
       'configurable' => TRUE,
       'triggers' => array(
-        'nodeapi_insert',
-        'nodeapi_update',
+        'node_delete',
       ),
     ),
   );
