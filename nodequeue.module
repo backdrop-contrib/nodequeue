@@ -1532,9 +1532,10 @@ function nodequeue_node_titles($sqid, $title = '', $backward = true, $from = 0, 
  * Get node_view output from a nodequeue
  */
 function nodequeue_view_nodes($sqid, $backward = TRUE, $teaser = TRUE, $links = TRUE, $from = 0, $count = 0) {
+  $output = array();
   $nodes = nodequeue_load_nodes($sqid, $backward, $from, $count);
   foreach ($nodes as $node) {
-    $output .= node_view($node, $teaser, FALSE, $links);
+    $output[] = node_view($node, $teaser, FALSE, $links);
   }
   return $output;
 }
@@ -1588,15 +1589,15 @@ function nodequeue_load_back($sqid, $teaser = TRUE, $links = TRUE) {
  * View a random node from a queue
  */
 function nodequeue_view_random_node($sqid, $teaser = TRUE, $links = TRUE) {
-  $count = db_select('node', 'n')
-    ->fields('n', array('nid'))
-    ->addTag('node_access')
-    ->condition('nn.sqid', $sqid)
-    ->condition('n.status', 1)
-    ->countQuery()
-    ->execute()
-    ->fetchField();
+  $query = db_select('node', 'n')
+    ->fields('n', array('nid'));
   $query->join('nodequeue_nodes', 'nn', 'n.nid = nn.nid');
+  $count = $query->addTag('node_access')
+     ->condition('nn.sqid', $sqid)
+     ->condition('n.status', 1)
+     ->countQuery()
+     ->execute()
+     ->fetchField();
 
   return nodequeue_view_nodes($sqid, FALSE, $teaser, $links, rand(0, $count - 1), 1);
 }
@@ -1605,15 +1606,15 @@ function nodequeue_view_random_node($sqid, $teaser = TRUE, $links = TRUE) {
  * Load a random node object from a queue
  */
 function nodequeue_load_random_node($sqid) {
-  $count = db_select('node', 'n')
-    ->fields('n', array('nid'))
-    ->addTag('node_access')
-    ->condition('nn.sqid', $sqid)
-    ->condition('n.status', 1)
-    ->countQuery()
-    ->execute()
-    ->fetchField();
+  $query = db_select('node', 'n')
+    ->fields('n', array('nid'));
   $query->join('nodequeue_nodes', 'nn', 'n.nid = nn.nid');
+  $count = $query->addTag('node_access')
+     ->condition('nn.sqid', $sqid)
+     ->condition('n.status', 1)
+     ->countQuery()
+     ->execute()
+     ->fetchField();
 
   return array_shift(nodequeue_load_nodes($sqid, TRUE, rand(0, $count - 1), 1));
 }
