@@ -307,7 +307,7 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
     // If the $queue is a string - name of a queue type, basically - then we test that it's a valid queue type.
     $queue = strtolower($queue);
     if (!isset($info[$queue])) {
-      return false;
+      return FALSE;
     }
     drupal_set_title(t('Add @type', array('@type' => strtolower($info[$queue]['title']))), PASS_THROUGH);
     $queue = new nodequeue_queue($queue);
@@ -318,8 +318,8 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
 
   $form['description'] = array(
     '#type' => 'fieldset',
-    '#title' => $info[$queue->owner]['title'],
-    '#description' => $info[$queue->owner]['description'],
+    '#title' => filter_xss($info[$queue->owner]['title']),
+    '#description' => filter_xss($info[$queue->owner]['description']),
   );
 
   $form['title'] = array(
@@ -614,7 +614,7 @@ function nodequeue_admin_view($queue, $subqueue = array()) {
       return nodequeue_view_subqueues($queue);
     }
   }
-  else if ($subqueue->sqid) {
+  elseif ($subqueue->sqid) {
     if (!nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
       return drupal_not_found();
     }
@@ -644,7 +644,7 @@ function nodequeue_arrange_subqueue($queue, $subqueue = NULL) {
       return drupal_not_found();
     }
   }
-  else if ($subqueue->sqid) {
+  elseif ($subqueue->sqid) {
     if (!nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
       return drupal_not_found();
     }
@@ -837,7 +837,7 @@ function nodequeue_arrange_subqueue_form_submit($form, &$form_state, $reverse = 
     }
   }
 
-  $message = t('The queue has been updated.');
+  $message = 'The queue has been updated.';
 
   if ($reverse || $shuffle) {
     $keys = array_keys($nodes);
@@ -846,13 +846,13 @@ function nodequeue_arrange_subqueue_form_submit($form, &$form_state, $reverse = 
     // reverse the list if the reverse button was pressed
     if ($reverse) {
       $values = array_reverse($values);
-      $message = t('The queue has been reversed.');
+      $message = 'The queue has been reversed.';
     }
 
     // shuffle the list if the shuffle button was pressed.
     if ($shuffle) {
       shuffle($values);
-      $message = t('The queue has been shuffled.');
+      $message = 'The queue has been shuffled.';
     }
 
     $nodes = array_combine($keys, $values);
@@ -862,7 +862,7 @@ function nodequeue_arrange_subqueue_form_submit($form, &$form_state, $reverse = 
   $sqid = $form['nodes']['#subqueue']['sqid'];
   nodequeue_save_subqueue_order($nodes, $qid, $sqid);
 
-  drupal_set_message($message);
+  drupal_set_message(t('@message', array('@message' => $message)));
 }
 
 /**
@@ -898,7 +898,7 @@ function nodequeue_save_subqueue_order($nodes, $qid, $sqid) {
       $clean[$count] = $node;
       $count++;
     }
-    else if ($pos == 'r') {
+    elseif ($pos == 'r') {
       // call nodequeue_remove hook
       module_invoke_all('nodequeue_remove', $sqid, $node['nid']);
     }

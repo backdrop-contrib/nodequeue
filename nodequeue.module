@@ -281,7 +281,7 @@ function nodequeue_node_view($node, $view_mode) {
           'purl' => array('disabled' => TRUE),
         );
       }
-      else if ($queue->link_remove) {
+      elseif ($queue->link_remove) {
         $links[$class] = array(
           'title' => nodequeue_title_substitute($queue->link_remove, $queue, $subqueue),
           'href' => "nodequeue/$queue->qid/remove-node/$subqueue->sqid/$id",
@@ -663,12 +663,12 @@ function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
       $loaded[$queue->qid]->count = 0;
     }
 
-    $result = db_query("SELECT qid, rid FROM {nodequeue_roles} WHERE qid IN (:to_load)", array(':to_load' =>$to_load));
+    $result = db_query("SELECT qid, rid FROM {nodequeue_roles} WHERE qid IN (:to_load)", array(':to_load' => $to_load));
     foreach ($result as $obj) {
       $loaded[$obj->qid]->roles[] = $obj->rid;
     }
 
-    $result = db_query("SELECT qid, type FROM {nodequeue_types} WHERE qid IN (:to_load)", array(':to_load' =>$to_load));
+    $result = db_query("SELECT qid, type FROM {nodequeue_types} WHERE qid IN (:to_load)", array(':to_load' => $to_load));
     foreach ($result as $obj) {
       $loaded[$obj->qid]->types[] = $obj->type;
     }
@@ -1413,7 +1413,7 @@ function nodequeue_subqueue_size_text($max, $count, $long = TRUE) {
   if (empty($count)) {
     $message = theme('nodequeue_subqueue_empty_text');
   }
-  else if ($count == $max) {
+  elseif ($count == $max) {
     $message = theme('nodequeue_subqueue_full_text');
   }
   else {
@@ -1506,7 +1506,7 @@ function nodequeue_nodequeue_form_submit(&$queue, $form_state) {
 /**
  * in general it's preferable to use Views for this functionality.
  */
-function nodequeue_node_titles($sqid, $title = '', $backward = true, $from = 0, $count = 0, $published_only = TRUE) {
+function nodequeue_node_titles($sqid, $title = '', $backward = TRUE, $from = 0, $count = 0, $published_only = TRUE) {
   $orderby = ($backward ? "DESC" : "ASC");
   $query = db_select('node', 'n')
     ->fields('n', array('nid', 'title'))

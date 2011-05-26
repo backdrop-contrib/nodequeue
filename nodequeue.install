@@ -261,7 +261,9 @@ function nodequeue_update_6003() {
   $ret = array();
   $invalid = db_query("SELECT count(nid) FROM {nodequeue_nodes} WHERE nid = 0")->fetchField();
   if (!empty($invalid)) {
-    db_query("DELETE FROM {nodequeue_nodes} WHERE nid = 0");
+    db_delete('nodequeue_nodes')
+    ->condition('nid', 0)
+    ->execute();
     $t = get_t();
     $ret[] = array('success' => TRUE, 'query' => $t("Deleted @invalid invalid entries from the {nodequeue_nodes} table.", array('@invalid' => $invalid)));
   }
@@ -305,8 +307,8 @@ function nodequeue_update_7200() {
       'nodequeue_subqueue' => array('qid', 'reference', 'title'),
       'nodequeue_nodes' => array('sqid', 'qid_nid'),
     );
-    foreach($del_indices as $table => $indices) {
-      foreach($indices as $k => $index) {
+    foreach ($del_indices as $table => $indices) {
+      foreach ($indices as $k => $index) {
         db_drop_index($table, $table . "_" . $index . "_idx");
       }
     }
@@ -334,8 +336,8 @@ function nodequeue_update_7200() {
          'nid' => array('nid'),
        ),
     );
-    foreach($add_indexes as $table => $indices) {
-      foreach($indices as $name => $columns) {
+    foreach ($add_indexes as $table => $indices) {
+      foreach ($indices as $name => $columns) {
         db_add_index($table, $name, $columns);
       }
     }

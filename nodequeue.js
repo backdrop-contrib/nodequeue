@@ -346,7 +346,7 @@ Drupal.nodequeue = function(base, settings) {
               }
             },
             error: function(data) {
-              alert('An error occurred');
+              alert(Drupal.t('An error occurred'));
               $(input).parent().removeClass('throbbing');
               $(input).attr('disabled', false);
             }

@@ -1,7 +1,11 @@
 <?php
+
 /**
+ * @file
  * Argument handler for subqueues.
- *
+ */
+
+/**
  * Subqueues have titles that are determined by doing substitution from
  * the subqueue_title on the queue using the title on the subqueue, which
  * takes a little extra work to do here.

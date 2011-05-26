@@ -58,7 +58,7 @@ function nodequeue_add_action_form($context) {
     );
   }
   else {
-    drupal_set_message(t('Please <a href="!url">create</a> a nodequeue first.', array('!url' => url('admin/structure/nodequeue'))));
+    drupal_set_message(t('Please <a href="@url">create</a> a nodequeue first.', array('@url' => url('admin/structure/nodequeue'))));
   }
   return $form;
 }
@@ -108,8 +108,8 @@ function action_nodequeue_add($op, $edit = array(), $node) {
       return array(
         'description' => t('Add to Nodequeues'),
         'type' => t('node'),
-        'batchable' => true,
-        'configurable' => true,
+        'batchable' => TRUE,
+        'configurable' => TRUE,
       );
       break;
 
@@ -161,7 +161,7 @@ function action_nodequeue_add($op, $edit = array(), $node) {
           );
       }
       else {
-        drupal_set_message(t('Please <a href="!url">create</a> a nodequeue first.', array('!url' => url('admin/structure/nodequeue'))));
+        drupal_set_message(t('Please <a href="@url">create</a> a nodequeue first.', array('@url' => url('admin/structure/nodequeue'))));
       }
       return $form;
 
@@ -240,8 +240,8 @@ function action_nodequeue_remove($op, $edit = array(), $node) {
       return array(
         'description' => t('Remove from Nodequeues'),
         'type' => t('node'),
-        'batchable' => true,
-        'configurable' => true,
+        'batchable' => TRUE,
+        'configurable' => TRUE,
       );
       break;
 

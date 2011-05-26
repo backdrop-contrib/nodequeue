@@ -1,6 +1,9 @@
 <?php
 
 /**
+ * @file
+ * Provides a nodequeue service.
+ *
  * @author Greg Harvey - http://www.drupaler.co.uk
  */
 
@@ -10,7 +13,7 @@
 function nodequeue_service_permission() {
   return array(
     'get nodequeues' => array(
-      'title' => t('get nodequeues'),
+      'title' => t('Get nodequeues'),
       'description' => t('TODO Add a description for get nodequeues'),
     ),
   );
@@ -36,9 +39,9 @@ function nodequeue_service_service() {
       '#file' => array('file' => 'inc', 'module' => 'nodequeue_service'),
       '#args'             => array(
         array(
-          '#name'           => 'qid',
-          '#type'           => 'int',
-          '#description'    => t('A parent nodequeue queue ID.'),
+          '#name' => 'qid',
+          '#type' => 'int',
+          '#description' => t('A parent nodequeue queue ID.'),
         ),
       ),
       '#return'   => 'struct',
@@ -46,4 +49,3 @@ function nodequeue_service_service() {
     ),
   );
 }
-
