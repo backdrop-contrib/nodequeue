@@ -21,6 +21,13 @@ function nodequeue_admin_settings($form, &$form_state) {
     '#default_value' => variable_get('nodequeue_tab_name', t('Nodequeue')),
     '#description' => t('If nodes will have a menu tab for manipulating related nodequeues, what should that tab be called?'),
   );
+  $form['nodequeue_autocomplete_limit'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Nodequeue autocomplete limit'),
+    '#size'=> 2,
+    '#default_value' => variable_get('nodequeue_autocomplete_limit', 10),
+    '#description' => t('Number of node titles to show in the autocomplete search results.'),
+  );
   $form['nodequeue_view_per_queue'] = array(
     '#type' => 'checkbox',
     '#title' => t('Automatically create one view per queue'),

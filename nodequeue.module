@@ -1756,7 +1756,7 @@ function nodequeue_api_autocomplete($queue, $subqueue, $string) {
     ->addTag('node_access')
     ->fields('n', array('nid', 'title'))
     ->condition('n.type', $queue->types, 'IN')
-    ->range(0, 10);
+    ->range(0, variable_get('nodequeue_autocomplete_limit', 10));
 
   $where_args = array();
   global $user;
