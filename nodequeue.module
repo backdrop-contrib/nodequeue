@@ -239,61 +239,7 @@ function nodequeue_node_delete($node) {
  * Implements hook_node_view().
  */
 function nodequeue_node_view($node, $view_mode) {
-  $links = array();
-  if (variable_get('nodequeue_links', FALSE) &&
-      user_access('manipulate queues')) {
-    $queues = nodequeue_load_queues_by_type($node->type, 'links');
-    $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
-    if (empty($subqueues)) {
-      return;
-    }
-
-    // resort the subqueues to retain consistent ordering:
-
-    ksort($subqueues);
-    // Due to caching, we can accidentally get positions leftover
-    // from previous iterations on teaser list pages, so we must
-    // remove any existing positions here.
-    foreach ($subqueues as $id => $subqueue) {
-      unset($subqueues[$id]->position);
-    }
-
-    if (!module_exists('translation')) {
-      nodequeue_set_subqueue_positions($subqueues, $node->nid);
-    }
-
-    foreach ($subqueues as $subqueue) {
-      $queue = $queues[$subqueue->qid];
-      $id = nodequeue_get_content_id($queue, $node);
-      if (module_exists('translation')) {
-        $subqueue = array($subqueue->sqid => $subqueue);
-        nodequeue_set_subqueue_positions($subqueue, $id);
-        $subqueue = array_shift($subqueue);
-      }
-      $query_string = nodequeue_get_query_string($id, TRUE);
-      $class = 'nodequeue-ajax-toggle nodequeue-toggle-q-' . $queue->qid . ' nodequeue-toggle-sq-' . $subqueue->sqid . ' nodequeue-toggle-ref-' . $subqueue->reference;
-      if (!isset($subqueue->position)) {
-        $links[$class] = array(
-          'title' => nodequeue_title_substitute($queue->link, $queue, $subqueue),
-          'href' => "nodequeue/$queue->qid/add-node/$subqueue->sqid/$id",
-          'attributes' => array('class' => array($class . ' toggle-add')),
-          'query' => $query_string,
-          'purl' => array('disabled' => TRUE),
-        );
-      }
-      elseif ($queue->link_remove) {
-        $links[$class] = array(
-          'title' => nodequeue_title_substitute($queue->link_remove, $queue, $subqueue),
-          'href' => "nodequeue/$queue->qid/remove-node/$subqueue->sqid/$id",
-          'attributes' => array('class' => array($class . ' toggle-remove')),
-          'query' => $query_string,
-          'purl' => array('disabled' => TRUE),
-        );
-      }
-    }
-    drupal_add_js(drupal_get_path('module', 'nodequeue') . '/nodequeue.js');
-    drupal_add_css(drupal_get_path('module', 'nodequeue') . '/nodequeue.css');
-  }
+  $links = nodequeue_node_links($node);
   if (!empty($links)) {
     $node->content['links']['nodequeue'] = array(
       '#links' => $links,
@@ -1504,7 +1450,7 @@ function nodequeue_nodequeue_form_submit(&$queue, $form_state) {
 // External queue fetching
 
 /**
- * in general it's preferable to use Views for this functionality.
+ * In general it's preferable to use Views for this functionality.
  */
 function nodequeue_node_titles($sqid, $title = '', $backward = TRUE, $from = 0, $count = 0, $published_only = TRUE) {
   $orderby = ($backward ? "DESC" : "ASC");
@@ -1529,7 +1475,69 @@ function nodequeue_node_titles($sqid, $title = '', $backward = TRUE, $from = 0, 
 }
 
 /**
- * Get node_view output from a nodequeue
+ * Returns an array of nodequeue links for a node.
+ */
+function nodequeue_node_links($node) {
+  $links = array();
+  if (variable_get('nodequeue_links', FALSE) &&
+      user_access('manipulate queues')) {
+    $queues = nodequeue_load_queues_by_type($node->type, 'links');
+    $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
+    if (empty($subqueues)) {
+      return;
+    }
+
+    // resort the subqueues to retain consistent ordering:
+
+    ksort($subqueues);
+    // Due to caching, we can accidentally get positions leftover
+    // from previous iterations on teaser list pages, so we must
+    // remove any existing positions here.
+    foreach ($subqueues as $id => $subqueue) {
+      unset($subqueues[$id]->position);
+    }
+
+    if (!module_exists('translation')) {
+      nodequeue_set_subqueue_positions($subqueues, $node->nid);
+    }
+
+    foreach ($subqueues as $subqueue) {
+      $queue = $queues[$subqueue->qid];
+      $id = nodequeue_get_content_id($queue, $node);
+      if (module_exists('translation')) {
+        $subqueue = array($subqueue->sqid => $subqueue);
+        nodequeue_set_subqueue_positions($subqueue, $id);
+        $subqueue = array_shift($subqueue);
+      }
+      $query_string = nodequeue_get_query_string($id, TRUE);
+      $class = 'nodequeue-ajax-toggle nodequeue-toggle-q-' . $queue->qid . ' nodequeue-toggle-sq-' . $subqueue->sqid . ' nodequeue-toggle-ref-' . $subqueue->reference;
+      if (!isset($subqueue->position)) {
+        $links[$class] = array(
+          'title' => nodequeue_title_substitute($queue->link, $queue, $subqueue),
+          'href' => "nodequeue/$queue->qid/add-node/$subqueue->sqid/$id",
+          'attributes' => array('class' => array($class . ' toggle-add')),
+          'query' => $query_string,
+          'purl' => array('disabled' => TRUE),
+        );
+      }
+      elseif ($queue->link_remove) {
+        $links[$class] = array(
+          'title' => nodequeue_title_substitute($queue->link_remove, $queue, $subqueue),
+          'href' => "nodequeue/$queue->qid/remove-node/$subqueue->sqid/$id",
+          'attributes' => array('class' => array($class . ' toggle-remove')),
+          'query' => $query_string,
+          'purl' => array('disabled' => TRUE),
+        );
+      }
+    }
+    drupal_add_js(drupal_get_path('module', 'nodequeue') . '/nodequeue.js');
+    drupal_add_css(drupal_get_path('module', 'nodequeue') . '/nodequeue.css');
+  }
+  return $links;
+}
+
+/**
+ * Get node_view output from a nodequeue.
  */
 function nodequeue_view_nodes($sqid, $backward = TRUE, $teaser = TRUE, $links = TRUE, $from = 0, $count = 0) {
   $output = array();
@@ -1572,21 +1580,21 @@ function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5, $
 }
 
 /**
- * Load the first node of a queue
+ * Load the first node of a queue.
  */
 function nodequeue_load_front($sqid) {
   return array_shift(nodequeue_load_nodes($sqid, FALSE, 0, 1));
 }
 
 /**
- * Load the last node of a queue
+ * Load the last node of a queue.
  */
 function nodequeue_load_back($sqid, $teaser = TRUE, $links = TRUE) {
   return array_shift(nodequeue_load_nodes($sqid, TRUE, 0, 1));
 }
 
 /**
- * View a random node from a queue
+ * View a random node from a queue.
  */
 function nodequeue_view_random_node($sqid, $teaser = TRUE, $links = TRUE) {
   $query = db_select('node', 'n')
@@ -1603,7 +1611,7 @@ function nodequeue_view_random_node($sqid, $teaser = TRUE, $links = TRUE) {
 }
 
 /**
- * Load a random node object from a queue
+ * Load a random node object from a queue.
  */
 function nodequeue_load_random_node($sqid) {
   $query = db_select('node', 'n')
