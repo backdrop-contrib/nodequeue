@@ -109,13 +109,48 @@ function nodequeue_node_tab($node) {
     return FALSE;
   }
   $header = array();
-  $header[] = array('data' => t('Title'), 'class' => array('nodequeue-title'));
-  $header[] = array('data' => t('Max nodes'), 'class' => array('nodequeue-max-nodes'));
-  $header[] = array('data' => t('In queue'), 'class' => array('nodequeue-in-queue'));
+  $header[] = array('data' => t('Title'), 'field' => 'title', 'sort' => 'asc', 'class' => array('nodequeue-title'));
+  $header[] = array('data' => t('Max nodes'), 'field' => 'size', 'class' => array('nodequeue-max-nodes'));
+  $header[] = array('data' => t('In queue'), 'field' => 'count', 'class' => array('nodequeue-in-queue'));
   $header[] = array('data' => t('Operation'), 'class' => array('nodequeue-operation'));
+  $table_sort = tablesort_init($header);
+
   $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
 
   nodequeue_set_subqueue_positions($subqueues, $node->nid);
+
+  $sort_primary = array();
+  $sort_secondary = array();
+  $sort_direction_regular = array('asc' => SORT_ASC, 'desc' => SORT_DESC);
+  $sort_direction_reverse = array('asc' => SORT_DESC, 'desc' => SORT_ASC);
+  foreach ($subqueues as $subqueue) {
+    $queue = $queues[$subqueue->qid];
+    $sort_secondary[] = $queue->title;
+    switch ($table_sort['sql']) {
+      case 'title':
+      default:
+        $sort_primary[] = $queue->title;
+        $sort_direction = $sort_direction_regular;
+        break;
+      case 'size':
+        $sort_primary[] = $queue->size;
+        $sort_direction = $sort_direction_reverse;
+        break;
+      case 'count':
+        $sort_primary[] = $subqueue->count;
+        $sort_direction = $sort_direction_reverse;
+        break;
+    }
+  }
+
+  if (!empty($table_sort)) {
+    if (strtolower($table_sort['sort']) == 'desc') {
+      array_multisort($sort_primary, $sort_direction['desc'], $sort_secondary, $subqueues); // Re-indexes array keys; key no longer equals qid.
+    }
+    else {
+      array_multisort($sort_primary, $sort_direction['asc'], $sort_secondary, $subqueues); // Re-indexes array keys; key no longer equals qid.
+    }
+  }
 
   $rows = array();
   foreach ($subqueues as $subqueue) {
