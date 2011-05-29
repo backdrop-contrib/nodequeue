@@ -696,7 +696,7 @@ function nodequeue_arrange_subqueue($queue, $subqueue = NULL) {
   // get nodes from the queue
   $nodes = _nodequeue_dragdrop_get_nodes($queue, $subqueue);
 
-  return drupal_get_form('nodequeue_arrange_subqueue_form', $queue, $nodes, $subqueue);
+  return drupal_get_form('nodequeue_arrange_subqueue_form_' . $subqueue->sqid, $queue, $nodes, $subqueue);
 }
 
 /**
@@ -791,6 +791,7 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
     '#autocomplete_path' => 'nodequeue/autocomplete/' . $subqueue->sqid,
     '#maxlength' => 1024,
     '#default_value' => t('Enter the title of a node to add it to the queue'),
+    '#attributes' => array('class' => array('subqueue-add-nid')),
   );
   $form['add']['submit'] = array(
     '#type' => 'submit',
@@ -802,7 +803,8 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save')
+    '#value' => t('Save'),
+    '#submit' => array('nodequeue_arrange_subqueue_form_submit'),
   );
   $form['actions']['reverse'] = array(
     '#type' => 'submit',

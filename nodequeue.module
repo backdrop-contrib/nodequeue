@@ -249,6 +249,19 @@ function nodequeue_node_view($node, $view_mode) {
 }
 
 /**
+ * Implementats hook_forms().
+ */
+function nodequeue_forms($form_id) {
+  $forms = array();
+  if (strpos($form_id, 'nodequeue_arrange_subqueue_form_') === 0) {
+    $forms[$form_id] = array(
+      'callback' => 'nodequeue_arrange_subqueue_form',
+    );
+  }
+  return $forms;
+}
+
+/**
  * Implements hook_theme().
  */
 function nodequeue_theme() {
@@ -2077,18 +2090,24 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
 
   $output = '';
 
-  // get css to hide some of the help text if javascript is disabled
+  // Get css to hide some of the help text if javascript is disabled.
   drupal_add_css(drupal_get_path('module', 'nodequeue') . '/nodequeue.css');
 
-  // TODO: Would be nice to expose qid, sqid, reference as classes for more custom theming :).
-  // TODO: Create unique ID to make multiple tabledrag forms on a page possible
-  drupal_add_tabledrag('nodequeue-dragdrop', 'order', 'sibling', 'node-position');
+  $table_id = 'nodequeue-dragdrop-' . $form['#subqueue']['sqid'];
+  $table_classes = array(
+    'nodequeue-dragdrop',
+    'nodequeue-dragdrop-qid-' . $form['#subqueue']['qid'],
+    'nodequeue-dragdrop-sqid-' . $form['#subqueue']['sqid'],
+    'nodequeue-dragdrop-reference-' . $form['#subqueue']['reference'],
+  );
+  drupal_add_tabledrag($table_id, 'order', 'sibling', 'node-position');
   drupal_add_js(drupal_get_path('module', 'nodequeue') . '/nodequeue_dragdrop.js');
 
+  $reverse[str_replace('-', '_', $table_id)] = (bool) $form['#queue']['reverse'];
   drupal_add_js(
     array(
       'nodequeue' => array(
-        'reverse' => (bool) $form['#queue']['reverse'],
+        'reverse' => $reverse,
       )
     ),
     array(
@@ -2097,7 +2116,7 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
     )
   );
 
-  // render form as table rows
+  // Render form as table rows.
   $rows = array();
   $counter = 1;
   foreach (element_children($form) as $key) {
@@ -2127,9 +2146,9 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
     $rows[] = array(array('data' => t('No nodes in this queue.'), 'colspan' => 7));
   }
 
-  // render the main nodequeue table
+  // Render the main nodequeue table.
   $header = array(t('Title'), t('Author'), t('Post Date'), t('Position'), array('data' => t('Operations'), 'colspan' => 2), t('Position'));
-  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => array('nodequeue-dragdrop'), 'class' => array('nodequeue-dragdrop'))));
+  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => $table_classes)));
 
   return $output;
 }
