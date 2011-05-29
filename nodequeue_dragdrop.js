@@ -133,7 +133,7 @@ function nodequeueUpdateNodePositions(table_id) {
   var reverse = Drupal.settings.nodequeue.reverse[table_id.replace(/-/g, '_')];
   var size = reverse ? $('#' + table_id + ' .node-position').size() : 1;
 
-  $('#' + table_id + ' .node-position').each(function(i){
+  $('#' + table_id + ' tr').filter(":visible").find('.node-position').each(function(i) {
     $(this).val(size);
     reverse ? size-- : size++;
   });
