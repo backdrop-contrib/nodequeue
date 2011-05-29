@@ -28,17 +28,17 @@ define('NODEQUEUE_DUPLICATE_POSITION', 3);
  */
 function nodequeue_permission() {
   return array(
-    'manipulate queues' => array(
-      'title' => t('manipulate queues'),
-      'description' => t('Manipulate queues.'),
-    ),
     'administer nodequeue' => array(
-      'title' => t('administer nodequeue'),
+      'title' => t('Administer nodequeue'),
       'description' => t('Administer the nodequeue module.'),
     ),
+   'manipulate queues' => array(
+      'title' => t('Manipulate queues'),
+      'description' => t('Manipulate queues.'),
+    ),
     'manipulate all queues' => array(
-      'title' => t('manipulate all queues'),
-      'description' => t('Manipulate all queues'),
+      'title' => t('Manipulate all queues'),
+      'description' => t('Manipulate all queues.'),
     ),
   );
 }
