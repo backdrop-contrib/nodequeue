@@ -954,8 +954,8 @@ function nodequeue_save_subqueue_order($nodes, $qid, $sqid) {
       $count++;
     }
     elseif ($pos == 'r') {
-      // call nodequeue_remove hook
-      module_invoke_all('nodequeue_remove', $sqid, $node['nid']);
+      // Remove the node from this subqueue.
+      nodequeue_subqueue_remove_node($sqid, $node['nid']);
     }
     else {
       return array(NODEQUEUE_INVALID_POSITION, 'Invalid position value. New subqueue order not saved.');
