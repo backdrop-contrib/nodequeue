@@ -20,7 +20,7 @@ function smartqueue_taxonomy_nodequeue_form($queue, &$form) {
   $form['placeholder']['vocabularies'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Vocabularies'),
-    '#description' => t('Select which vocabularies to use; each unique combination of terms from all of these vocabularies will have a subqueue.'),
+    '#description' => t('Select which vocabularies to use; each unique combination of terms from all of these vocabularies will have a subqueue. This selection cannot be changed after the queue is created.'),
     '#options' => $options,
   );
 
