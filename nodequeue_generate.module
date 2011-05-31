@@ -5,7 +5,7 @@ function nodequeue_generate_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('nodequeue_generate_form'),
     'description' => 'Bulk add nodes into queues',
-    'title' => 'Generate nodequeue assignments',
+    'title' => 'Generate queue assignments',
     'access callback' => 'user_access',
     'access arguments' => array('manipulate all queues'),
   );
@@ -13,11 +13,11 @@ function nodequeue_generate_menu() {
 }
 
 function nodequeue_generate_form() {
-  $form['help'] = array('#value' => '<p>' . t('Select which nodequeues shall be <strong>emptied</strong> and re-populated with new nodes.') . '</p>');
+  $form['help'] = array('#value' => '<p>' . t('Select which queues shall be <strong>emptied</strong> and re-populated with new nodes.') . '</p>');
 
   $queues = nodequeue_load_queues(nodequeue_get_all_qids(25));
   if (empty($queues)) {
-    form_set_error('', t('No nodequeues exist.'));
+    form_set_error('', t('No queues exist.'));
     return array();
   }
 

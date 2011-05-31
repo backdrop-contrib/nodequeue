@@ -1435,8 +1435,8 @@ function nodequeue_subqueue_shuffle($subqueue) {
  */
 function nodequeue_nodequeue_info() {
   return array('nodequeue' => array(
-    'title' => t('Nodequeue'),
-    'description' => t('Standard nodequeues have just one subqueue. Nodes put into a queue are added to the back of the queue; when a node is added to a full queue, the node in the front of the queue will be popped out to make room.'),
+    'title' => t('Simple queue'),
+    'description' => t('Simple queues have just one subqueue. Nodes put into a queue are added to the back of the queue; when a node is added to a full queue, the node in the front of the queue will be popped out to make room.'),
     ));
 }
 
