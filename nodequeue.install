@@ -231,6 +231,23 @@ function nodequeue_schema() {
 }
 
 /**
+ * Implements hook_uninstall().
+ */
+function nodequeue_uninstall() {
+  // Remove our variables.
+  $variables = array(
+    'nodequeue_use_tab',
+    'nodequeue_tab_display_max',
+    'nodequeue_tab_name',
+    'nodequeue_autocomplete_limit',
+    'nodequeue_view_per_queue',
+  );
+  foreach ($variables as $variable) {
+    variable_del($variable);
+  }
+}
+
+/**
  * There was a discrepancy between the link/link_remove fields created with
  * node_install/node_schema, and the ones created with nodequeue_update_5000.
  * This forces everyone to 40 characters.
