@@ -2127,7 +2127,7 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
       $row[] = drupal_render($form[$key]['author']);
       $row[] = drupal_render($form[$key]['date']);
       $row[] = drupal_render($form[$key]['position']);
-      $row[] = drupal_render($form[$key]['edit']);
+      $row[] = (!empty($form[$key]['edit'])) ? drupal_render($form[$key]['edit']) : '&nbsp;';
       $row[] = drupal_render($form[$key]['remove']);
       $row[] = array(
         'data' => $counter,

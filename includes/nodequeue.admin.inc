@@ -718,24 +718,29 @@ function _nodequeue_dragdrop_get_nodes($queue, $subqueue) {
 
   $visible = nodequeue_nids_visible($subqueue->sqid);
 
-  // get a list of all nodes in the subqueue, regardless of access restrictions
+  // Get a list of all nodes in the subqueue, regardless of access restrictions.
   $query = db_select('node', 'n')
     ->distinct();
 
-  $query->leftJoin('users', 'u', 'n.uid = u.uid');
   $query->leftJoin('nodequeue_nodes', 'nq', 'nq.nid = n.nid');
-  $query->fields('n', array('nid', 'title', 'created'))
+  $query->fields('n', array('nid'))
     ->fields('nq', array('position'))
-    ->fields('u', array('name'))
     ->condition('nq.sqid', $subqueue->sqid)
     ->orderBy('nq.position', $order);
   $result = $query->execute();
-  //$result = db_query('SELECT DISTINCT(n.nid), n.title, n.uid, u.name, n.created, nq.position FROM {node} n LEFT JOIN {users} u on n.uid = u.uid LEFT JOIN {nodequeue_nodes} nq ON nq.nid = n.nid WHERE nq.sqid = :sqid ORDER BY nq.position ' . $order, array(':sqid' => $subqueue->sqid));
 
-  $nodes = array();
-  foreach ($result as $node) {
+  $nids = array();
+  $sq_nodes = array();
+  foreach ($result as $sq_node) {
+    $nids[] = $sq_node->nid;
+    // Save node position in a separate array so we can reference it later.
+    $sq_nodes[$sq_node->nid]['position'] = $sq_node->position;
+  }
+  $nodes = node_load_multiple($nids);
+
+  foreach ($nodes as $node) {
     $node->visible = isset($visible[$node->nid]) ? TRUE : FALSE;
-    $nodes[] = $node;
+    $node->position = $sq_nodes[$node->nid]['position'];
   }
 
   return $nodes;
@@ -770,7 +775,9 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
       $form['nodes'][$node->nid]['date'] = array('#value' => '');
     }
 
-    $form['nodes'][$node->nid]['edit'] = array('#markup' => l(t('edit'), 'node/' . $node->nid . '/edit', array('attributes' => array('title' => t('Edit this node')))));
+    if (node_access('update', $node)) {
+      $form['nodes'][$node->nid]['edit'] = array('#markup' => l(t('edit'), 'node/' . $node->nid . '/edit', array('attributes' => array('title' => t('Edit this node')))));
+    }
     $form['nodes'][$node->nid]['position'] = array(
       '#type' => 'position',
       '#delta' => $count,
