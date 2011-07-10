@@ -68,3 +68,25 @@ function smartqueue_update_6003() {
       ->execute();
   }
 }
+
+/**
+ * Change reference field to rely on field names intead of field-ids.
+ */
+function smartqueue_update_7001() {
+  $results = db_select('nodequeue_queue', 'nq')
+              ->fields('nq', array('qid','reference'))
+              ->condition('owner', 'smartqueue_taxonomy', '=')
+              ->execute();
+  foreach ($results as $result) {
+    $field_names = array();
+    $field_ids = explode('-', $result->reference);
+    foreach ($field_ids as $field_id) {
+      $field = field_info_field_by_id($field_id);
+      $field_names[] = $field['field_name'];
+    }
+    db_update('nodequeue_queue')
+      ->fields(array('reference' => implode('-', $field_names)))
+      ->condition('qid', $result->qid)
+      ->execute();
+  }
+}
