@@ -963,7 +963,7 @@ function nodequeue_save_subqueue_order($nodes, $qid, $sqid) {
   $clean = array();
   $count = 1;
   ksort($nodes);
-  module_invoke_all('nodequeue_sort_alter', $sqid, $nodes);
+  drupal_alter('nodequeue_sort', $nodes, $sqid);
   foreach ($nodes as $pos => $node) {
     if (!is_numeric($node['nid']) || $node['nid'] < 1) {
       return array(NODEQUEUE_INVALID_NID, 'Invalid nid value. New subqueue order not saved.');
