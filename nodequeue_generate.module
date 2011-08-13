@@ -114,7 +114,7 @@ function nodequeue_generate_repopulate_queues($qids, $nodes_limit = 10) {
  */
 function nodequeue_generate_rehash() {
   // Delete existing smartqueue taxonomy subqueues
-  db_query("DELETE ns FROM nodequeue_subqueue ns INNER JOIN nodequeue_queue nq ON ns.qid=nq.qid WHERE nq.owner = 'smartqueue_taxonomy'");
+  db_query("DELETE ns FROM {nodequeue_subqueue} ns INNER JOIN {nodequeue_queue} nq ON ns.qid = nq.qid WHERE nq.owner = 'smartqueue_taxonomy'");
 
   // Get all queues, owned by Smartqueue taxonomy.
   $qids = db_select('nodequeue_queue', 'nq')
