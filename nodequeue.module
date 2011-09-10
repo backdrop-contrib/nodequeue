@@ -1636,7 +1636,7 @@ function nodequeue_load_random_node($sqid) {
  * Get the position of a node in a subqueue, or FALSE if not found.
  */
 function nodequeue_subqueue_position($sqid, $nid) {
-  return db_query("SELECT position FROM {nodequeue_nodes} WHERE sqid = %d AND nid = %d", $sqid, $nid)->fetchField();
+  return db_query("SELECT position FROM {nodequeue_nodes} WHERE sqid = :sqid AND nid = :nid", array(':sqid' => $sqid, ':nid' => $nid))->fetchField();
 }
 
 /**
