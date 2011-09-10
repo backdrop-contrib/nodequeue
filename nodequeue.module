@@ -1202,7 +1202,7 @@ function nodequeue_queue_swap($subqueue, $pos1, $pos2) {
     ->execute();
 
   // notify other modules of the swap
-  module_invoke_all('nodequeue_swap', $sqid, $nid);
+  module_invoke_all('nodequeue_swap', $subqueue->sqid, $nid);
 
 }
 
