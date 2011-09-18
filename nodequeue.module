@@ -2066,6 +2066,11 @@ function nodequeue_nids_visible($sqid = -1, $account = NULL) {
     $query->condition(db_or()->condition('n.status', 1)->condition('n.uid', $account->uid));
   }
 
+  // Disable i18n_select for this query.
+  if (arg(0) == 'admin') {
+    $query->addTag('i18n_select');
+  }
+
   $query_restricted = $query->execute();
   foreach ($query_restricted as $result_restricted) {
     $nids_visible[$result_restricted->nid] = $result_restricted->nid;
