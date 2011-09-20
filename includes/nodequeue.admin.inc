@@ -363,7 +363,7 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
     if (!isset($info[$queue])) {
       return FALSE;
     }
-    drupal_set_title(t('Add @type', array('@type' => strtolower($info[$queue]['title']))), PASS_THROUGH);
+    drupal_set_title(t('Add @type', array('@type' => $info[$queue]['title'])), PASS_THROUGH);
     $queue = new nodequeue_queue($queue);
   }
   else {
