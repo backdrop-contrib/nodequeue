@@ -65,6 +65,18 @@ function nodequeue_generate_form() {
   return $form;
 }
 
+/**
+ * Validate nodequeue generate form submission.
+ *
+ * Make sure that at least one queue was selected.
+ */
+function nodequeue_generate_form_validate($form, &$form_state) {
+  $qids = array_keys(array_filter($form_state['values']['nodequeues']));
+  if (count($qids) < 1) {
+    form_set_error('nodequeues', t('You must select a Queue.'));
+  }
+}
+
 function nodequeue_generate_form_submit($form, &$form_state) {
   // Get qids of all nodequeues that need to be re-populated and repopulate them.
   $qids = array_keys(array_filter($form_state['values']['nodequeues']));
