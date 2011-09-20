@@ -1802,6 +1802,7 @@ function nodequeue_api_autocomplete($queue, $subqueue, $string) {
     return $function($queue, $subqueue, $string, $where, $where_args);
   }
   else {
+    $query->addTag('i18n_select');
     $result = $query->execute();
 
     foreach ($result as $node) {
