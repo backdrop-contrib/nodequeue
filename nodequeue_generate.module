@@ -140,6 +140,7 @@ function nodequeue_generate_rehash() {
     $fields = explode('-', $queue->reference);
 
     $tids = array();
+    $nids = array();
     foreach ($fields as $field) {
       // Get all possible tids from this field.
       $query = db_select('field_data_' . $field, 'f');
@@ -153,26 +154,26 @@ function nodequeue_generate_rehash() {
       $query = $query->execute();
 
       $tids += $query->fetchAll();
-    }
 
-    // Rehash for each tid.
-    $nids = array();
-    foreach ($tids as $tid) {
-      foreach ($fields as $field) {
-        $query = db_select('field_data_' . $field, 'f')
+      // Rehash for each tid.
+      foreach ($tids as $tid) {
+        $query = db_select('field_data_' . $field, 'f');
+        $query
           ->condition('f.entity_type', 'node')
           ->condition('f.bundle', $queue->types, 'IN')
           ->condition('f.deleted', FALSE)
           ->condition('f.' . $field . '_tid', $tid->tid)
           ->fields('f', array('entity_id'))
-          ->range(0, 1)
-          ->execute();
+          ->range(0, 1);
+        $query = $query->execute();
 
-        $nids += $query->fetchAll();
+        while($item = $query->fetchAssoc()) {
+          $nids[] = $item;
+        }
       }
 
       foreach ($nids as $nid) {
-        $node = node_load($nid->entity_id);
+        $node = node_load($nid['entity_id']);
         nodequeue_api_subqueues($queue, $node);
       }
     }
