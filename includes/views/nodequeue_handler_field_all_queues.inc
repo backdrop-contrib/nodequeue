@@ -61,12 +61,17 @@ class nodequeue_handler_field_all_queues extends views_handler_field_prerender_l
     }
 
     if ($nids) {
-      $queue = '';
-      if (!empty($this->options['limit']) && !empty($this->options['qids'])) {
-        $queue = " AND nn.qid IN (" . implode(', ', array_keys(array_filter($this->options['qids']))) . ")";
+      $query = db_select('nodequeue_nodes', 'nn');
+      $query->innerJoin('nodequeue_queue', 'nq', 'nn.qid = nq.qid');
+      $query->fields('nn', array('nid', 'qid'));
+      $query->fields('nq', array('title'));
+      $query->orderby('nq.title');
+      $query->condition('nn.nid', $nids);
+      $qids = array_filter($this->options['qids']);
+      if (!empty($this->options['limit']) && !empty($qids)) {
+        $query->condition('nn.qid', $qids);
       }
-
-      $result = db_query("SELECT nn.nid, nn.qid, nq.title FROM {nodequeue_nodes} nn INNER JOIN {nodequeue_queue} nq ON nq.qid = nn.qid WHERE nn.nid IN (" . implode(', ', $nids) . ")$queue ORDER BY nq.title");
+      $result = $query->execute();
 
       foreach ($result as $queue) {
         $this->items[$queue->nid][$queue->qid]['title'] = check_plain($queue->title);

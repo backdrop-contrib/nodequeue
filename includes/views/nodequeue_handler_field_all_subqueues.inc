@@ -15,12 +15,20 @@ class nodequeue_handler_field_all_subqueues extends nodequeue_handler_field_all_
       }
 
       if ($nids) {
-        $queue = '';
-        if (!empty($this->options['limit']) && !empty($this->options['qids'])) {
-          $queue = " AND nn.qid IN (" . implode(', ', array_keys(array_filter($this->options['qids']))) . ")";
+        $query = db_select('nodequeue_nodes', 'nn');
+        $query->innerJoin('nodequeue_queue', 'nq', 'nn.qid = nq.qid');
+        $query->innerJoin('nodequeue_subqueue', 'ns', 'nn.sqid = ns.sqid');
+        $query->fields('nn', array('nid', 'sqid', 'qid'));
+        $query->fields('nq', array('subqueue_title'));
+        $query->fields('ns', array('title'));
+        $query->orderby('ns.title');
+        $query->orderby('nq.subqueue_title');
+        $query->condition('nn.nid', $nids);
+        $qids = array_filter($this->options['qids']);
+        if (!empty($this->options['limit']) && !empty($qids)) {
+          $query->condition('nn.qid', $qids);
         }
-
-        $result = db_query("SELECT nn.nid, nn.sqid, nn.qid, nq.subqueue_title, ns.title FROM {nodequeue_nodes} nn INNER JOIN {nodequeue_queue} nq ON nq.qid = nn.qid INNER JOIN {nodequeue_subqueue} ns on nn.sqid = ns.sqid WHERE nn.nid IN (" . implode(', ', $nids) . ")$queue ORDER BY ns.title, nq.subqueue_title");
+        $result = $query->execute();
 
         foreach ($result as $queue) {
           $title = empty($queue->subqueue_title) ? $queue->title : str_replace('%subqueue', $queue->title, $queue->subqueue_title);
