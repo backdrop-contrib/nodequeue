@@ -10,11 +10,14 @@ class nodequeue_handler_field_all_queues extends views_handler_field_prerender_l
   /**
    * Provide meaningful defaults.
    */
-  function options(&$options) {
-    parent::options($options);
-    $options['link_to_queue'] = TRUE;
-    $options['limit'] = FALSE;
-    $options['qids'] = array();
+  function option_definition() {
+    $options = parent::option_definition();
+
+    $options['link_to_queue'] = array('default' => TRUE);
+    $options['limit'] = array('default' => FALSE);
+    $options['qids'] = array('default' => array());
+
+    return $options;
   }
 
   /**
@@ -25,7 +28,7 @@ class nodequeue_handler_field_all_queues extends views_handler_field_prerender_l
     $form['link_to_queue'] = array(
       '#title' => t('Link this field to queue arrange page'),
       '#type' => 'checkbox',
-      '#default_value' => !empty($this->options['link_to_taxonomy']),
+      '#default_value' => !empty($this->options['link_to_queue']),
     );
 
     $form['limit'] = array(
@@ -47,11 +50,7 @@ class nodequeue_handler_field_all_queues extends views_handler_field_prerender_l
       '#title' => t('Queues'),
       '#options' => $options,
       '#default_value' => $this->options['qids'],
-      '#states' => array(
-        'visible' => array(
-          ':input[name="options[limit]"]' => array('checked' => TRUE)
-        ),
-      ),
+      '#dependency' => array('edit-options-limit' => array(TRUE)),
     );
   }
 
