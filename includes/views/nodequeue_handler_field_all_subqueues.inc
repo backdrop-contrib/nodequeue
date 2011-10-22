@@ -24,11 +24,11 @@ class nodequeue_handler_field_all_subqueues extends nodequeue_handler_field_all_
 
         foreach ($result as $queue) {
           $title = empty($queue->subqueue_title) ? $queue->title : str_replace('%subqueue', $queue->title, $queue->subqueue_title);
-          if (empty($this->options['link_to_queue'])) {
-            $this->items[$queue->nid][$queue->sqid] = check_plain($title);
-          }
-          else {
-            $this->items[$queue->nid][$queue->sqid] = l($title, "admin/structure/nodequeue/$queue->qid/view/$queue->sqid");
+          $this->items[$queue->nid][$queue->sqid]['title'] = check_plain($title);
+
+          if (!empty($this->options['link_to_queue'])) {
+            $this->items[$queue->nid][$queue->sqid]['make_link'] = TRUE;
+            $this->items[$queue->nid][$queue->sqid]['path'] = 'admin/structure/nodequeue/' . $queue->qid . '/view/' . $queue->sqid;
           }
         }
       }

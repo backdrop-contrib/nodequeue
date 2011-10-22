@@ -69,13 +69,17 @@ class nodequeue_handler_field_all_queues extends views_handler_field_prerender_l
       $result = db_query("SELECT nn.nid, nn.qid, nq.title FROM {nodequeue_nodes} nn INNER JOIN {nodequeue_queue} nq ON nq.qid = nn.qid WHERE nn.nid IN (" . implode(', ', $nids) . ")$queue ORDER BY nq.title");
 
       foreach ($result as $queue) {
-        if (empty($this->options['link_to_queue'])) {
-          $this->items[$queue->nid][$queue->qid] = check_plain($queue->title);
-        }
-        else {
-          $this->items[$queue->nid][$queue->qid] = l($queue->title, "admin/structure/nodequeue/$queue->qid");
+        $this->items[$queue->nid][$queue->qid]['title'] = check_plain($queue->title);
+
+        if (!empty($this->options['link_to_queue'])) {
+          $this->items[$queue->nid][$queue->qid]['make_link'] = TRUE;
+          $this->items[$queue->nid][$queue->qid]['path'] = 'admin/structure/nodequeue/' . $queue->qid;
         }
       }
     }
+  }
+
+  function render_item($count, $item) {
+    return $item['title'];
   }
 }
