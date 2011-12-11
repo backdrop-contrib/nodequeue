@@ -87,7 +87,7 @@ function nodequeue_menu() {
   $items['nodequeue/autocomplete'] = array(
     'title' => 'Autocomplete',
     'page callback' => 'nodequeue_autocomplete',
-    'access arguments' => '_nodequeue_access_admin_or_manipulate',
+    'access callback' => '_nodequeue_access_admin_or_manipulate',
     'file' => 'includes/nodequeue.admin.inc',
     'type' => MENU_CALLBACK
   );
