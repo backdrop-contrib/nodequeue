@@ -17,6 +17,33 @@ Drupal.behaviors.nodequeueDrag = {
   }
 };
 
+Drupal.behaviors.nodequeueWeightChange = {
+  attach: function(context) {
+    $('.nodequeue-dragdrop tr.draggable select.node-position').bind('change', function() {
+      var table_id = $(this).parents('.nodequeue-dragdrop').attr('id');
+      var row = $(this).parents('tr');
+      var pos = $(this).attr('value') * 1;
+      var true_pos = row.parent().children().index(row) + 1;
+
+      var row_after = $('.nodequeue-dragdrop tbody tr:nth-child(' + pos + ')');
+
+      if (pos < true_pos) {
+        row_after.before(row);
+      }
+      else if (pos > true_pos) {
+        row_after.after(row);
+      }
+      else { // Nothing to do, in the same position.
+        return;
+      }
+
+      nodequeueUpdateNodePositions(table_id);
+      nodequeueInsertChangedWarning(table_id);
+      nodequeueRestripeTable(table_id);
+    });
+  }
+};
+
 Drupal.behaviors.nodequeueReverse = {
   attach: function(context) {
     $('#edit-actions-reverse').click(function() {
