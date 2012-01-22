@@ -181,6 +181,16 @@ function smartqueue_nodequeue_alter(&$data, $type) {
 }
 
 /**
+ * Implements hook_nodequeue_delete().
+ */
+function smartqueue_nodequeue_delete($qid) {
+  // Remove data from the smartqueue table.
+  db_delete('smartqueue')
+    ->condition('qid', $qid)
+    ->execute();
+}
+
+/**
  * Build an array of strings that represents all of the possible term
  * combinations.
  */

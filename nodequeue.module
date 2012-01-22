@@ -953,6 +953,9 @@ function nodequeue_delete($qid) {
   db_delete('nodequeue_subqueue')
     ->condition('qid', $qid)
     ->execute();
+
+  // Invoke a hook to notify other modules that a nodequeue has been deleted.
+  module_invoke_all('nodequeue_delete', $qid);
 }
 
 /**
