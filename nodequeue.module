@@ -373,9 +373,9 @@ function nodequeue_form_apachesolr_search_bias_form_alter(&$form, &$form_state, 
 }
 
 /**
- * Implements hook_apachesolr_update_index().
+ * Implements hook_apachesolr_index_document_ENTITY_TYPE().
  */
-function nodequeue_apachesolr_update_index(&$document, $node) {
+function nodequeue_apachesolr_index_document_node($document, $node, $env_id) {
   if (empty($document)) {
     return;
   }
