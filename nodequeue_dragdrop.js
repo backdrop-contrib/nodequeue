@@ -85,9 +85,8 @@ Drupal.behaviors.nodequeueRemoveNode = {
   attach: function(context) {
     $('a.nodequeue-remove').css('display', 'block');
     $('a.nodequeue-remove').click(function() {
-      a = $(this).attr('id');
-      a = '#' + a.replace('nodequeue-remove-', 'edit-') + '-position';
-      $(a).val('r');
+      var node_edit = '#' + $(this).attr('id').replace('nodequeue-remove-', 'edit-nodes-') + '-position';
+      $(node_edit).val('r');
 
       // Hide the current row.
       $(this).parent().parent().fadeOut('fast', function() {
@@ -96,6 +95,7 @@ Drupal.behaviors.nodequeueRemoveNode = {
 
         if ($('#' + table_id + ' tbody tr:not(:hidden)').size() == 0) {
           nodequeuePrependEmptyMessage(table_id);
+          nodequeueInsertChangedWarning(table_id);
         }
         else {
           nodequeueRestripeTable(table_id)

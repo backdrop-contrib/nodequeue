@@ -800,7 +800,7 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
     );
 
     $attr = array(
-      '#attributes' => array(
+      'attributes' => array(
         'title' => t('Remove from queue'),
         'style' => 'display: none;',
         'class' => array('nodequeue-remove'),
