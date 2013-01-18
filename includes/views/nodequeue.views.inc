@@ -47,6 +47,27 @@ function nodequeue_views_data() {
     ),
   );
 
+  // Nodequeue position and other.
+  $data['nodequeue_nodes']['position_and_other'] = array(
+    'title' => t('Position in nodequeue and other parameter'),
+    'help' => t("Allows combining the nodequeue position with another (random)
+      parameter (created date for example). This handler is useful only if the
+      nodequeue relationship is NOT required."),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+     ),
+    'sort' => array(
+      'handler' => 'nodequeue_handler_sort_by_position_and_other',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+  );
+
   // timestamp
   $data['nodequeue_nodes']['timestamp'] = array(
     'title' => t('Added date'),

@@ -16,3 +16,4 @@ files[] = includes/views/nodequeue_handler_field_links.inc
 files[] = includes/views/nodequeue_handler_field_queue_tab.inc
 files[] = includes/views/nodequeue_handler_filter_in_queue.inc
 files[] = includes/views/nodequeue_handler_relationship_nodequeue.inc
+files[] = includes/views/nodequeue_handler_sort_by_position_and_other.inc
