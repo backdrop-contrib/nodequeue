@@ -64,6 +64,19 @@ class nodequeue_handler_relationship_nodequeue extends views_handler_relationshi
   }
 
   /**
+   * Validate the options form.
+   */
+  function options_validate(&$form, &$form_state) {
+    parent::options_validate($form, $form_state);
+
+    // Check that at least on queue has been selected.
+    $options = $form_state['values']['options'];
+    if($options['limit'] && empty($options['names'])) {
+      form_set_error('names', t('You must check at least one queue.'));
+    }
+  }
+
+  /**
    * Called to implement a relationship in a query.
    */
   function query() {
