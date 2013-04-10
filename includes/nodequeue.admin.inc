@@ -297,15 +297,15 @@ function nodequeue_view_queues() {
     // If this queue has only one subqueue.
     if ($sub_text == 1) {
       $sub_text .= " (" . nodequeue_subqueue_size_text($queue->size, $queue->subqueue->count) . ")";
-      $operations[] = l(t('View'), "admin/structure/nodequeue/$queue->qid/view/" . $queue->subqueue->sqid);
+      $operations['view'] = l(t('View'), "admin/structure/nodequeue/$queue->qid/view/" . $queue->subqueue->sqid);
     }
     else {
-      $operations[] = l(t('View'), "admin/structure/nodequeue/$queue->qid/view");
+      $operations['view'] = l(t('View'), "admin/structure/nodequeue/$queue->qid/view");
     }
 
     if (user_access('administer nodequeue')) {
-      $operations[] = l(t('Edit'), "admin/structure/nodequeue/$queue->qid/edit");
-      $operations[] = l(t('Delete'), "admin/structure/nodequeue/$queue->qid/delete");
+      $operations['edit'] = l(t('Edit'), "admin/structure/nodequeue/$queue->qid/edit");
+      $operations['delete'] = l(t('Delete'), "admin/structure/nodequeue/$queue->qid/delete");
     }
 
     $rows[] = array(
@@ -545,7 +545,7 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
   );
 
   if (isset($queue->qid)) {
-    $form[] = array(
+    $form['delete'] = array(
       '#type' => 'submit',
       '#value' => t('Delete'),
       '#validate' => array('nodequeue_edit_queue_form_delete_validate'),
