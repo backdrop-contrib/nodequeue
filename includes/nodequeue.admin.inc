@@ -782,9 +782,9 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
       $form['nodes'][$node->nid]['date'] = array('#markup' => format_date($node->created, 'short'));
     }
     else {
-      $form['nodes'][$node->nid]['title'] = array('#value' => t('Restricted node, NID: @nid', array('@nid' => $node->nid)));
-      $form['nodes'][$node->nid]['author'] = array('#value' => '');
-      $form['nodes'][$node->nid]['date'] = array('#value' => '');
+      $form['nodes'][$node->nid]['title'] = array('#markup' => t('Restricted node, NID: @nid', array('@nid' => $node->nid)));
+      $form['nodes'][$node->nid]['author'] = array('#markup' => '');
+      $form['nodes'][$node->nid]['date'] = array('#markup' => '');
     }
 
     if (node_access('update', $node)) {
