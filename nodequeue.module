@@ -1620,14 +1620,16 @@ function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5, $
  * Load the first node of a queue.
  */
 function nodequeue_load_front($sqid) {
-  return array_shift(nodequeue_load_nodes($sqid, FALSE, 0, 1));
+  $nodequeue_nodes = nodequeue_load_nodes($sqid, FALSE, 0, 1);
+  return array_shift($nodequeue_nodes);
 }
 
 /**
  * Load the last node of a queue.
  */
 function nodequeue_load_back($sqid, $teaser = TRUE, $links = TRUE) {
-  return array_shift(nodequeue_load_nodes($sqid, TRUE, 0, 1));
+  $nodequeue_nodes = nodequeue_load_nodes($sqid, TRUE, 0, 1);
+  return array_shift($nodequeue_nodes);
 }
 
 /**
@@ -1661,7 +1663,8 @@ function nodequeue_load_random_node($sqid) {
      ->execute()
      ->fetchField();
 
-  return array_shift(nodequeue_load_nodes($sqid, TRUE, rand(0, $count - 1), 1));
+  $nodequeue_nodes = nodequeue_load_nodes($sqid, TRUE, rand(0, $count - 1), 1);
+  return array_shift($nodequeue_nodes);
 }
 
 /**
