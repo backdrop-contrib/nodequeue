@@ -1045,7 +1045,7 @@ function nodequeue_arrange_subqueue_form_add_submit($form, &$form_state) {
 
   if (!empty($form_state['values']['add']['nid'])) {
     preg_match('/\[nid: (\d+)\]$/', $form_state['values']['add']['nid'], $matches);
-    $nid = $matches[1];
+    $nid = isset($matches[1]) ? $matches[1] : NULL;
     if (empty($nid)) {
       form_set_error('', t('Please enter a valid node title.'));
     }
