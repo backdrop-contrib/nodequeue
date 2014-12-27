@@ -433,3 +433,11 @@ function nodequeue_update_7202() {
   );
   db_add_field('nodequeue_queue', 'insert_at_front', $field);
 }
+
+/**
+ * Rebuild the menu cache so that contextual links in views appear.
+ */
+function nodequeue_update_7203() {
+  variable_set('menu_rebuild_needed', TRUE);
+  drupal_set_message(t('The menus will now be rebuilt.'));
+}
