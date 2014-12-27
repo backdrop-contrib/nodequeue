@@ -35,6 +35,12 @@ function nodequeue_admin_settings($form, &$form_state) {
       If you wish to have fewer views, you can disable this option and use a single view with an argument for the qid."),
     '#default_value' => variable_get('nodequeue_view_per_queue', 1),
   );
+  $form['nodequeue_show_contextual_links'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display contextual links.'),
+    '#description' => t("A contextual link to edit the nodequeue will be displayed on Views that have a nodequeue relationship."),
+    '#default_value' => variable_get('nodequeue_show_contextual_links', TRUE),
+  );
   return system_settings_form($form);
 }
 
