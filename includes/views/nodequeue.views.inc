@@ -124,6 +124,10 @@ function nodequeue_views_data() {
   $data['nodequeue_nodes']['in_queue'] = array(
     'title' => t('In queue'),
     'help' => t('Filter to ensure a node IS or IS NOT in the related queue'),
+    'sort' => array(
+      'help' => t('Sort by whether this is a nodequeue node or not'),
+      'handler' => 'nodequeue_handler_sort_in_queue',
+    ),
     'filter' => array(
       'handler' => 'nodequeue_handler_filter_in_queue',
       'label' => t('In queue'),
