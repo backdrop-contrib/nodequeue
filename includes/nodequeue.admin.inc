@@ -868,16 +868,18 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
  */
 function nodequeue_arrange_subqueue_form_validate($form, &$form_state) {
   $positions = array();
-  foreach ($form_state['values'] as $nid => $element) {
-    if (is_numeric($nid) && is_numeric($element['position'])) {
-      $positions[$nid] = $element['position'];
+  if (isset($form_state['values']['nodes'])) {
+    foreach ($form_state['values']['nodes'] as $nid => $element) {
+      if (is_numeric($nid) && is_numeric($element['position'])) {
+        $positions[$nid] = $element['position'];
+      }
     }
   }
   if (count(array_unique($positions)) < count($positions)) {
     $seen = array();
     foreach ($positions as $nid => $position) {
       if (isset($seen[$position])) {
-        form_set_error($nid . '][position', t('Duplicate position value.'));
+        form_set_error('nodes][' . $nid . '][position', t('Duplicate position value.'));
       }
       $seen[$position] = TRUE;
     }
