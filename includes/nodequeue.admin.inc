@@ -436,6 +436,13 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
     '#description' => t('Ordinarily queues are arranged with the front of the queue (where items will be removed) on top and the back (where items will be added) on the bottom. If checked, this will display the queue such that items will be added to the top and removed from the bottom.'),
   );
 
+  $form['insert_at_front'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Insert nodes at front of queue, and delete from the back.'),
+    '#default_value' => $queue->insert_at_front,
+    '#description' => t('Ordinarily items are added at the back of the queue, and excess nodes are removed from the front. If checked, this behaviour is reversed: nodes will be added at the front and removed from the back.'),
+  );
+
   $form['link'] = array(
     '#type' => 'textfield',
     '#title' => t('Link "add to queue" text'),

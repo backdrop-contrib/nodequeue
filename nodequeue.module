@@ -456,6 +456,7 @@ class nodequeue_queue {
 
   var $subqueue_title = '';
   var $reverse = 0;
+  var $insert_at_front = 0;
 
   // runtime
   var $subqueues = array();
@@ -858,6 +859,7 @@ function nodequeue_save(&$queue) {
     'show_in_ui' => $queue->show_in_ui,
     'i18n' => $queue->i18n,
     'reverse' => $queue->reverse,
+    'insert_at_front' => $queue->insert_at_front,
     'reference' => $queue->reference,
   );
 
@@ -1043,14 +1045,29 @@ function nodequeue_subqueue_add($queue, &$subqueue, $nid = NULL) {
   if (!empty($nid)) {
     $transaction = db_transaction();
     try {
-      $position = db_query("SELECT MAX(position) + 1 FROM (SELECT * FROM {nodequeue_nodes} WHERE sqid = :sqid) as nn", array(':sqid' => $subqueue->sqid))->fetchField();
-      $position = !empty($position) ? $position : 1;
-      db_query("INSERT INTO {nodequeue_nodes} (sqid, qid, nid, position, timestamp) VALUES (:sqid, :qid, :nid, :position, :time)", array(':sqid' => $subqueue->sqid, ':qid' => $queue->qid, ':nid' => $nid, ':position' => $position,':time' => REQUEST_TIME));
+      if ($queue->insert_at_front) {
+        db_update('nodequeue_nodes')
+          ->expression('position', 'position + 1')
+          ->condition('sqid', $subqueue->sqid)
+          ->execute();
+        $position = 1;
+      }
+      else {
+        $position = db_query("SELECT COALESCE((SELECT MAX(position) + 1 FROM {nodequeue_nodes} WHERE sqid = :sqid), 1)", array(':sqid' => $subqueue->sqid))->fetchField();
+      }
+      db_insert('nodequeue_nodes')
+        ->fields(array(
+            'sqid' => $subqueue->sqid,
+            'qid' => $queue->qid,
+            'nid' => $nid,
+            'position' => $position,
+            'timestamp' => REQUEST_TIME,
+          ))
+        ->execute();
     }
     catch (Exception $e) {
       $transaction->rollback();
       watchdog_exception('nodequeue', $e);
-
       throw $e;
     }
 
@@ -1167,7 +1184,12 @@ function nodequeue_check_subqueue_size($queue, &$subqueue, $size = NULL) {
   }
 
   if ($queue->size && $subqueue->count > $size) {
-    nodequeue_subqueue_remove($subqueue->sqid, 1, $subqueue->count - $size);
+    if ($queue->insert_at_front) {
+      nodequeue_subqueue_remove($subqueue->sqid, $size + 1, $subqueue->count);
+    }
+    else {
+      nodequeue_subqueue_remove($subqueue->sqid, 1, $subqueue->count - $size);
+    }
     $subqueue->count = $size;
   }
 }
