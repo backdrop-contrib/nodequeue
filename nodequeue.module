@@ -1610,12 +1610,10 @@ function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5, $
     $result = $query->execute();
   }
 
-  $nodes = array();
-  foreach ($result as $nid) {
-    $nodes[] = node_load($nid->nid);
-  }
+  $assoc_result = $result->fetchAllAssoc('nid');
+  $nids = array_keys($assoc_result);
 
-  return $nodes;
+  return node_load_multiple($nids);
 }
 
 /**
