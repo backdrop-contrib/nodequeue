@@ -1853,7 +1853,6 @@ function nodequeue_api_autocomplete($queue, $subqueue, $string) {
     $query->condition('n.type', $queue->types, 'IN');
   }
 
-  $where_args = array();
   global $user;
   if (!user_access('administer nodes', $user)) {
     $query->condition(db_or()->condition('n.status', 1)->condition('n.uid', $user->uid));
@@ -1878,7 +1877,7 @@ function nodequeue_api_autocomplete($queue, $subqueue, $string) {
   // Call to the API.
   $function = $queue->owner . "_nodequeue_autocomplete";
   if (function_exists($function)) {
-    return $function($queue, $subqueue, $string, $where, $where_args);
+    return $function($queue, $subqueue, $string, $query);
   }
   else {
     $query->addTag('i18n_select');
