@@ -7,7 +7,7 @@
  * @ingroup views_field_handlers
  */
 class nodequeue_handler_field_all_subqueues extends nodequeue_handler_field_all_queues {
-  function pre_render($values) {
+  function pre_render(&$values) {
     if (user_access('manipulate queues') || user_access('manipulate all queues')) {
       $nids = array();
       foreach ($values as $result) {

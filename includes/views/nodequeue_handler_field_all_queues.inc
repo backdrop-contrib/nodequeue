@@ -54,7 +54,7 @@ class nodequeue_handler_field_all_queues extends views_handler_field_prerender_l
     );
   }
 
-  function pre_render($values) {
+  function pre_render(&$values) {
     $nids = array();
     foreach ($values as $result) {
       $nids[] = $result->{$this->field_alias};
