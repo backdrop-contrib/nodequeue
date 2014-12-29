@@ -16,7 +16,7 @@ class nodequeue_handler_relationship_nodequeue extends views_handler_relationshi
     if (!empty($options['qids'])) {
       $map = array_flip(nodequeue_get_qid_map());
       foreach ($options['qids'] as $key => $value) {
-        if ($value) {
+        if ($value && isset($map[$key])) {
           $this->options['names'][$map[$key]] = ($value) ? $map[$key] : 0;
         }
       }
