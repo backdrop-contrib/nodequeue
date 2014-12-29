@@ -522,7 +522,7 @@ function nodequeue_get_qids($type, $account = NULL, $bypass_cache = FALSE) {
     $account = $user;
   }
 
-  static $cache = array();
+  $cache = &drupal_static(__FUNCTION__, array());
   if ($bypass_cache || !isset($cache[$type])) {
     $roles_join = $roles_where = '';
     $roles = array();
@@ -601,7 +601,7 @@ function nodequeue_get_all_qids($page_size = 0, $pager_element = 0, $bypass_cach
  *   Boolean value indicating whether to bypass the cache or not.
  */
 function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
-  static $cache = array();
+  $cache = &drupal_static(__FUNCTION__, array());
   $to_load = $loaded = array();
 
   foreach ($qids as $qid) {
@@ -688,7 +688,7 @@ function subqueue_load($sqid) {
  *   Boolean value indicating whether to bypass the cache or not.
  */
 function nodequeue_load_subqueues($sqids, $bypass_cache = FALSE) {
-  static $cache = array();
+  $cache = &drupal_static(__FUNCTION__, array());
   $to_load = array();
 
   foreach ($sqids as $sqid) {
@@ -774,7 +774,7 @@ function nodequeue_load_subqueues_by_queue($qids, $page_size = 0) {
  *   is another array of references.
  */
 function nodequeue_load_subqueues_by_reference($references, $bypass_cache = FALSE) {
-  static $cache = array();
+  $cache = &drupal_static(__FUNCTION__, array());
   $subqueues = array();
   if ($bypass_cache) {
     $cache = array();
@@ -832,7 +832,7 @@ function nodequeue_load_queue_by_name($name) {
  *   A array of qids, keyed by machine name.
  */
 function nodequeue_get_qid_map() {
-  static $map = array();
+  $map = &drupal_static(__FUNCTION__, array());
   if (!$map) {
     $result = db_query("SELECT qid, name FROM {nodequeue_queue}");
     while ($get = $result->fetchObject()) {
@@ -1374,7 +1374,7 @@ function nodequeue_set_subqueue_positions(&$subqueues, $nid) {
 function nodequeue_get_subqueues_by_node($queues, $node) {
   // Determine which subqueues are valid for each queue.
   $references = array();
-  static $last_nid = 0;
+  $last_nid = &drupal_static(__FUNCTION__, 0);
   foreach ($queues as $queue) {
     if ($result = nodequeue_api_subqueues($queue, $node)) {
       $references[$queue->qid] = is_array($result) ? $result : array($result);
