@@ -1577,18 +1577,59 @@ function nodequeue_node_links($node) {
 
 /**
  * Get node_view output from a nodequeue.
+ *
+ * @param integer $sqid
+ *   Subqueue ID
+ * @param boolean $backward
+ *   If TRUE (default), display the node with the highest queue position first.
+ * @param $view_mode
+ *   View mode, e.g. 'full', 'teaser'... For backward compatibility, non-string
+ *   arguments will be converted to boolean, TRUE implies 'teaser' and FALSE
+ *   implies 'full'.
+ * @param boolean $links
+ *   Deprecated.
+ * @param integer $from
+ *   Display offset from highest (if $backward is FALSE, lowest) queue position.
+ * @param integer $count
+ *   Maximum number of nodes to display.
+ *
+ * @return array
+ *   An array as expected by drupal_render().
  */
-function nodequeue_view_nodes($sqid, $backward = TRUE, $teaser = TRUE, $links = TRUE, $from = 0, $count = 0) {
-  $output = array();
+function nodequeue_view_nodes($sqid, $backward = TRUE, $view_mode = 'teaser', $links = TRUE, $from = 0, $count = 0) {
+  // This is for backward compatibility with 'D6 style' argument, which used
+  // to be $teaser = TRUE (and previously wasn't converted as necessary in D7
+  // version):
+  if (!is_string($view_mode)) {
+    $view_mode = $view_mode ? 'teaser' : 'full';
+   }
+
   $nodes = nodequeue_load_nodes($sqid, $backward, $from, $count);
-  foreach ($nodes as $node) {
-    $output[] = node_view($node, $teaser, FALSE, $links);
-  }
-  return $output;
+  $output = node_view_multiple($nodes, $view_mode);
+
+  // Keep backward compatibility with the previous version of this function, which
+  // returned an array of individually built nodes.
+  // @todo reevaluate this.
+  unset($output['nodes']['#sorted']);
+  return array_values($output['nodes']);
 }
 
 /**
  * Load an array of node objects belonging to a particular nodequeue.
+ *
+ * @param integer $sqid
+ *   Subqueue ID
+ * @param boolean $backward
+ *   If TRUE (default), display the node with the highest queue position first.
+ * @param integer $from
+ *   Display offset from highest (if $backward is FALSE, lowest) queue position.
+ * @param integer $count
+ *   Maximum number of nodes to display.
+ * @param bool $published_only
+ *   If TRUE (default), only load published nodes.
+ *
+ * @return array
+ *   An array of node objects (indexed sequentially, not by nid).
  */
 function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5, $published_only = TRUE) {
   $orderby = ($backward ? "DESC" : "ASC");
@@ -1604,16 +1645,15 @@ function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5, $
   }
 
   if ($count) {
-    $result = $query->range($from, $count)->execute();
+    $result = $query->range($from, $count)->execute()->fetchCol();
   }
   else {
-    $result = $query->execute();
+    $result = $query->execute()->fetchCol();
   }
 
-  $assoc_result = $result->fetchAllAssoc('nid');
-  $nids = array_keys($assoc_result);
-
-  return node_load_multiple($nids);
+  // Return numerically indexed array for backward compatibility.
+  // @todo reevaluate this.
+  return array_values(node_load_multiple($result));
 }
 
 /**
