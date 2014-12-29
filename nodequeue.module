@@ -675,21 +675,25 @@ function subqueue_load($sqid) {
 }
 
 /**
- * Load a list of subqueues
+ * Load a list of subqueues.
  *
  * This exists to provide a way of loading a bunch of queues with
  * the fewest queries. Loading 5 queues results in only 4 queries,
  * not 20. This also caches queues so that they don't get loaded
  * repeatedly.
  *
- * @param $sqids
+ * @param array $sqids
  *   An array of subqueue IDs to load.
- * @param $bypass_cache
+ * @param bool $bypass_cache
  *   Boolean value indicating whether to bypass the cache or not.
+ *
+ * @return array
+ *   An array of subqueues.
  */
 function nodequeue_load_subqueues($sqids, $bypass_cache = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
   $to_load = array();
+  $subqueues = array();
 
   foreach ($sqids as $sqid) {
     if ($bypass_cache || !isset($cache[$sqid])) {
