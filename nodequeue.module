@@ -868,7 +868,7 @@ function nodequeue_save(&$queue) {
       ->fields($nodequeue_queue_fields)
       ->execute();
 
-    if (function_exists('views_invalidate_cache')) {
+    if (module_exists('views')) {
       views_invalidate_cache();
     }
   }
