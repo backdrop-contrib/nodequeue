@@ -1032,6 +1032,9 @@ function nodequeue_save_subqueue_order($nodes, $qid, $sqid) {
     nodequeue_check_subqueue_size($queue, $subqueue);
   }
 
+  // Invoke a hook to notify other modules of the updated queue.
+  module_invoke_all('nodequeue_update', $qid, $sqid);
+
   return array(NODEQUEUE_OK, 'The queue has been updated.');
 }
 
