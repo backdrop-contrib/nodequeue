@@ -426,6 +426,7 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
     '#default_value' => $queue->size,
     '#size' => 2,
     '#maxlength' => 2,
+    '#required' => TRUE,
     '#description' => t('The maximum number of nodes will appear in the queue. Enter 0 for no limit'),
   );
 
