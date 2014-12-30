@@ -2123,41 +2123,6 @@ function nodequeue_machine_name_exists($machine_name) {
   return $queue_exists;
 }
 
-/**
- * Get the list of nodes in the subqueue, taking into account node access restrictions.
- */
-function nodequeue_nids_visible($sqid = -1, $account = NULL) {
-  $node_status_sql = '';
-  if (!$account) {
-    global $user;
-    $account = $user;
-  }
-  $nids_visible = array();
-
-  $query = db_select('node', 'n')
-    ->fields('n', array('nid'))
-    ->addTag('node_access')
-    ->distinct()
-    ->condition('nq.sqid', $sqid)
-    ->orderBy('nq.position', 'ASC');
-  $query->leftJoin('nodequeue_nodes', 'nq', 'nq.nid = n.nid');
-
-  if (!user_access('administer nodes', $account)) {
-    $query->condition(db_or()->condition('n.status', 1)->condition('n.uid', $account->uid));
-  }
-
-  // Disable i18n_select for this query.
-  if (arg(0) == 'admin') {
-    $query->addTag('i18n_select');
-  }
-
-  $query_restricted = $query->execute();
-  foreach ($query_restricted as $result_restricted) {
-    $nids_visible[$result_restricted->nid] = $result_restricted->nid;
-  }
-  return $nids_visible;
-}
-
 /* --- THEME ---------------------------------------------------------------- */
 
 /**

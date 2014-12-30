@@ -742,8 +742,6 @@ function nodequeue_arrange_subqueue($queue, $subqueue = NULL) {
 function _nodequeue_dragdrop_get_nodes($queue, $subqueue) {
   $order = $queue->reverse ? 'DESC' : 'ASC';
 
-  $visible = nodequeue_nids_visible($subqueue->sqid);
-
   // Get a list of all nodes in the subqueue, regardless of access restrictions.
   $query = db_select('nodequeue_nodes', 'nq');
 
@@ -768,7 +766,7 @@ function _nodequeue_dragdrop_get_nodes($queue, $subqueue) {
   foreach ($sq_nodes as $key => $sq_node) {
     $nid = $sq_node['nid'];
     $sq_node += (array) $nodes[$nid];
-    $sq_node['visible'] = isset($visible[$nid]) ? TRUE : FALSE;
+    $sq_node['visible'] = node_access('view', $nodes[$nid]) ? TRUE : FALSE;
     $sq_nodes[$key] = (object) $sq_node;
   }
 
