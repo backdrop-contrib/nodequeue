@@ -305,3 +305,24 @@ function smartqueue_taxonomy_get_parents($tids) {
     return array();
   }
 }
+
+/**
+ * Implements hook_nodequeue_autocomplete().
+ */
+function smartqueue_taxonomy_nodequeue_autocomplete($queue, $subqueue, $string, &$query) {
+  $matches = array();
+
+  // Filtering by the reference
+  $query->join('taxonomy_index', 'ti', 'n.nid = ti.nid');
+  $query->condition('ti.tid', $subqueue->reference, '=');
+
+  $query->addTag('i18n_select');
+  $result = $query->execute();
+
+  foreach ($result as $node) {
+    $id = nodequeue_get_content_id($queue, $node);
+    $matches[$node->nid] = check_plain($node->title) . " [nid: $id]";
+  }
+
+  return $matches;
+}
