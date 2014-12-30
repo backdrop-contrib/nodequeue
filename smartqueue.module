@@ -171,10 +171,12 @@ function smartqueue_taxonomy_nodequeue_subqueues(&$queue, $node) {
 function smartqueue_nodequeue_alter(&$data, $type) {
   switch ($type) {
     case 'load_queues':
-      $qids = array_keys($data);
-      $result = db_query("SELECT qid, use_parents FROM {smartqueue} WHERE qid IN (:qids)", array(':qids' => $qids));
-      foreach ($result as $queue) {
-        $data[$queue->qid]->use_parents = $queue->use_parents;
+      if (!empty($data)) {
+        $qids = array_keys($data);
+        $result = db_query("SELECT qid, use_parents FROM {smartqueue} WHERE qid IN (:qids)", array(':qids' => $qids));
+        foreach ($result as $queue) {
+          $data[$queue->qid]->use_parents = $queue->use_parents;
+        }
       }
       break;
   }
