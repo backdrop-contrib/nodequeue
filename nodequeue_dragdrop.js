@@ -162,7 +162,7 @@ function nodequeueUpdateNodePositions(table_id) {
 
   $('#' + table_id + ' tr').filter(":visible").find('select.node-position').each(function(i) {
     $(this).val(size);
-    $(this).find("option[value='" + size + '"]').attr('selected', 'selected');
+    $(this).find("option[value='" + size + "']").attr('selected', 'selected');
     reverse ? size-- : size++;
   });
 }
