@@ -81,9 +81,7 @@ function nodequeue_generate_form_submit($form, &$form_state) {
   // Get qids of all nodequeues that need to be re-populated and repopulate them.
   $qids = array_keys(array_filter($form_state['values']['nodequeues']));
   $nodes_limit = $form_state['values']['nodequeue_generate_nodes_limit'];
-dpm('a');
   nodequeue_generate_rehash();
-dpm('b');
   nodequeue_generate_repopulate_queues($qids, $nodes_limit);
 }
 
