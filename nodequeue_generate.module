@@ -175,8 +175,8 @@ function nodequeue_generate_rehash() {
         }
       }
 
-      foreach ($nids as $nid) {
-        $node = node_load($nid['entity_id']);
+      $nodes = node_load_multiple($nids);
+      foreach ($nodes as $node) {
         nodequeue_api_subqueues($queue, $node);
       }
     }
