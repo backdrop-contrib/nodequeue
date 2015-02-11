@@ -95,7 +95,7 @@ function smartqueue_update_7001() {
  * Clean-up leftovers from the {smartqueue} table.
  */
 function smartqueue_update_7002() {
-  db_query('DELETE FROM {smartqueue} WHERE `qid` NOT IN (SELECT qid FROM {nodequeue_queue})');
+  db_query('DELETE FROM {smartqueue} WHERE qid NOT IN (SELECT qid FROM {nodequeue_queue})');
 
   return t('The {smartqueue} table has been cleaned.');
 }
