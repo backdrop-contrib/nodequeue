@@ -114,6 +114,8 @@ Drupal.behaviors.nodequeueRemoveNode = {
     $('a.nodequeue-remove').click(function() {
       var node_edit = '#' + $(this).attr('id').replace('nodequeue-remove-', 'edit-nodes-') + '-position';
       $(node_edit).val('r');
+      // Remove "node-position" class so that position rearrangement in misc/tabledrag.js will ignore this node.
+      $(node_edit).removeClass('node-position');
 
       // Hide the current row.
       $(this).parent().parent().fadeOut('fast', function() {
