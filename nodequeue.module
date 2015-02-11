@@ -1037,6 +1037,24 @@ function nodequeue_remove_subqueue($sqid) {
 /**
  * Add a node to a queue.
  *
+ * @param $queue_name
+ *   A machine-readable name of the queue.
+ * @param $nid
+ *   The node ID. Defaults to NULL.
+ */
+function nodequeue_queue_add($queue_name, $nid = NULL) {
+  if (!empty($nid)) {
+    $queue = nodequeue_load_queue_by_name($queue_name);
+    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+    foreach ($subqueues as $subqueue) {
+      nodequeue_subqueue_add($queue, $subqueue, $nid);
+    }
+  }
+}
+
+/**
+ * Add a node to a subqueue.
+ *
  * @param $queue
  *   The parent queue of the subqueue. This is required so that we can
  *   pop nodes out if the queue breaks size limits.
