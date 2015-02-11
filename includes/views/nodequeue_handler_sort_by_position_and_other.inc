@@ -28,6 +28,7 @@ class nodequeue_handler_sort_by_position_and_other extends views_handler_sort {
     $order = strtoupper($this->options['order']);
     $stub = ($order == 'DESC') ? '0' : '999999999';
 
-    $this->query->orderby[] = array('field' => "IFNULL($as, $stub) ", 'direction' => $order);
+    // Use COALESCE instead of IFNULL, and avoid using the field alias to support MS SQL Server.
+    $this->query->orderby[] = array('field' => "COALESCE($table.$field, $stub) ", 'direction' => $order);
   }
 }
