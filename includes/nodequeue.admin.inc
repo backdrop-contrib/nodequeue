@@ -933,7 +933,7 @@ function nodequeue_arrange_subqueue_form_submit($form, &$form_state, $reverse = 
     }
   }
 
-  $message = 'The queue has been updated.';
+  $message = t('The queue has been updated.');
 
   if ($reverse || $shuffle) {
     $keys = array_keys($nodes);
@@ -942,13 +942,13 @@ function nodequeue_arrange_subqueue_form_submit($form, &$form_state, $reverse = 
     // reverse the list if the reverse button was pressed
     if ($reverse) {
       $values = array_reverse($values);
-      $message = 'The queue has been reversed.';
+      $message = t('The queue has been reversed.');
     }
 
     // shuffle the list if the shuffle button was pressed.
     if ($shuffle) {
       shuffle($values);
-      $message = 'The queue has been shuffled.';
+      $message = t('The queue has been shuffled.');
     }
 
     $nodes = array_combine($keys, $values);
@@ -958,7 +958,7 @@ function nodequeue_arrange_subqueue_form_submit($form, &$form_state, $reverse = 
   $sqid = $form['nodes']['#subqueue']['sqid'];
   nodequeue_save_subqueue_order($nodes, $qid, $sqid);
 
-  drupal_set_message(t('@message', array('@message' => $message)));
+  drupal_set_message($message);
 }
 
 /**
