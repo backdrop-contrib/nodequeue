@@ -526,30 +526,29 @@ function nodequeue_apachesolr_query_alter(DrupalSolrQueryInterface $query) {
  * always check to see if our variables are empty or not.
  */
 class nodequeue_queue {
-  var $name = '';
-  var $title = '';
-  var $size = 0;
-  var $link = '';
-  var $link_remove = '';
-  var $roles = array();
-  var $types = array();
-  var $show_in_links = TRUE;
-  var $show_in_tab = TRUE;
-  var $show_in_ui = TRUE;
-  var $reference = 0;
-  var $i18n = 0;
-
-  var $subqueue_title = '';
-  var $reverse = 0;
-  var $insert_at_front = 0;
+  public $name = '';
+  public $title = '';
+  public $size = 0;
+  public $link = '';
+  public $link_remove = '';
+  public $roles = array();
+  public $types = array();
+  public $show_in_links = TRUE;
+  public $show_in_tab = TRUE;
+  public $show_in_ui = TRUE;
+  public $reference = 0;
+  public $i18n = 0;
+  public $subqueue_title = '';
+  public $reverse = 0;
+  public $insert_at_front = 0;
 
   // runtime
-  var $subqueues = array();
-  var $subqueue = NULL;
+  public $subqueues = array();
+  public $subqueue = NULL;
 
-  var $current = NULL;
+  public $current = NULL;
 
-  function nodequeue_queue($type) {
+  function __construct($type) {
     $this->owner = $type;
   }
 }
