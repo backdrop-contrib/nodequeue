@@ -1445,7 +1445,8 @@ function nodequeue_queue_back($subqueue, $position) {
   db_update('nodequeue_nodes')
     ->expression('position', 'position - 1')
     ->condition('sqid', $subqueue->sqid)
-    ->condition('position', $position, '<')
+    ->condition('position', $position, '>')
+    ->condition('position', $subqueue->count, '<=')
     ->execute();
 
   db_insert('nodequeue_nodes')
