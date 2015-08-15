@@ -1045,6 +1045,9 @@ function nodequeue_save(&$queue) {
  * Delete a nodequeue.
  */
 function nodequeue_delete($qid) {
+  // Load the queue before it's deleted.
+  $queue = nodequeue_load($qid);
+
   db_delete('nodequeue_roles')
     ->condition('qid', $qid)
     ->execute();
@@ -1066,7 +1069,7 @@ function nodequeue_delete($qid) {
     ->execute();
 
   // Invoke a hook to notify other modules that a nodequeue has been deleted.
-  module_invoke_all('nodequeue_delete', $qid);
+  module_invoke_all('nodequeue_delete', $qid, $queue);
 }
 
 /**
