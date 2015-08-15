@@ -120,7 +120,7 @@ function smartqueue_taxonomy_nodequeue_subqueues(&$queue, $node) {
     }
   }
 
-  if (!empty($field_names) && $queue->use_parents) {
+  if (!empty($field_names) && !empty($queue->use_parents)) {
     // Replace taxonomy IDs with their parents'.
     foreach ($field_names as $field_name => &$tids) {
       $tids = smartqueue_taxonomy_get_parents($tids);
