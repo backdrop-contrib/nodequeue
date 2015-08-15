@@ -432,6 +432,7 @@ function nodequeue_form_apachesolr_search_bias_form_alter(&$form, &$form_state, 
   $weights = drupal_map_assoc(array('21.0', '13.0', '8.0', '5.0', '3.0', '2.0', '1.0', '0.8', '0.5', '0.3', '0.2', '0.1'));
   $weights['0'] = t('Normal');
   $queues = nodequeue_load_subqueues_by_queue(array_keys(nodequeue_get_all_qids()));
+  $env_id = $form['#env_id'];
 
   // Build the form.
   $form['biasing']['nodequeue_boost'] = array(
@@ -443,10 +444,10 @@ function nodequeue_form_apachesolr_search_bias_form_alter(&$form, &$form_state, 
   );
   $form['biasing']['nodequeue_boost']['nodequeue_apachesolr_boost'] = array(
     '#type' => 'item',
-    '#description' => t("Specify to bias the search result when a node is in a queue. Any value except <em>Normal</em> will increase the socre for the given queue in the search results"),
+    '#description' => t("Specify to bias the search result when a node is in a queue. Any value except <em>Normal</em> will increase the score for the given queue in the search results"),
   );
   foreach ($queues as $sqid => $queue) {
-    $boost = variable_get("nodequeue_apachesolr_boost_$sqid", 0);
+    $boost = apachesolr_environment_variable_get($env_id, "nodequeue_apachesolr_boost_$sqid", 0);
     // Add in setting for each queue.
     $form['biasing']['nodequeue_boost']['nodequeue_apachesolr_boost']["nodequeue_apachesolr_boost_$sqid"] = array(
       '#type' => 'select',
@@ -455,20 +456,21 @@ function nodequeue_form_apachesolr_search_bias_form_alter(&$form, &$form_state, 
       '#default_value' => $boost,
     );
   }
+  $form['actions']['submit']['#submit'][] = 'nodequeue_search_bias_form_submit';
 }
 
 /**
- * Implements hook_apachesolr_index_document_ENTITY_TYPE().
+ * Implements hook_apachesolr_index_document_build_ENTITY_TYPE().
  */
-function nodequeue_apachesolr_index_document_node($document, $node, $env_id) {
+function nodequeue_apachesolr_index_document_build_node(ApacheSolrDocument $document, $entity, $env_id) {
   if (empty($document)) {
     return;
   }
 
   $queues = nodequeue_load_queues(array_keys(nodequeue_get_all_qids()));
-  $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
+  $subqueues = nodequeue_get_subqueues_by_node($queues, $entity);
 
-  nodequeue_set_subqueue_positions($subqueues, $node->nid);
+  nodequeue_set_subqueue_positions($subqueues, $entity->nid);
   if (is_array($subqueues)) {
     foreach ($subqueues as $sqid => $subqueue) {
       if (!empty($subqueue->position)) {
@@ -498,14 +500,34 @@ function _nodequeue_solr_qid_key() {
 function nodequeue_apachesolr_query_alter(DrupalSolrQueryInterface $query) {
   $queues = nodequeue_load_subqueues_by_queue(array_keys(nodequeue_get_all_qids()));
   $added = FALSE;
+  $env_id = $query->solr('getId');
   foreach ($queues as $sqid => $queue) {
-    $boost = variable_get("nodequeue_apachesolr_boost_$sqid", 0);
+    $boost = apachesolr_environment_variable_get($env_id, "nodequeue_apachesolr_boost_$sqid", 0);
     if (!empty($boost)) {
-      $query->params['bq'][] = _nodequeue_solr_qid_key() . ":$sqid^$boost";
+      $query->addParam('bq', _nodequeue_solr_qid_key() . ":$sqid^$boost");
       if (!$added) {
         // Only want to add the facet.field once. no need to repeat it.
-        $query->params['facet.field'][] = _nodequeue_solr_qid_key();
+        $query->addParam('facet.field', _nodequeue_solr_qid_key());
         $added = TRUE;
+      }
+    }
+  }
+}
+
+/**
+ * Additional submit handler for nodequeue values.
+ */
+function nodequeue_search_bias_form_submit(&$form, &$form_state) {
+  // Exclude unnecessary elements.
+  form_state_values_clean($form_state);
+  foreach ($form_state['values'] as $key => $value) {
+    if (is_array($value) && isset($form_state['values']['array_filter'])) {
+      $value = array_keys(array_filter($value));
+    }
+    // There is no need to set default variable values.
+    if (!isset($form[$key]['#default_value']) || $form[$key]['#default_value'] != $value) {
+      if (preg_match('/nodequeue_apachesolr_boost_/', $key)) {
+        apachesolr_environment_variable_set($form['#env_id'], $key, $value);
       }
     }
   }
