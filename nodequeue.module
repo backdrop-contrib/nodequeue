@@ -2281,9 +2281,11 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
         'class' => array('position')
       );
 
+      $classes = !empty($form[$key]['#attributes']['class']) ? $form[$key]['#attributes']['class'] : array();
+      $classes[] = 'draggable';
       $rows[] = array(
         'data'  => $row,
-        'class' => array('draggable'),
+        'class' => $classes,
       );
     }
 
