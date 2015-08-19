@@ -1783,9 +1783,7 @@ function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5, $
     $result = $query->execute()->fetchCol();
   }
 
-  // Return numerically indexed array for backward compatibility.
-  // @todo reevaluate this.
-  return array_values(node_load_multiple($result));
+  return node_load_multiple($result);
 }
 
 /**
