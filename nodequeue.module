@@ -230,6 +230,7 @@ function nodequeue_node_delete($node) {
       // node in a queue twice, the 2nd position would be wrong.
       nodequeue_subqueue_remove_node($obj->sqid, $node->nid);
     }
+    rules_invoke_event('nodequeue_node_changed', nodequeue_load_subqueue($obj->sqid), $node);
   }
 }
 
@@ -245,6 +246,19 @@ function nodequeue_node_view($node, $view_mode) {
     );
   }
 }
+
+/**
+ * Implements hook_node_update()
+ */
+function nodequeue_node_update($node) {
+  $result = db_query("SELECT qid, sqid FROM {nodequeue_nodes} WHERE nid =:nid", array(
+    ':nid' => $node->nid,
+  ));
+  foreach ($result as $obj) {
+    rules_invoke_event('nodequeue_node_changed', nodequeue_load_subqueue($obj->sqid), $node);
+  }
+}
+
 
 /**
  * Implementats hook_forms().
@@ -2351,4 +2365,26 @@ function theme_nodequeue_subqueue_full_text() {
  */
 function theme_nodequeue_subqueue_count_text($variables) {
   return t('@count in queue', array('@count' => $variables['count']));
+}
+
+/**
+ * Implements hook_nodequeue_add()
+ */
+function nodequeue_nodequeue_add($sqid, $nid) {
+  // When a node is added to a nodequeue invoke the corresponding rules event
+  $subqueue = nodequeue_load_subqueue($sqid);
+  $node = node_load($nid);
+  rules_invoke_event('nodequeue_added', $subqueue, $node);
+  rules_invoke_event('nodequeue_saved', $subqueue, $node);
+}
+
+/**
+ * Implements hook_nodequeue_remove().
+ */
+function nodequeue_nodequeue_remove($sqid, $nid) {
+  // When a node is removed from a nodequeue invoke the corresponding rules event
+  $subqueue = nodequeue_load_subqueue($sqid);
+  $node = node_load($nid);
+  rules_invoke_event('nodequeue_removed', $subqueue, $node);
+  rules_invoke_event('nodequeue_saved', $subqueue, $node);
 }

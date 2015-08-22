@@ -1042,6 +1042,12 @@ function nodequeue_save_subqueue_order($nodes, $qid, $sqid) {
   // Invoke a hook to notify other modules of the updated queue.
   module_invoke_all('nodequeue_update', $qid, $sqid);
 
+  // As there's no API for saving a subqueue, we have to trigger the nodequeue save event here.
+  // There might be some other places where we have to add these lines.
+  if (module_exists('rules')) {
+    rules_invoke_event('nodequeue_saved', $subqueue, $nodes);
+  }
+
   return array(NODEQUEUE_OK, 'The queue has been updated.');
 }
 
