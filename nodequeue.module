@@ -230,7 +230,9 @@ function nodequeue_node_delete($node) {
       // node in a queue twice, the 2nd position would be wrong.
       nodequeue_subqueue_remove_node($obj->sqid, $node->nid);
     }
-    rules_invoke_event('nodequeue_node_changed', nodequeue_load_subqueue($obj->sqid), $node);
+    if (module_exists('rules')) {
+      rules_invoke_event('nodequeue_node_changed', nodequeue_load_subqueue($obj->sqid), $node);
+    }
   }
 }
 
@@ -254,8 +256,11 @@ function nodequeue_node_update($node) {
   $result = db_query("SELECT qid, sqid FROM {nodequeue_nodes} WHERE nid =:nid", array(
     ':nid' => $node->nid,
   ));
-  foreach ($result as $obj) {
-    rules_invoke_event('nodequeue_node_changed', nodequeue_load_subqueue($obj->sqid), $node);
+
+  if (module_exists('rules')) {
+    foreach ($result as $obj) {
+      rules_invoke_event('nodequeue_node_changed', nodequeue_load_subqueue($obj->sqid), $node);
+    }
   }
 }
 
