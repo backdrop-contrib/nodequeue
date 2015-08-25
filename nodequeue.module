@@ -2374,8 +2374,10 @@ function nodequeue_nodequeue_add($sqid, $nid) {
   // When a node is added to a nodequeue invoke the corresponding rules event
   $subqueue = nodequeue_load_subqueue($sqid);
   $node = node_load($nid);
-  rules_invoke_event('nodequeue_added', $subqueue, $node);
-  rules_invoke_event('nodequeue_saved', $subqueue, $node);
+  if (module_exists('rules')) {
+    rules_invoke_event('nodequeue_added', $subqueue, $node);
+    rules_invoke_event('nodequeue_saved', $subqueue, $node);
+  }
 }
 
 /**
@@ -2385,6 +2387,8 @@ function nodequeue_nodequeue_remove($sqid, $nid) {
   // When a node is removed from a nodequeue invoke the corresponding rules event
   $subqueue = nodequeue_load_subqueue($sqid);
   $node = node_load($nid);
-  rules_invoke_event('nodequeue_removed', $subqueue, $node);
-  rules_invoke_event('nodequeue_saved', $subqueue, $node);
+  if (module_exists('rules')) {
+    rules_invoke_event('nodequeue_removed', $subqueue, $node);
+    rules_invoke_event('nodequeue_saved', $subqueue, $node);
+  }
 }
