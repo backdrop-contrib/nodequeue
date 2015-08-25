@@ -18,3 +18,6 @@ files[] = includes/views/nodequeue_handler_filter_in_queue.inc
 files[] = includes/views/nodequeue_handler_relationship_nodequeue.inc
 files[] = includes/views/nodequeue_handler_sort_by_position_and_other.inc
 files[] = includes/views/nodequeue_handler_sort_in_queue.inc
+
+; Tests
+files[] = tests/nodequeue.test
