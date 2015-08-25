@@ -1001,7 +1001,7 @@ class NodequeueAPIMiscUnitTest extends NodequeueWebTestCase {
   function setUp() {
     parent::setUp('nodequeue');
   }
-  
+
   function testNodequeueGetSubqueueSizeText() {
     // TODO: nodequeue_subqueue_size_text($max, $count, $long = TRUE)
   }
