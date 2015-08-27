@@ -2249,7 +2249,7 @@ function nodequeue_js_output($label, $href, $count = NULL, $sqid = NULL) {
   }
 
   drupal_json_output($return);
-  exit;
+  drupal_exit();
 }
 
 /**
