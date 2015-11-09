@@ -210,12 +210,16 @@ function nodequeue_rules_condition_belongs_to_nodequeue($nodequeue, $qid) {
 /**
  * The condition verifies if the provided nodequeue argument is contained within the configured nodequeues.
  *
- * @param $nodequeue
- *   nodequeue (subqueue) object
- * @param $qid
- *   list of nodequeue ID's
- * @return boolean
+ * @param $node
+ * @param $qids
+ *
+ * @return bool
  *   boolean indicating whether the conditions applies
+ *
+ * @internal param $nodequeue
+ *   nodequeue (subqueue) object
+ * @internal param $qid
+ *   list of nodequeue ID's
  */
 function nodequeue_rules_condition_node_belongs_to_nodequeue($node, $qids) {
   $queues = nodequeue_load_queues(array_keys($qids));

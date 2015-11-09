@@ -17,9 +17,10 @@ class NodequeueWebTestCase extends DrupalWebTestCase {
    *
    * @param $label
    *   Text between the anchor tags.
-   * @param $index
+   * @param int $index
    *   Link position counting from zero.
-   * @return
+   *
+   * @return bool
    *   Page on success, or FALSE on failure.
    */
   protected function clickImage($label, $index = 0) {
@@ -41,14 +42,18 @@ class NodequeueWebTestCase extends DrupalWebTestCase {
   /**
    * @param array $types
    *   An array of content types that can be put in the queue.
+   * @param array $rids
    * @param int $size
    *   The size of the queue, 0 for infinite.
-   * @param int $rid
-   *   The role ID allowed to manipulate this queue.
    * @param bool $reverse
    *   Reverse the queue in the admin view.
+   * @param string $owner
+   *
    * @return object
    *   A nodequeue object.
+   *
+   * @internal param int $rid
+   *   The role ID allowed to manipulate this queue.
    */
   function createNodequeue($types, $rids = array(2), $size = 10, $reverse = FALSE, $owner = 'nodequeue') {
     $queue = new stdClass();

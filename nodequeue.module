@@ -724,6 +724,10 @@ function nodequeue_get_all_qids($page_size = 0, $pager_element = 0, $bypass_cach
  *
  * @param $bypass_cache
  *   Boolean value indicating whether to bypass the cache or not.
+ *
+ * @return array
+ *   if $bypass_cache is TRUE then it will return data from catch
+ *   else from database.
  */
 function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
@@ -782,6 +786,9 @@ function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
  *
  * @param $qid
  *   The qid of the queue to load.
+ *
+ * @return mixed
+ *   if $queues is empty the function will return empty array else $queues.
  */
 function nodequeue_load($qid) {
   $queues = nodequeue_load_queues(array($qid));
@@ -850,6 +857,9 @@ function nodequeue_load_subqueues($sqids, $bypass_cache = FALSE) {
  *   The subqueue ID to load.
  * @param $bypass_cache
  *   Boolean value indicating whether to bypass the cache or not.
+ *
+ * @return mixed
+ *
  */
 function nodequeue_load_subqueue($sqid, $bypass_cache = FALSE) {
   $subqueues = nodequeue_load_subqueues(array($sqid), $bypass_cache);
@@ -870,6 +880,10 @@ function nodequeue_load_subqueue($sqid, $bypass_cache = FALSE) {
  *   A $qid or array of $qids
  * @param $page_size
  *   If non-zero, use the pager_query and limit the page-size to the parameter.
+ *
+ * @return array
+ *   If $qids is empty it will return empty array else $subqueues.
+ *
  */
 function nodequeue_load_subqueues_by_queue($qids, $page_size = 0) {
   if (is_numeric($qids)) {
@@ -901,6 +915,9 @@ function nodequeue_load_subqueues_by_queue($qids, $page_size = 0) {
  * @param $references
  *   A keyed array of references to load. The key is the $qid and each value
  *   is another array of references.
+ *
+ * @return object
+ *
  */
 function nodequeue_load_subqueues_by_reference($references, $bypass_cache = FALSE) {
   $cache = &drupal_static(__FUNCTION__, array());
@@ -937,8 +954,7 @@ function nodequeue_load_subqueues_by_reference($references, $bypass_cache = FALS
  *
  * @param $name
  *   The queue machine name
- *
- * @return
+ * @return array|mixed
  *   The queue definition, or an empty array if no queue was found with the
  *   given machine name.
  */
@@ -1101,6 +1117,8 @@ function nodequeue_delete($qid) {
  * @param $reference
  *   A reference that uniquely identifies this subqueue. If NULL it will
  *   be assigned the sqid.
+ *
+ * @return object
  */
 function nodequeue_add_subqueue(&$queue, $title, $reference = NULL) {
   if (empty($reference)) {
@@ -1190,6 +1208,8 @@ function nodequeue_queue_add($queue_name, $nid = NULL) {
  *   The subqueue to add the node to.
  * @param $nid
  *   The node ID. Defaults to NULL.
+ *
+ * @throws Exception
  */
 function nodequeue_subqueue_add($queue, &$subqueue, $nid = NULL) {
   if (!empty($nid)) {
@@ -1324,9 +1344,11 @@ function nodequeue_queue_clear($sqid) {
  *
  * @param $queue
  *   The queue object.
- * @param $reference
- *   The subqueue to check.
+ * @param $subqueue
+ * @param null $size
  *
+ * @internal param $reference
+ *   The subqueue to check.
  */
 function nodequeue_check_subqueue_size($queue, &$subqueue, $size = NULL) {
   if (!isset($size)) {
@@ -1521,6 +1543,9 @@ function nodequeue_set_subqueue_positions(&$subqueues, $nid) {
  * @param $node
  *   A fully loaded node object.
  *
+ * @return array|object
+ *   if references is missing between $queues and $node it will return empty array
+ *   else $subqueues.
  */
 function nodequeue_get_subqueues_by_node($queues, $node) {
   // Determine which subqueues are valid for each queue.
@@ -1980,7 +2005,7 @@ function nodequeue_api_subqueues(&$queue, $node) {
  * @param $string
  *   The string being matched.
  *
- * @return
+ * @return array
  *   An keyed array $nid => $title
  */
 function nodequeue_api_autocomplete($queue, $subqueue, $string) {
@@ -2096,13 +2121,13 @@ function nodequeue_api_subqueue_access($subqueue, $account = NULL, $queue = NULL
  * @param $seed
  *   The seed to use when generating a token. If NULL no token will
  *   be generated.
- * @param $destination
+ * @param bool $destination
  *   The destination to use. If FALSE one won't be used; if TRUE
  *   one will be generated from drupal_get_destination().
- * @param $query
+ * @param array $query
  *   An array of additional items to add to the query.
  *
- * @return
+ * @return array|string
  *   The query string suitable for use in the l() function.
  */
 function nodequeue_get_query_string($seed, $destination = FALSE, $query = array()) {
@@ -2170,6 +2195,9 @@ function nodequeue_node_and_queue_access($node, $queue, $subqueue = NULL) {
  *   - 'links': Only check for queues that have node links.
  *   - 'tab': Only check for queues that appear on the node tab.
  *   - 'ui': Only check for queues that appear in the UI.
+ *
+ * @return bool
+ *   if $qids is empty it will return FALSE else TRUE.
  */
 function nodequeue_nodequeue_access($type, $location = NULL, $account = NULL) {
   if (isset($type->type)) {

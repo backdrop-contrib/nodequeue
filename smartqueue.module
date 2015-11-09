@@ -220,6 +220,8 @@ function smartqueue_build_string($arrays) {
  *
  * @param $queue Queue object.
  * @param $reference Subqueue reference string (tids imploded with '-').
+ *
+ * @return string
  */
 function smartqueue_taxonomy_nodequeue_subqueue_title($queue, $reference) {
   $tids = explode('-', $reference);

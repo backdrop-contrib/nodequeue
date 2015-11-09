@@ -85,7 +85,7 @@ function hook_nodequeue_sort_alter($nodes, $sqid) {
  * nodequeue hook in a reorder operation, the last being hook_nodequeue_update.
  *
  * @param array $nodes
- * @param int $sqid
+ * @param int $qid
  */
 function hook_nodequeue_save_subqueue_order_alter($qid, $nodes) {
   // Invoked from:

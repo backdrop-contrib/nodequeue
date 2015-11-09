@@ -105,6 +105,9 @@ function nodequeue_admin_remove_node($queue, $subqueue, $node) {
  *
  * @param $node
  *   The loaded $node; will be loaded by the hook_menu.
+ *
+ * @return string
+ *   return data in html table
  */
 function nodequeue_node_tab($node) {
   $output = '';
