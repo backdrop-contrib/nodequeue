@@ -26,3 +26,11 @@ testNodequeueQueueOperations() fails
 NodequeueApacheSolrUnitTest fails
 ---------------------------------------
 - Need to fix Apache Solr tests.
+
+testNodequeueAddQueue() table sorting fails on Drupal.org
+---------------------------------------------------------------
+fail: [Nodequeue] Line 327 of sites/all/modules/nodequeue/tests/nodequeue.test:
+Nodequeue table is sorted by max rows descending.
+
+fail: [Nodequeue] Line 331 of sites/all/modules/nodequeue/tests/nodequeue.test:
+Nodequeue table is sorted by subqueues descending.
