@@ -2368,6 +2368,10 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
 
   // Render the main nodequeue table.
   $header = array(t('Title'), t('Author'), t('Post Date'), t('Position'), array('data' => t('Operations'), 'colspan' => 2), t('Position'));
+
+  // Allow other modules to alter the table setup before output.
+  drupal_alter('nodequeue_arrange_subqueue_form', $form, $header, $rows);
+
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => $table_classes)));
 
   return $output;
