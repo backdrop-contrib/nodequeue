@@ -227,3 +227,140 @@ function nodequeue_rules_condition_node_belongs_to_nodequeue($node, $qids) {
     return FALSE;
   }
 }
+
+/**
+ * Implements hook_rules_action_info().
+ */
+function nodequeue_rules_action_info() {
+  return array(
+    // Action: Add a given node to the given nodequeue.
+    'nodequeue_action_add_node' => array(
+      'label' => t('Add node to nodequeue'),
+      'group' => t('Nodequeue'),
+      'parameter' => array(
+        'node' => array(
+          'type' => 'node',
+          'label' => t('Node'),
+          'description' => t('The node you want to add.'),
+        ),
+        'queue' => array(
+          'type' => 'text',
+          'label' => t('Queue'),
+          'description' => t('The queue where the node should be added to.'),
+          'options list' => 'nodequeue_get_queue_names',
+        ),
+        'unique' => array(
+            'type' => 'boolean',
+            'label' => t('Prevent duplication'),
+            'description' => t('Selecting this option will prevent the node from being added more than once to any subqueue.'),
+            'default value' => TRUE,
+          )
+      ),
+    ),
+    // Action: Remove the given node from the given nodequeue.
+    'nodequeue_action_remove_node' => array(
+      'label' => t('Remove node from nodequeue'),
+      'group' => t('Nodequeue'),
+      'parameter' => array(
+        'node' => array(
+          'type' => 'node',
+          'label' => t('Node'),
+          'description' => t('The node you want to remove.'),
+        ),
+        'queue' => array(
+          'type' => 'text',
+          'label' => t('Queue'),
+          'description' => t('The queue where the node should be removed from.'),
+          'options list' => 'nodequeue_get_queue_names',
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Action: Add the given node to the given nodequeue.
+ */
+function nodequeue_action_add_node($node, $queue_name, $unique) {
+  $queue = nodequeue_load_queue_by_name($queue_name);
+  $smartqueue_enabled = function_exists('smartqueue_taxonomy_nodequeue_subqueues') ? TRUE : FALSE;
+  if ($smartqueue_enabled) {
+    $references = smartqueue_taxonomy_nodequeue_subqueues($queue, $node);
+  }
+
+  $smartqueue_domain_enabled = function_exists('smartqueue_domain_nodequeue_subqueues') ? TRUE : FALSE;
+  if ($smartqueue_domain_enabled) {
+    $subqueue_domain = smartqueue_domain_nodequeue_subqueues($queue, $node);
+    $node_domains = nodequeue_get_node_domains($node);
+  }
+  $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+  foreach ($subqueues as $subqueue) {
+    $add = TRUE;
+    // unique means we don't add it if it's in the queue already
+    if ($unique) {
+      $add = nodequeue_subqueue_position($subqueue->sqid, $node->nid) === FALSE;
+    }
+    if ($add) {
+      if ($smartqueue_domain_enabled) {
+        // Do not allow nodes to be added to queues on domains they are not publishted to.
+        // The domain id is the last part of the queue reference string.
+        // All smartqueue_domain subqueue references also contain ":domain:".
+        if (!empty($subqueue->reference) && !empty($node_domains)){
+          $reference_array = explode(':', $subqueue->reference);
+          $queue_domain_id = end($reference_array);
+          if (strpos($subqueue->reference, ':domain:') && in_array($queue_domain_id, $node_domains)) {
+            nodequeue_subqueue_add($queue, $subqueue, $node->nid);
+          }
+        }
+      }
+      if ($smartqueue_enabled) {
+        if (in_array($subqueue->reference, $references)) {
+          nodequeue_subqueue_add($queue, $subqueue, $node->nid);
+        }
+      }
+      if (!$smartqueue_domain_enabled && !$smartqueue_domain_enabled){
+        nodequeue_subqueue_add($queue, $subqueue, $node->nid);
+      }
+    }
+  }
+}
+
+/**
+ * Action: Remove the given node from the given nodequeue.
+ */
+function nodequeue_action_remove_node($node, $queue_name) {
+  $queue = nodequeue_load_queue_by_name($queue_name);
+  $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+  foreach ($subqueues as $subqueue) {
+    if (!$queue->i18n || (isset($node->tnid) && empty($node->tnid))) {
+      nodequeue_subqueue_remove_node($subqueue->sqid, $node->nid);
+    }
+  }
+}
+
+/**
+ * Return a list of nodequeue names.
+ */
+function nodequeue_get_queue_names() {
+  $items = array();
+  $queues = nodequeue_load_queues(nodequeue_get_all_qids());
+  foreach ($queues as $queue) {
+    $items[$queue->name] = $queue->title;
+  }
+  return $items;
+}
+
+/**
+ * Helper function for fetching possible domain ids for a node.
+ */
+function nodequeue_get_node_domains($node){
+  $node_domains = array();
+  if (empty($node->nid) || !function_exists('domain_get_node_domains')){
+    return $node_domains;
+  }
+  $domain_data = domain_get_node_domains($node->nid);
+  if (!empty($domain_data['domain_id'])){
+    return $domain_data['domain_id'];
+  }
+  return $node_domains;
+}
