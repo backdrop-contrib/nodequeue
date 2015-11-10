@@ -912,9 +912,10 @@ function nodequeue_load_subqueues_by_queue($qids, $page_size = 0) {
  * This can be used to load a set of subqueues by reference; it will primarily
  * be used by plugins that are managing subqueues.
  *
- * @param $references
+ * @param array $references
  *   A keyed array of references to load. The key is the $qid and each value
  *   is another array of references.
+ * @param bool $bypass_cache
  *
  * @return object
  *
@@ -2177,9 +2178,10 @@ function _nodequeue_access_admin_or_manipulate() {
  *
  * No, this isn't some odd hook_access implementation.
  *
- * @param unknown_type $node
- * @param unknown_type $queue
- * @return unknown
+ * @param object $node
+ * @param object $queue
+ * @param object $subqueue
+ * @return bool
  */
 function nodequeue_node_and_queue_access($node, $queue, $subqueue = NULL) {
   return nodequeue_nodequeue_access($node->type) && nodequeue_queue_access($queue, $subqueue);
@@ -2195,6 +2197,7 @@ function nodequeue_node_and_queue_access($node, $queue, $subqueue = NULL) {
  *   - 'links': Only check for queues that have node links.
  *   - 'tab': Only check for queues that appear on the node tab.
  *   - 'ui': Only check for queues that appear in the UI.
+ * @param object $account
  *
  * @return bool
  *   if $qids is empty it will return FALSE else TRUE.
