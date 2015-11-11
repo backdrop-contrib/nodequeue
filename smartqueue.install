@@ -24,12 +24,12 @@ function smartqueue_schema() {
         'size' => 'tiny',
         'default' => 0,
       ),
-    ),
-    'use_parents_all' => array(
-      'description' => 'Whether a queue is to use all the terms ancestors when displaying the queue selection.',
-      'type' => 'int',
-      'size' => 'tiny',
-      'default' => 0,
+      'use_parents_all' => array(
+        'description' => 'Whether a queue is to use all the terms ancestors when displaying the queue selection.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'default' => 0,
+      ),
     ),
     'primary key' => array('qid'),
   );
