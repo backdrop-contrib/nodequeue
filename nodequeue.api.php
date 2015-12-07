@@ -268,3 +268,21 @@ function hook_subqueue_access($sub_queue, $account, $queue) {
  */
 function hook_nodequeue_alter($loaded, $context) {
 }
+
+/**
+ * Allow modifying the table setup before output.
+ *
+ * For example, it's possible to add some columns in the table
+ * with the help of this hook.
+ *
+ * @param array $form
+ *   The form to access submitted values.
+ * @param array $header
+ *   The table headers before sending it to theming layer.
+ * @param array $rows
+ *   The table rows before sending it to theming layer.
+ *
+ * @see theme_nodequeue_arrange_subqueue_form_table().
+ */
+function hook_nodequeue_arrange_subqueue_form_alter($form, $header, $rows) {
+}
