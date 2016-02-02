@@ -3,7 +3,9 @@ description = Create queues which can contain nodes in arbitrary order
 package = Nodequeue
 backdrop = 1.x
 version = 1.x-1.x
+type = module
 configure = admin/structure/nodequeue/settings
+
 
 ; Includes
 files[] = includes/views/nodequeue.views.inc
