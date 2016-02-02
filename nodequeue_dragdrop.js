@@ -1,10 +1,10 @@
 (function ($) {
 
-Drupal.behaviors.nodequeueDrag = {
+Backdrop.behaviors.nodequeueDrag = {
   attach: function(context) {
     $('.nodequeue-dragdrop').each(function() {
       var table_id = $(this).attr('id');
-      var tableDrag = Drupal.tableDrag[table_id];
+      var tableDrag = Backdrop.tableDrag[table_id];
 
       tableDrag.onDrop = function() {
         $('#' + table_id + ' td.position').each(function(i) {
@@ -17,7 +17,7 @@ Drupal.behaviors.nodequeueDrag = {
   }
 };
 
-Drupal.behaviors.nodequeueWeightChange = {
+Backdrop.behaviors.nodequeueWeightChange = {
   attach: function(context) {
     $('.nodequeue-dragdrop tr.draggable select.node-position').bind('change', function() {
       var table_id = $(this).parents('.nodequeue-dragdrop').attr('id');
@@ -44,7 +44,7 @@ Drupal.behaviors.nodequeueWeightChange = {
   }
 };
 
-Drupal.behaviors.nodequeueReverse = {
+Backdrop.behaviors.nodequeueReverse = {
   attach: function(context) {
     $('#edit-actions-reverse').click(function() {
       var $table = $(this).parent().parent().find('.nodequeue-dragdrop:first');
@@ -64,7 +64,7 @@ Drupal.behaviors.nodequeueReverse = {
   }
 };
 
-Drupal.behaviors.nodequeueShuffle = {
+Backdrop.behaviors.nodequeueShuffle = {
   attach: function(context) {
     $('#edit-actions-shuffle').click(function() {
       var $table = $(this).parent().parent().find('.nodequeue-dragdrop:first');
@@ -86,7 +86,7 @@ Drupal.behaviors.nodequeueShuffle = {
   }
 };
 
-Drupal.behaviors.nodequeueClear = {
+Backdrop.behaviors.nodequeueClear = {
   attach: function(context) {
     $('#edit-actions-clear').click(function() {
       var $table = $(this).parent().parent().find('.nodequeue-dragdrop:first');
@@ -108,7 +108,7 @@ Drupal.behaviors.nodequeueClear = {
   }
 };
 
-Drupal.behaviors.nodequeueRemoveNode = {
+Backdrop.behaviors.nodequeueRemoveNode = {
   attach: function(context) {
     $('a.nodequeue-remove').css('display', 'block');
     $('a.nodequeue-remove').click(function() {
@@ -137,7 +137,7 @@ Drupal.behaviors.nodequeueRemoveNode = {
   }
 }
 
-Drupal.behaviors.nodequeueClearTitle = {
+Backdrop.behaviors.nodequeueClearTitle = {
   attach: function(context) {
     $('.subqueue-add-nid').focus(function() {
       if (this.value == this.defaultValue) {
@@ -159,7 +159,7 @@ Drupal.behaviors.nodequeueClearTitle = {
  */
 function nodequeueUpdateNodePositions(table_id) {
   // Check if reverse option is set.
-  var reverse = Drupal.settings.nodequeue.reverse[table_id.replace(/-/g, '_')];
+  var reverse = Backdrop.settings.nodequeue.reverse[table_id.replace(/-/g, '_')];
   var size = reverse ? $('#' + table_id + ' .node-position').size() : 1;
 
   $('#' + table_id + ' tr').filter(":visible").find('select.node-position').each(function(i) {
@@ -191,16 +191,16 @@ function nodequeueRestripeTable(table_id) {
  * Add a row to the nodequeue table explaining that the queue is empty.
  */
 function nodequeuePrependEmptyMessage(table_id) {
-  $('#' + table_id + ' tbody').prepend('<tr class="odd"><td colspan="6">'+Drupal.t('No nodes in this queue.')+'</td></tr>');
+  $('#' + table_id + ' tbody').prepend('<tr class="odd"><td colspan="6">'+Backdrop.t('No nodes in this queue.')+'</td></tr>');
 }
 
 /**
  * Display a warning reminding the user to save the nodequeue.
  */
 function nodequeueInsertChangedWarning(table_id) {
-  if (Drupal.tableDrag[table_id].changed == false) {
-    $(Drupal.theme('tableDragChangedWarning')).insertAfter('#' + table_id).hide().fadeIn('slow');
-    Drupal.tableDrag[table_id].changed = true;
+  if (Backdrop.tableDrag[table_id].changed == false) {
+    $(Backdrop.theme('tableDragChangedWarning')).insertAfter('#' + table_id).hide().fadeIn('slow');
+    Backdrop.tableDrag[table_id].changed = true;
   }
 }
 

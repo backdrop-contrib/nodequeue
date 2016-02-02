@@ -58,7 +58,7 @@ function nodequeue_add_action_form($context) {
     );
   }
   else {
-    drupal_set_message(t('Please <a href="@url">create</a> a nodequeue first.', array('@url' => url('admin/structure/nodequeue'))));
+    backdrop_set_message(t('Please <a href="@url">create</a> a nodequeue first.', array('@url' => url('admin/structure/nodequeue'))));
   }
   return $form;
 }
@@ -161,7 +161,7 @@ function action_nodequeue_add($op, $edit = array(), $node) {
           );
       }
       else {
-        drupal_set_message(t('Please <a href="@url">create</a> a nodequeue first.', array('@url' => url('admin/structure/nodequeue'))));
+        backdrop_set_message(t('Please <a href="@url">create</a> a nodequeue first.', array('@url' => url('admin/structure/nodequeue'))));
       }
       return $form;
 

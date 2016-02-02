@@ -16,7 +16,7 @@
  * path: path to add items
  * tr: the base id of the tr
  */
-Drupal.nodequeue = function(base, settings) {
+Backdrop.nodequeue = function(base, settings) {
   // Set the properties for this object.
   if (settings.container == null) {
     settings.container = settings.row_class;
@@ -299,12 +299,12 @@ Drupal.nodequeue = function(base, settings) {
               // Parse response
               $(input).parent().removeClass('throbbing');
               $(input).attr('disabled', false);
-              data = Drupal.parseJson(data);
+              data = Backdrop.parseJson(data);
               if (data.status) {
                 // add new data
                 var new_content = $(data.data);
 
-                Drupal.freezeHeight();
+                Backdrop.freezeHeight();
                 // Hide the new content before adding to page.
 
                 maxPosition++;
@@ -322,7 +322,7 @@ Drupal.nodequeue = function(base, settings) {
 
                 bindButtons();
 
-                Drupal.unfreezeHeight();
+                Backdrop.unfreezeHeight();
 
                 // Add the extra data, if necessary
                 if (data.extra && settings.extra) {
@@ -347,7 +347,7 @@ Drupal.nodequeue = function(base, settings) {
               }
             },
             error: function(data) {
-              alert(Drupal.t('An error occurred'));
+              alert(Backdrop.t('An error occurred'));
               $(input).parent().removeClass('throbbing');
               $(input).attr('disabled', false);
             }
@@ -366,12 +366,12 @@ Drupal.nodequeue = function(base, settings) {
 }
 
 
-Drupal.nodequeue.autoAttach = function() {
-  if (Drupal.settings && Drupal.settings.nodequeue) {
-    for (var base in Drupal.settings.nodequeue) {
+Backdrop.nodequeue.autoAttach = function() {
+  if (Backdrop.settings && Backdrop.settings.nodequeue) {
+    for (var base in Backdrop.settings.nodequeue) {
       if (!$('#'+ base + '.nodequeue-processed').size()) {
-        var settings = Drupal.settings.nodequeue[base];
-        var list = new Drupal.nodequeue(base, settings);
+        var settings = Backdrop.settings.nodequeue[base];
+        var list = new Backdrop.nodequeue(base, settings);
         $('#'+ base).addClass('nodequeue-processed');
       }
     }
@@ -418,6 +418,6 @@ Drupal.nodequeue.autoAttach = function() {
 
 }
 
-$(document).ready(Drupal.nodequeue.autoAttach);
+$(document).ready(Backdrop.nodequeue.autoAttach);
 
 })(jQuery);

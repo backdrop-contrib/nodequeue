@@ -1,7 +1,8 @@
 name = Nodequeue
 description = Create queues which can contain nodes in arbitrary order
 package = Nodequeue
-core = 7.x
+backdrop = 1.x
+version = 1.x-1.x
 configure = admin/structure/nodequeue/settings
 
 ; Includes

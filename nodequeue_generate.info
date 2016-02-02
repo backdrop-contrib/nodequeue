@@ -2,6 +2,6 @@ name = Nodequeue generate
 description = Bulk assign nodes into queues for quickly populating a site.
 package = Development
 dependencies[] = nodequeue
-core = 7.x
-
+backdrop = 1.x
+version = 1.x-1.x
 files[] = nodequeue_generate.module

@@ -7,7 +7,7 @@ function nodequeue_generate_menu() {
   $items['admin/structure/nodequeue/generate_nodequeue'] = array(
     'title' => 'Generate queue assignments',
     'description' => 'Bulk add nodes into queues',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('nodequeue_generate_form'),
     'access callback' => 'user_access',
     'access arguments' => array('manipulate all queues'),
@@ -117,7 +117,7 @@ function nodequeue_generate_repopulate_queues($qids, $nodes_limit = 10) {
     }
   }
 
-  drupal_set_message(format_plural(count($qids), '1 queue populated', '@count queues populated.'));
+  backdrop_set_message(format_plural(count($qids), '1 queue populated', '@count queues populated.'));
 }
 
 /**

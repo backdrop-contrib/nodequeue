@@ -1,8 +1,8 @@
 name = Nodequeue Service
 description = Provides a nodequeue service.
 package = Nodequeue
-core = 7.x
-
+backdrop = 1.x
+version = 1.x-1.x
 dependencies[] = services
 dependencies[] = nodequeue
 

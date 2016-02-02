@@ -18,7 +18,7 @@ function nodequeue_generate_drush_command() {
 
   $items['nodequeue-generate'] = array(
     'description' => "Re-populates specified nodequeues with random nodes.",
-    'drupal dependencies' => array('nodequeue_generate'),
+    'backdrop dependencies' => array('nodequeue_generate'),
     'arguments' => array(
       'queue' => 'Machine name of queue to be re-populated.',
     ),
@@ -26,12 +26,12 @@ function nodequeue_generate_drush_command() {
   );
   $items['nodequeue-generate-all'] = array(
     'description' => "Re-populates nodequeues with random nodes.",
-    'drupal dependencies' => array('nodequeue_generate'),
+    'backdrop dependencies' => array('nodequeue_generate'),
     'aliases' => array('nqga'),
   );
   $items['nodequeue-generate-rehash'] = array(
     'description' => "Rehashes smartqueue subqueues for taxonomy smartqueue.",
-    'drupal dependencies' => array('nodequeue_generate', 'smartqueue'),
+    'backdrop dependencies' => array('nodequeue_generate', 'smartqueue'),
     'aliases' => array('nqgr'),
   );
 

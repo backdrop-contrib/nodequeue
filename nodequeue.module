@@ -24,6 +24,17 @@ define('NODEQUEUE_DUPLICATE_POSITION', 3);
 /* --- HOOKS ---------------------------------------------------------------- */
 
 /**
+ * Implements hook_config_info().
+ */
+function nodequeue_config_info() {
+  $prefixes['nodequeue.settings'] = array(
+    'label' => t('Nodequeue settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
  * Implements hook_permission().
  */
 function nodequeue_permission() {
@@ -49,7 +60,7 @@ function nodequeue_permission() {
  * Loads subsidiary includes for other modules.
  */
 function nodequeue_init() {
-  include_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'nodequeue') . '/includes/nodequeue.actions.inc';
+  include_once BACKDROP_ROOT . '/' . backdrop_get_path('module', 'nodequeue') . '/includes/nodequeue.actions.inc';
 }
 
 /**
@@ -78,7 +89,7 @@ function nodequeue_menu() {
   );
   $items['admin/structure/nodequeue/settings'] = array(
     'title' => 'Settings',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('nodequeue_admin_settings'),
     'access arguments' => $admin_access,
     'file' => 'includes/nodequeue.admin.inc',
@@ -96,7 +107,7 @@ function nodequeue_menu() {
     $items['admin/structure/nodequeue/add/' . $key] = array(
       'title' => 'Add @type',
       'title arguments' => array('@type' => strtolower($data['title'])),
-      'page callback' => 'drupal_get_form',
+      'page callback' => 'backdrop_get_form',
       'page arguments' => array('nodequeue_edit_queue_form', $key),
       'access arguments' => $admin_access,
       'file' => 'includes/nodequeue.admin.inc',
@@ -105,7 +116,7 @@ function nodequeue_menu() {
   }
   $items['node/%node/nodequeue'] = array(
     'title' => '@tab',
-    'title arguments' => array('@tab' => variable_get('nodequeue_tab_name', 'Nodequeue')),
+    'title arguments' => array('@tab' => config_get('nodequeue.settings', 'nodequeue_tab_name')),
     'page callback' => 'nodequeue_node_tab',
     'page arguments' => array(1),
     'access callback' => 'nodequeue_node_tab_access',
@@ -148,7 +159,7 @@ function nodequeue_menu() {
   // Actual administrative items.
   $items['admin/structure/nodequeue/%nodequeue/edit'] = array(
     'title' => 'Edit queue',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('nodequeue_edit_queue_form', 3),
     'access arguments' => $admin_access,
     'file' => 'includes/nodequeue.admin.inc',
@@ -156,7 +167,7 @@ function nodequeue_menu() {
   );
   $items['admin/structure/nodequeue/%nodequeue/delete'] = array(
     'title' => 'Delete',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('nodequeue_admin_delete', 3),
     'access arguments' => $admin_access,
     'file' => 'includes/nodequeue.admin.inc',
@@ -181,7 +192,7 @@ function nodequeue_menu() {
   );
   $items["admin/structure/nodequeue/%nodequeue/clear/%subqueue"] = array(
     'title' => 'Clear',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('nodequeue_clear_confirm', 3, 5),
     'access callback' => 'nodequeue_queue_access',
     'access arguments' => array(3, 5),
@@ -203,7 +214,7 @@ function subqueue_to_arg() {
  * Implements hook_admin_paths().
  */
 function nodequeue_admin_paths() {
-  if (variable_get('node_admin_theme')) {
+  if (config_get('system.core', 'node_admin_theme')) {
     $paths = array(
       'node/*/nodequeue' => TRUE,
     );
@@ -358,7 +369,7 @@ function nodequeue_contextual_links_view_alter(&$element, $items) {
     return;
   }
 
-  if (!variable_get('nodequeue_show_contextual_links', TRUE)) {
+  if (!config_get('nodequeue.settings', 'nodequeue_show_contextual_links')) {
     return;
   }
 
@@ -436,7 +447,7 @@ function nodequeue_contextual_links_view_alter(&$element, $items) {
 function nodequeue_views_api() {
   return array(
     'api' => 2,
-    'path' => drupal_get_path('module', 'nodequeue') . '/includes/views',
+    'path' => backdrop_get_path('module', 'nodequeue') . '/includes/views',
   );
 }
 
@@ -448,7 +459,7 @@ function nodequeue_views_api() {
  */
 function nodequeue_form_apachesolr_search_bias_form_alter(&$form, &$form_state, $form_id) {
   // Setup for the form building.
-  $weights = drupal_map_assoc(array('21.0', '13.0', '8.0', '5.0', '3.0', '2.0', '1.0', '0.8', '0.5', '0.3', '0.2', '0.1'));
+  $weights = backdrop_map_assoc(array('21.0', '13.0', '8.0', '5.0', '3.0', '2.0', '1.0', '0.8', '0.5', '0.3', '0.2', '0.1'));
   $weights['0'] = t('Normal');
   $queues = nodequeue_load_subqueues_by_queue(array_keys(nodequeue_get_all_qids()));
   $env_id = $form['#env_id'];
@@ -516,7 +527,7 @@ function _nodequeue_solr_qid_key() {
 /**
  * Implements hook_apachesolr_query_alter().
  */
-function nodequeue_apachesolr_query_alter(DrupalSolrQueryInterface $query) {
+function nodequeue_apachesolr_query_alter(BackdropSolrQueryInterface $query) {
   $queues = nodequeue_load_subqueues_by_queue(array_keys(nodequeue_get_all_qids()));
   $added = FALSE;
   $env_id = $query->solr('getId');
@@ -647,7 +658,7 @@ function nodequeue_get_qids($type, $account = NULL, $bypass_cache = FALSE) {
     $account = $user;
   }
 
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   if ($bypass_cache || !isset($cache[$type])) {
     $roles_join = $roles_where = '';
     $roles = array();
@@ -655,7 +666,7 @@ function nodequeue_get_qids($type, $account = NULL, $bypass_cache = FALSE) {
     // superuser always has access.
     if (!user_access('manipulate all queues', $account)) {
       $roles_join = "INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid ";
-      $roles = array_keys((array) $account->roles) + array(DRUPAL_AUTHENTICATED_RID);
+      $roles = array_keys((array) $account->roles) + array(BACKDROP_AUTHENTICATED_ROLE);
 
       $roles_where .= "AND nr.rid IN (:roles)";
     }
@@ -692,7 +703,7 @@ function nodequeue_get_qids($type, $account = NULL, $bypass_cache = FALSE) {
  *   An array in the format: @code { array($qid => $qid) }
  */
 function nodequeue_get_all_qids($page_size = 0, $pager_element = 0, $bypass_cache = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   if ($bypass_cache || empty($cache[$page_size])) {
     $query = db_select('nodequeue_queue', 'nq')
       ->fields('nq', array('qid'));
@@ -730,7 +741,7 @@ function nodequeue_get_all_qids($page_size = 0, $pager_element = 0, $bypass_cach
  *   else from database.
  */
 function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $to_load = $loaded = array();
 
   foreach ($qids as $qid) {
@@ -761,7 +772,7 @@ function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
     }
 
     $context = 'load_queues';
-    drupal_alter('nodequeue', $loaded, $context);
+    backdrop_alter('nodequeue', $loaded, $context);
   }
 
   if ($bypass_cache) {
@@ -823,7 +834,7 @@ function subqueue_load($sqid) {
  *   An array of subqueues.
  */
 function nodequeue_load_subqueues($sqids, $bypass_cache = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $to_load = array();
   $subqueues = array();
 
@@ -921,7 +932,7 @@ function nodequeue_load_subqueues_by_queue($qids, $page_size = 0) {
  *
  */
 function nodequeue_load_subqueues_by_reference($references, $bypass_cache = FALSE) {
-  $cache = &drupal_static(__FUNCTION__, array());
+  $cache = &backdrop_static(__FUNCTION__, array());
   $subqueues = array();
   if ($bypass_cache) {
     $cache = array();
@@ -978,7 +989,7 @@ function nodequeue_load_queue_by_name($name) {
  *   A array of qids, keyed by machine name.
  */
 function nodequeue_get_qid_map() {
-  $map = &drupal_static(__FUNCTION__, array());
+  $map = &backdrop_static(__FUNCTION__, array());
   if (!$map) {
     $result = db_query("SELECT qid, name FROM {nodequeue_queue}");
     while ($get = $result->fetchObject()) {
@@ -1057,10 +1068,10 @@ function nodequeue_save(&$queue) {
 
   // set our global that tells us whether or not we need to activate hook_link
   if (db_query("SELECT COUNT(*) FROM {nodequeue_queue} WHERE link <> ''")->fetchField()) {
-    variable_set('nodequeue_links', TRUE);
+    config_set('nodequeue.settings', 'nodequeue_links', TRUE);
   }
   else {
-    variable_set('nodequeue_links', FALSE);
+    config_set('nodequeue.settings', 'nodequeue_links', FALSE);
   }
 
   if (isset($queue->add_subqueue) && is_array($queue->add_subqueue)) {
@@ -1551,7 +1562,7 @@ function nodequeue_set_subqueue_positions(&$subqueues, $nid) {
 function nodequeue_get_subqueues_by_node($queues, $node) {
   // Determine which subqueues are valid for each queue.
   $references = array();
-  $last_nid = &drupal_static(__FUNCTION__, 0);
+  $last_nid = &backdrop_static(__FUNCTION__, 0);
   foreach ($queues as $queue) {
     if ($result = nodequeue_api_subqueues($queue, $node)) {
       $references[$queue->qid] = is_array($result) ? $result : array($result);
@@ -1695,7 +1706,7 @@ function nodequeue_node_titles($sqid, $title = '', $backward = TRUE, $from = 0, 
  */
 function nodequeue_node_links($node) {
   $links = array();
-  if (variable_get('nodequeue_links', FALSE) &&
+  if (config_get('nodequeue.settings', 'nodequeue_links') &&
       user_access('manipulate queues')) {
     $queues = nodequeue_load_queues_by_type($node->type, 'links');
     $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
@@ -1746,8 +1757,8 @@ function nodequeue_node_links($node) {
         );
       }
     }
-    drupal_add_js(drupal_get_path('module', 'nodequeue') . '/nodequeue.js');
-    drupal_add_css(drupal_get_path('module', 'nodequeue') . '/nodequeue.css');
+    backdrop_add_js(backdrop_get_path('module', 'nodequeue') . '/nodequeue.js');
+    backdrop_add_css(backdrop_get_path('module', 'nodequeue') . '/nodequeue.css');
   }
   return $links;
 }
@@ -1771,7 +1782,7 @@ function nodequeue_node_links($node) {
  *   Maximum number of nodes to display.
  *
  * @return array
- *   An array as expected by drupal_render().
+ *   An array as expected by backdrop_render().
  */
 function nodequeue_view_nodes($sqid, $backward = TRUE, $view_mode = 'teaser', $links = TRUE, $from = 0, $count = 0) {
   // This is for backward compatibility with 'D6 style' argument, which used
@@ -2018,7 +2029,7 @@ function nodequeue_api_autocomplete($queue, $subqueue, $string) {
   $query = db_select('node', 'n')
     ->addTag('node_access')
     ->fields('n', array('nid', 'tnid', 'title'))
-    ->range(0, variable_get('nodequeue_autocomplete_limit', 10));
+    ->range(0, config_get('nodequeue.settings', 'nodequeue_autocomplete_limit'));
 
   if (!empty($queue->types)) {
     $query->condition('n.type', $queue->types, 'IN');
@@ -2124,7 +2135,7 @@ function nodequeue_api_subqueue_access($subqueue, $account = NULL, $queue = NULL
  *   be generated.
  * @param bool $destination
  *   The destination to use. If FALSE one won't be used; if TRUE
- *   one will be generated from drupal_get_destination().
+ *   one will be generated from backdrop_get_destination().
  * @param array $query
  *   An array of additional items to add to the query.
  *
@@ -2132,7 +2143,7 @@ function nodequeue_api_subqueue_access($subqueue, $account = NULL, $queue = NULL
  *   The query string suitable for use in the l() function.
  */
 function nodequeue_get_query_string($seed, $destination = FALSE, $query = array()) {
-  $dest = drupal_get_destination();
+  $dest = backdrop_get_destination();
   foreach ($dest as $key => $value) {
     $query[$key] = $value;
   }
@@ -2151,14 +2162,14 @@ function nodequeue_get_query_string($seed, $destination = FALSE, $query = array(
  * Get a private token used to protect nodequeue's links from spoofing.
  */
 function nodequeue_get_token($nid) {
-  return 'token=' . drupal_get_token($nid);
+  return 'token=' . backdrop_get_token($nid);
 }
 
 /**
  * Check to see if the token generated from seed matches.
  */
 function nodequeue_check_token($seed) {
-  return drupal_get_token($seed) == $_GET['token'];
+  return backdrop_get_token($seed) == $_GET['token'];
 }
 
 /* --- UTILITY -------------------------------------------------------------- */
@@ -2241,12 +2252,12 @@ function nodequeue_queue_access($queue, $subqueue = NULL, $account = NULL) {
     return FALSE;
   }
 
-  $roles = array_keys((array) $account->roles) + array(DRUPAL_AUTHENTICATED_RID);
+  $roles = array_keys((array) $account->roles) + array(BACKDROP_AUTHENTICATED_ROLE);
   return (bool) array_intersect($roles, $queue->roles);
 }
 
 function nodequeue_node_tab_access($node) {
-  if (!variable_get('nodequeue_use_tab', 1) || !user_access('manipulate queues')) {
+  if (!config_get('nodequeue.settings', 'nodequeue_use_tab') || !user_access('manipulate queues')) {
     // For performance reasons: If the menu tab is disabled or the user can't
     // manipulate queues, there is no reason to run the rest of these queries.
     return FALSE;
@@ -2279,8 +2290,8 @@ function nodequeue_js_output($label, $href, $count = NULL, $sqid = NULL) {
     $return->sqid = $sqid;
   }
 
-  drupal_json_output($return);
-  drupal_exit();
+  backdrop_json_output($return);
+  backdrop_exit();
 }
 
 /**
@@ -2312,7 +2323,7 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
   $output = '';
 
   // Get css to hide some of the help text if javascript is disabled.
-  drupal_add_css(drupal_get_path('module', 'nodequeue') . '/nodequeue.css');
+  backdrop_add_css(backdrop_get_path('module', 'nodequeue') . '/nodequeue.css');
 
   $table_id = 'nodequeue-dragdrop-' . $form['#subqueue']['sqid'];
   $table_classes = array(
@@ -2321,11 +2332,11 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
     'nodequeue-dragdrop-sqid-' . $form['#subqueue']['sqid'],
     'nodequeue-dragdrop-reference-' . $form['#subqueue']['reference'],
   );
-  drupal_add_tabledrag($table_id, 'order', 'sibling', 'node-position');
-  drupal_add_js(drupal_get_path('module', 'nodequeue') . '/nodequeue_dragdrop.js');
+  backdrop_add_tabledrag($table_id, 'order', 'sibling', 'node-position');
+  backdrop_add_js(backdrop_get_path('module', 'nodequeue') . '/nodequeue_dragdrop.js');
 
   $reverse[str_replace('-', '_', $table_id)] = (bool) $form['#queue']['reverse'];
-  drupal_add_js(
+  backdrop_add_js(
     array(
       'nodequeue' => array(
         'reverse' => $reverse,
@@ -2344,12 +2355,12 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
     if (isset($form[$key]['title'])) {
       $row = array();
 
-      $row[] = drupal_render($form[$key]['title']);
-      $row[] = drupal_render($form[$key]['author']);
-      $row[] = drupal_render($form[$key]['date']);
-      $row[] = drupal_render($form[$key]['position']);
-      $row[] = (!empty($form[$key]['edit'])) ? drupal_render($form[$key]['edit']) : '&nbsp;';
-      $row[] = drupal_render($form[$key]['remove']);
+      $row[] = backdrop_render($form[$key]['title']);
+      $row[] = backdrop_render($form[$key]['author']);
+      $row[] = backdrop_render($form[$key]['date']);
+      $row[] = backdrop_render($form[$key]['position']);
+      $row[] = (!empty($form[$key]['edit'])) ? backdrop_render($form[$key]['edit']) : '&nbsp;';
+      $row[] = backdrop_render($form[$key]['remove']);
       $row[] = array(
         'data' => $counter,
         'class' => array('position')
@@ -2373,7 +2384,7 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
   $header = array(t('Title'), t('Author'), t('Post Date'), t('Position'), array('data' => t('Operations'), 'colspan' => 2), t('Position'));
 
   // Allow other modules to alter the table setup before output.
-  drupal_alter('nodequeue_arrange_subqueue_form', $form, $header, $rows);
+  backdrop_alter('nodequeue_arrange_subqueue_form', $form, $header, $rows);
 
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => $table_classes)));
 

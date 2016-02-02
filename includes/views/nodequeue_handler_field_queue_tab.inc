@@ -16,7 +16,7 @@ class nodequeue_handler_field_queue_tab extends views_handler_field_node_link {
 
     $this->options['alter']['make_link'] = TRUE;
     $this->options['alter']['path'] = "node/$node->nid/nodequeue";
-    $this->options['alter']['query'] = drupal_get_destination();
+    $this->options['alter']['query'] = backdrop_get_destination();
 
     $text = !empty($this->options['text']) ? $this->options['text'] : t('nodequeue');
     return $text;

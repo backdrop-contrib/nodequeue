@@ -13,19 +13,19 @@ function nodequeue_admin_settings($form, &$form_state) {
   $form['nodequeue_use_tab'] = array(
     '#type' => 'checkbox',
     '#title' => t('Create a menu tab for each node that could belong to any queues'),
-    '#default_value' => variable_get('nodequeue_use_tab', 1),
+    '#default_value' => config_get('nodequeue.settings', 'nodequeue_use_tab'),
   );
   $form['nodequeue_tab_name'] = array(
     '#type' => 'textfield',
     '#title' => t('Nodequeue tab label'),
-    '#default_value' => variable_get('nodequeue_tab_name', t('Nodequeue')),
+    '#default_value' => config_get('nodequeue.settings', 'nodequeue_tab_name'),
     '#description' => t('If nodes will have a menu tab for manipulating related nodequeues, what should that tab be called?'),
   );
   $form['nodequeue_autocomplete_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Nodequeue autocomplete limit'),
     '#size'=> 2,
-    '#default_value' => variable_get('nodequeue_autocomplete_limit', 10),
+    '#default_value' => config_get('nodequeue.settings', 'nodequeue_autocomplete_limit'),
     '#description' => t('Number of node titles to show in the autocomplete search results.'),
   );
   $form['nodequeue_view_per_queue'] = array(
@@ -33,23 +33,44 @@ function nodequeue_admin_settings($form, &$form_state) {
     '#title' => t('Automatically create one view per queue'),
     '#description' => t("Nodequeue can create a view for each queue. \n
       If you wish to have fewer views, you can disable this option and use a single view with an argument for the qid."),
-    '#default_value' => variable_get('nodequeue_view_per_queue', 1),
+    '#default_value' => config_get('nodequeue.settings', 'nodequeue_view_per_queue'),
   );
   $form['nodequeue_show_contextual_links'] = array(
     '#type' => 'checkbox',
     '#title' => t('Display contextual links.'),
     '#description' => t("A contextual link to edit the nodequeue will be displayed on Views that have a nodequeue relationship."),
-    '#default_value' => variable_get('nodequeue_show_contextual_links', TRUE),
+    '#default_value' => config_get('nodequeue.settings', 'nodequeue_show_contextual_links'),
   );
-  return system_settings_form($form);
+  
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save configuration'),
+  );
+  return $form;
 }
+
+/**
+ * Submit handler for module_settings_form().
+ */
+function nodequeue_admin_settings_submit($form, &$form_state) {
+$config = config('nodequeue.settings');
+foreach ($form_state['values'] as $key => $value)
+{
+$config->set($key, $value);
+}
+
+$config->save();
+backdrop_set_message(t('The configuration options have been saved.'));
+}
+
 
 /**
  * Page callback to add a node to a queue.
  */
 function nodequeue_admin_add_node($queue, $subqueue, $node) {
   if (!nodequeue_check_token($node->nid)) {
-    return drupal_goto();
+    return backdrop_goto();
   }
   $id = nodequeue_get_content_id($queue, $node);
   nodequeue_subqueue_add($queue, $subqueue, $id);
@@ -69,7 +90,7 @@ function nodequeue_admin_add_node($queue, $subqueue, $node) {
   }
 
   // There should always be a destination set for this, so just goto wherever.
-  drupal_goto();
+  backdrop_goto();
 }
 
 /**
@@ -77,7 +98,7 @@ function nodequeue_admin_add_node($queue, $subqueue, $node) {
  */
 function nodequeue_admin_remove_node($queue, $subqueue, $node) {
   if (!nodequeue_check_token($node->nid)) {
-    return drupal_goto();
+    return backdrop_goto();
   }
   $id = nodequeue_get_content_id($queue, $node);
   nodequeue_subqueue_remove_node($subqueue->sqid, $id);
@@ -97,7 +118,7 @@ function nodequeue_admin_remove_node($queue, $subqueue, $node) {
   }
 
   // There should always be a destination set for this, so just goto wherever.
-  drupal_goto();
+  backdrop_goto();
 }
 
 /**
@@ -207,8 +228,8 @@ function nodequeue_node_tab($node) {
   }
 
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('nodequeue-table'))));
-  drupal_add_js(drupal_get_path('module', 'nodequeue') . '/nodequeue.js');
-  drupal_add_css(drupal_get_path('module', 'nodequeue') . '/nodequeue.css');
+  backdrop_add_js(backdrop_get_path('module', 'nodequeue') . '/nodequeue.js');
+  backdrop_add_css(backdrop_get_path('module', 'nodequeue') . '/nodequeue.css');
   return $output;
 }
 
@@ -263,11 +284,11 @@ function nodequeue_view_queues() {
     if ($queue->subqueues == 1) {
       $qids[] = $queue->qid;
     }
-    $sort_secondary[] = drupal_strtolower($queue->title);
+    $sort_secondary[] = backdrop_strtolower($queue->title);
     switch ($table_sort['sql']) {
       case 'title':
       default:
-        $sort_primary[] = drupal_strtolower($queue->title);
+        $sort_primary[] = backdrop_strtolower($queue->title);
         $sort_direction = $sort_direction_regular;
         break;
       case 'size':
@@ -372,11 +393,11 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
     if (!isset($info[$queue])) {
       return FALSE;
     }
-    drupal_set_title(t('Add @type', array('@type' => $info[$queue]['title'])), PASS_THROUGH);
+    backdrop_set_title(t('Add @type', array('@type' => $info[$queue]['title'])), PASS_THROUGH);
     $queue = new nodequeue_queue($queue);
   }
   else {
-    drupal_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)), PASS_THROUGH);
+    backdrop_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)), PASS_THROUGH);
   }
 
   $form['description'] = array(
@@ -632,10 +653,10 @@ function nodequeue_edit_queue_form_submit($formid, &$form_state) {
 
   if (!empty($queue->new)) {
     $form_state['values']['qid'] = $qid;
-    drupal_set_message(t('The queue has been created.'));
+    backdrop_set_message(t('The queue has been created.'));
   }
   else {
-    drupal_set_message(t('The queue has been updated.'));
+    backdrop_set_message(t('The queue has been updated.'));
   }
   $form_state['redirect'] = 'admin/structure/nodequeue';
 }
@@ -673,7 +694,7 @@ function nodequeue_admin_delete($form, &$form_state, $queue) {
 function nodequeue_admin_delete_submit($formid, &$form_state) {
   if ($form_state['values']['confirm']) {
     nodequeue_delete($form_state['values']['qid']);
-    drupal_set_message(t('The queue has been deleted.'));
+    backdrop_set_message(t('The queue has been deleted.'));
   }
   $form_state['redirect'] = 'admin/structure/nodequeue';
 }
@@ -682,7 +703,7 @@ function nodequeue_admin_delete_submit($formid, &$form_state) {
  * Page callback to view a queue.
  */
 function nodequeue_admin_view($queue, $subqueue = array()) {
-  drupal_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)), PASS_THROUGH);
+  backdrop_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)), PASS_THROUGH);
   $qid = $queue->qid;
 
   // If the queue has just one subqueue, it gets special treatment.
@@ -698,15 +719,15 @@ function nodequeue_admin_view($queue, $subqueue = array()) {
   }
   elseif ($subqueue->sqid) {
     if (!nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
-      return drupal_not_found();
+      return backdrop_not_found();
     }
     // Adjust properties of the page so our subqueue is in the right
     // visual place.
-    drupal_set_title(t("Subqueue '@title'",
+    backdrop_set_title(t("Subqueue '@title'",
       array('@title' => nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue))), PASS_THROUGH);
-    $breadcrumb = drupal_get_breadcrumb();
+    $breadcrumb = backdrop_get_breadcrumb();
     $breadcrumb[] = l($queue->title, "admin/structure/nodequeue/$queue->qid");
-    drupal_set_breadcrumb($breadcrumb);
+    backdrop_set_breadcrumb($breadcrumb);
   }
   return nodequeue_arrange_subqueue($queue, $subqueue);
 }
@@ -716,27 +737,27 @@ function nodequeue_admin_view($queue, $subqueue = array()) {
  */
 function nodequeue_arrange_subqueue($queue, $subqueue = NULL) {
   // set title and load subqueue if it's not provided
-  drupal_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)), PASS_THROUGH);
+  backdrop_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)), PASS_THROUGH);
   if (!$subqueue->sqid) {
     if ($queue->subqueues == 1) {
       $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
       $subqueue = array_shift($subqueues);
     }
     else {
-      return drupal_not_found();
+      return backdrop_not_found();
     }
   }
   elseif ($subqueue->sqid) {
     if (!nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
-      return drupal_not_found();
+      return backdrop_not_found();
     }
-    drupal_set_title(t("Subqueue '@title'", array('@title' => nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue))), PASS_THROUGH);
+    backdrop_set_title(t("Subqueue '@title'", array('@title' => nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue))), PASS_THROUGH);
   }
 
   // get nodes from the queue
   $nodes = _nodequeue_dragdrop_get_nodes($queue, $subqueue);
 
-  return drupal_get_form('nodequeue_arrange_subqueue_form_' . $subqueue->sqid, $queue, $nodes, $subqueue);
+  return backdrop_get_form('nodequeue_arrange_subqueue_form_' . $subqueue->sqid, $queue, $nodes, $subqueue);
 }
 
 /**
@@ -961,7 +982,7 @@ function nodequeue_arrange_subqueue_form_submit($form, &$form_state, $reverse = 
   $sqid = $form['nodes']['#subqueue']['sqid'];
   nodequeue_save_subqueue_order($nodes, $qid, $sqid);
 
-  drupal_set_message($message);
+  backdrop_set_message($message);
 }
 
 /**
@@ -988,7 +1009,7 @@ function nodequeue_save_subqueue_order($nodes, $qid, $sqid) {
   $clean = array();
   $count = 1;
   ksort($nodes);
-  drupal_alter('nodequeue_sort', $nodes, $sqid);
+  backdrop_alter('nodequeue_sort', $nodes, $sqid);
   foreach ($nodes as $pos => $node) {
     if (!is_numeric($node['nid']) || $node['nid'] < 1) {
       return array(NODEQUEUE_INVALID_NID, 'Invalid nid value. New subqueue order not saved.');
@@ -1082,12 +1103,12 @@ function nodequeue_arrange_subqueue_form_add_submit($form, &$form_state) {
  */
 function nodequeue_admin_remove($queue, $subqueue, $pos) {
   if (!is_numeric($pos) || !is_object($subqueue) || !nodequeue_check_token($pos)) {
-    return drupal_goto();
+    return backdrop_goto();
   }
 
   nodequeue_subqueue_remove($subqueue, $pos);
 
-  drupal_goto();
+  backdrop_goto();
 }
 
 /**
@@ -1098,7 +1119,7 @@ function nodequeue_clear_confirm($form, &$form_state, $queue, $subqueue) {
     return;
   }
 
-  drupal_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)), PASS_THROUGH);
+  backdrop_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)), PASS_THROUGH);
 
   $form['qid']  = array('#type' => 'value', '#value' => $queue->qid);
   $form['sqid'] = array('#type' => 'value', '#value' => $subqueue->sqid);
@@ -1117,7 +1138,7 @@ function nodequeue_clear_confirm($form, &$form_state, $queue, $subqueue) {
 function nodequeue_clear_confirm_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
     nodequeue_queue_clear($form_state['values']['sqid']);
-    drupal_set_message(t('The queue has been cleared.'));
+    backdrop_set_message(t('The queue has been cleared.'));
     $form_state['redirect'] = 'admin/structure/nodequeue/' . $form_state['values']['qid'] . '/view/' . $form_state['values']['sqid'];
   }
 }
@@ -1130,7 +1151,7 @@ function nodequeue_autocomplete() {
   $sqid = array_shift($args);
   $string = implode('/', $args);
   $matches = _nodequeue_autocomplete($sqid, $string);
-  drupal_json_output(drupal_map_assoc($matches));
+  backdrop_json_output(backdrop_map_assoc($matches));
 }
 
 function _nodequeue_autocomplete($sqid, $string) {
