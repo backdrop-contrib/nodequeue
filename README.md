@@ -1,162 +1,64 @@
 Node Queue
----------------------
+==========
 
-This module allows an administrator to arbitrarily put nodes in a group for some purpose; examples of this might be to highlight one particular node, as in a typical news site's Lead Article.
+This module allows people to arbitrarily place nodes into an ordered list for
+any purpose.
 
-Another use might be to create a block listing teasers for 5 forum posts that the admin thinks are important. Another use might be to create a group of nodes, and then have a block or the front page offer one of these randomly.
+Examples of usage can include:
+* To create a managed list of posts that appear on the home page.
+* To create a sidebar block with a bullet list of 5 selected posts.
+* To create sub-set of posts, from which one can be selected at random.
+* To highlight one particular node, as in a typical news site's Lead Article.
 
-CONTENTS OF THIS FILE
----------------------
-
- - Introduction
- - Tested
- - Known Issues
- - Special Thanks
- - Requirements
- - Installation
- - Coming From Drupal?
- - Usage
- - License
- - Credits
- - Maintainers
-
-TESTED
------
-
-Not working in Backdrop 1.3, but won't break your site.  This module has a lot of parts/integrations (Services, Rules, Drush, Taxonomy, Views, Search, Tests, etc ) so that if you want to work on this module, you are welcomed to.  The basic porting is done, but there are issues to fix with the sub-systems.
-
-KNOWN ISSUES
----------------------
-
-There are variables such as:
-$boost = apachesolr_environment_variable_get($env_id, "nodequeue_apachesolr_boost_$sqid", 0);
-
-What should we do with these?
+You can view a screencast about Nodequeue (for Drupal) by Learn by the Drop:
+<https://www.youtube.com/watch?v=s3oCr5iWeTc>
 
 
-SPECIAL THANKS
---------------
-
-You can view a screencast about Nodequeue by Learn by the Drop. <https://www.youtube.com/watch?v=s3oCr5iWeTc>
-
-
-REQUIREMENTS
+Installation
 ------------
 
-@todo
+- Install this module using the official Backdrop CMS instructions at
+  https://backdropcms.org/guide/modules
 
-INSTALLATION
-------------
+- Visit the configuration page under Administration > Configuration > Category >
+  Foo (admin/config/category/foo) and enter the required information.
 
-Install this module using the official Backdrop CMS instructions at https://backdropcms.org/guide/modules
+- Any additional steps.
 
-COMING FROM DRUPAL?
+Documentation
+-------------
+
+Additional documentation is located in the Wiki:
+https://github.com/backdrop-contrib/nodequeue/wiki/Documentation
+
+Issues
+------
+
+Bugs and Feature requests should be reported in the Issue Queue:
+https://github.com/backdrop-contrib/nodequeue/issues
+
+Current Maintainers
 -------------------
 
-nothing substantially changed yet.
+- Andy Martha <https://github.com/biolithic>
+- Jen Lampton <https://github.com/jenlampton>
+- Seeking additional maintainers
 
-@todo
-
-PERMISSIONS
-------------
-
-@todo
-
-USAGE
------
-
-The Nodequeue module allows users to collect nodes in an arbitrarily ordered list. The order in the list can be used for a any purpose, such as:
-
-A block listing teasers for the five top news stories on a site
-A user’s favorite music albums
-A group of favorite from which one is randomly displayed
-Nodequeue provides a simple drag-and-drop interface to manually order any queue. Additionally, it allows nodes to be added and removed from queues without needing edit permissions to the node. Nodes can be added to queues either from a queue management tab or by links on the node teaser.
-
-Queues can be set to allow only certain types of nodes to be added to the
-queue. Queue can be a fixed size or of infinite length. And the admin can
-select which roles have permission to add nodes to a given queue.
-
-Once a queue is set up, a new tab will appear on eligible nodes for eligible
-users. This tab will allow the user--regardless of edit permissions--to add or
-remove that node from the queue. Queue admins can view the nodes in the queue,
-and can modify the order of items already in the queue. Items may also appear
-in a nodes links area to add/remove them from the queue.
-
-When a node is added to the queue, it is added to the back of the queue. If a
-queue is full when a node is added, the front of the queue is removed.
-
-Nodequeue has support for nodes with i18n Internationalizations.
-
-It is highly recommended that you use the Views module to display your queues.
-However, if you choose not to, here is an alternative: Writing a PHP snippet.
-
-To Create a Block to Display Node Titles of a Queue
----------------------------------------------------------
-
-You'll need the Queue ID, which is easily extracted from the URL on the
-queue administration page.
-
-Create a new block, and insert the following PHP snippet into the block:
-
-   <?php print nodequeue_node_titles(QUEUEID); ?>
-
-If you want this queue to be printed in the reverse order, you can tell it
-to print backward:
-
-   <?php print nodequeue_node_titles(QUEUEID, '', true); ?>
-
-The '' in the line above is an optional title field. Feel free to put
-something here, but it's not terribly necessary in a block.
-
-Programatically displaying nodes from a Queue
----------------------------------------------------------
-
-The following funcitons can be used to display nodes from a subqueue, based on their position.
-For more customized displays of content from a queue, please use the Views module (http://drupal.org/project/views).
-For the most up to date Nodequeue API information, see http://drupal.org/node/293117.
-Programmatic Ways of Displaying Content from a Queue
-
-Nodequeue provides several functions which simplify getting a loaded node object from the front, back or a random position in a queue. For more selecting or displaying content in a more specific or complicated way, the Views module is probably your best bet.
-
-
-To Create a Block to Display Node Titles of a Queue
-
-You'll need the Queue ID, which is easily extracted from the URL on the queue administration page.
-
-Create a new block, and insert the following PHP snippet into the block:
-
-  <?php print nodequeue_node_titles($subqueue_id); ?>
-
-If you want this queue to be printed in the reverse order, you can tell it to print backward:
-
-  <?php print nodequeue_node_titles($subqueue_id, '', TRUE); ?>
-
-The '' in the line above is an optional title field. Feel free to put something here, but it's not terribly necessary in a block.
-
-LICENSE
+Credits
 -------
 
-This project is GPL v2 software. See the LICENSE.txt file in this directory for complete text.
-
-CREDITS
------------
-
-https://www.drupal.org/u/merlinofchaos
-
-https://www.drupal.org/u/ezra-g
-
-https://www.drupal.org/u/amateescu
-
-https://www.drupal.org/u/fizk
-
-https://www.drupal.org/u/sebcorbin
+- Ported to Backdrop CMS by [Andy Martha](https://github.com/biolithic)
+- Originally written for Drupal by [Paul Byrne](https://www.drupal.org/u/pfaocle).
+- Currently maintained for Drupal by [Yonas Yanfa](https://www.drupal.org/u/fizk)
+- Maintained for Drupal by [Sébastien Corbin](https://www.drupal.org/u/sebcorbin).
+- Maintained for Drupal by [Andrei Mateescu](https://www.drupal.org/u/amateescu).
+- Maintained for Drupal by [Ezra Gildesgame](https://www.drupal.org/u/ezra-g).
+- Maintained for Drupal by [Earl Miles](https://www.drupal.org/u/merlinofchaos).
 
 
-MAINTAINERS
------------
+License
+-------
 
-- seeking
+This project is GPL v2 software. See the LICENSE.txt file in this directory for
+complete text.
 
-Ported to Backdrop by:
-
-- biolithic <https://github.com/biolithic>
