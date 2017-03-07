@@ -55,12 +55,31 @@ function nodequeue_permission() {
 }
 
 /**
- * Implements hook_init().
- *
- * Loads subsidiary includes for other modules.
+ * Implements hook_action_info().
  */
-function nodequeue_init() {
-  include_once BACKDROP_ROOT . '/' . backdrop_get_path('module', 'nodequeue') . '/includes/nodequeue.actions.inc';
+function nodequeue_action_info() {
+  return array(
+    'nodequeue_add_action' => array(
+      'type' => 'node',
+      'file' => 'nodequeue.actions.inc',
+      'label' => t('Add to Nodequeues'),
+      'configurable' => TRUE,
+      'triggers' => array(
+        'node_presave',
+        'node_insert',
+        'node_update',
+      ),
+    ),
+    'nodequeue_remove_action' => array(
+      'type' => 'node',
+      'file' => 'nodequeue.actions.inc',
+      'label' => t('Remove from Nodequeues'),
+      'configurable' => TRUE,
+      'triggers' => array(
+        'node_delete',
+      ),
+    ),
+  );
 }
 
 /**
