@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Admin page callbacks for the nodequeue module.
@@ -9,37 +8,37 @@
  * Form builder for the nodequeue settings tab.
  */
 function nodequeue_admin_settings($form, &$form_state) {
-  $form = array();
-  $form['nodequeue_use_tab'] = array(
+  $form = array('#config' => 'nodequeue.settings');
+  $form['use_tab'] = array(
     '#type' => 'checkbox',
     '#title' => t('Create a menu tab for each node that could belong to any queues'),
-    '#default_value' => config_get('nodequeue.settings', 'nodequeue_use_tab'),
+    '#default_value' => config_get('nodequeue.settings', 'use_tab'),
   );
-  $form['nodequeue_tab_name'] = array(
+  $form['tab_name'] = array(
     '#type' => 'textfield',
     '#title' => t('Nodequeue tab label'),
-    '#default_value' => config_get('nodequeue.settings', 'nodequeue_tab_name'),
+    '#default_value' => config_get('nodequeue.settings', 'tab_name'),
     '#description' => t('If nodes will have a menu tab for manipulating related nodequeues, what should that tab be called?'),
   );
-  $form['nodequeue_autocomplete_limit'] = array(
+  $form['autocomplete_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Nodequeue autocomplete limit'),
     '#size'=> 2,
-    '#default_value' => config_get('nodequeue.settings', 'nodequeue_autocomplete_limit'),
+    '#default_value' => config_get('nodequeue.settings', 'autocomplete_limit'),
     '#description' => t('Number of node titles to show in the autocomplete search results.'),
   );
-  $form['nodequeue_view_per_queue'] = array(
+  $form['view_per_queue'] = array(
     '#type' => 'checkbox',
     '#title' => t('Automatically create one view per queue'),
     '#description' => t("Nodequeue can create a view for each queue. \n
       If you wish to have fewer views, you can disable this option and use a single view with an argument for the qid."),
-    '#default_value' => config_get('nodequeue.settings', 'nodequeue_view_per_queue'),
+    '#default_value' => config_get('nodequeue.settings', 'view_per_queue'),
   );
-  $form['nodequeue_show_contextual_links'] = array(
+  $form['show_contextual_links'] = array(
     '#type' => 'checkbox',
     '#title' => t('Display contextual links.'),
     '#description' => t("A contextual link to edit the nodequeue will be displayed on Views that have a nodequeue relationship."),
-    '#default_value' => config_get('nodequeue.settings', 'nodequeue_show_contextual_links'),
+    '#default_value' => config_get('nodequeue.settings', 'show_contextual_links'),
   );
 
   $form['actions']['#type'] = 'actions';
@@ -47,23 +46,9 @@ function nodequeue_admin_settings($form, &$form_state) {
     '#type' => 'submit',
     '#value' => t('Save configuration'),
   );
-  return $form;
-}
 
-/**
- * Submit handler for module_settings_form().
- */
-function nodequeue_admin_settings_submit($form, &$form_state) {
-$config = config('nodequeue.settings');
-foreach ($form_state['values'] as $key => $value)
-{
-$config->set($key, $value);
+  return system_settings_form($form);
 }
-
-$config->save();
-backdrop_set_message(t('The configuration options have been saved.'));
-}
-
 
 /**
  * Page callback to add a node to a queue.

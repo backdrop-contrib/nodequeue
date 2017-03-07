@@ -1,12 +1,8 @@
 {
     "_config_name": "nodequeue.settings",
-"menu_rebuild_needed": "TRUE",
-"nodequeue_tab_name": "Nodequeue",
-"node_admin_theme": "",
-"nodequeue_show_contextual_links": "TRUE",
-
-"nodequeue_links": "TRUE",
-"nodequeue_autocomplete_limit": "10",
-"nodequeue_use_tab": "1",
-"nodequeue_view_per_queue": "1"
+    "use_tab": 1,
+    "tab_name": "Queue",
+    "autocomplete_limit": "10",
+    "view_per_queue": 1,
+    "show_contextual_links": 0
 }
