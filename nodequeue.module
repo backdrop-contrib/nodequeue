@@ -1,16 +1,4 @@
 <?php
-
-/**
- *  NOTES
- *  Here are various notes I've taken about notable changes and/or ommissions
- *
- *  - Everything has been moved to admin/structure/nodequeue which seemed the
- *    most appropriate destination now that admin/content is out of the picture.
- *
- *  - None of the PagerQueries are working, they're all just normal queries for
- *    the time being.
- */
-
 /**
  * @file
  * Maintains queues of nodes in arbitrary order.
@@ -109,7 +97,6 @@ function nodequeue_permission() {
     ),
   );
 }
-
 
 /**
  * Implements hook_menu().
@@ -323,7 +310,6 @@ function nodequeue_node_update($node) {
   }
 }
 
-
 /**
  * Implementats hook_forms().
  */
@@ -367,7 +353,7 @@ function nodequeue_element_info() {
     '#input'         => TRUE,
     '#delta'         => 10,
     '#default_value' => 0,
-    '#process'       => array('process_position', 'ajax_process_form'),
+    '#process'       => array('nodequeue_process_position', 'ajax_process_form'),
   );
 
   return $type;
@@ -377,7 +363,7 @@ function nodequeue_element_info() {
  * Expand position elements into selects. Works like the weight element, except
  * only positive values are allowed.
  */
-function process_position($element) {
+function nodequeue_process_position($element) {
   for ($n = 1; $n <= $element['#delta']; $n++) {
     $positions[$n] = $n;
   }
@@ -390,18 +376,6 @@ function process_position($element) {
   $element += element_info('select');
 
   return $element;
-}
-
-/**
- * If no default value is set for position select boxes, use 1.
- */
-function position_value(&$form) {
-  if (isset($form['#default_value'])) {
-    $form['#value'] = $form['#default_value'];
-  }
-  else {
-    $form['#value'] = 1;
-  }
 }
 
 /**
@@ -1855,7 +1829,7 @@ function nodequeue_view_nodes($sqid, $backward = TRUE, $view_mode = 'teaser', $l
  *   If TRUE (default), only load published nodes.
  *
  * @return array
- *   An array of node objects (indexed sequentially, not by nid).
+ *   An array of node objects indexed by nid.
  */
 function nodequeue_load_nodes($sqid, $backward = FALSE, $from = 0, $count = 5, $published_only = TRUE) {
   $orderby = ($backward ? "DESC" : "ASC");
