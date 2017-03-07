@@ -1,8 +1,9 @@
+type = module
 name = Nodequeue Service
 description = Provides a nodequeue service.
 package = Nodequeue
 backdrop = 1.x
-version = 1.x-1.x
+
 dependencies[] = services
 dependencies[] = nodequeue
 
