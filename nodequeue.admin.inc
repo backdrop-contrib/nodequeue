@@ -228,8 +228,8 @@ function nodequeue_node_tab($node) {
   }
 
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('nodequeue-table'))));
-  backdrop_add_js(backdrop_get_path('module', 'nodequeue') . '/nodequeue.js');
-  backdrop_add_css(backdrop_get_path('module', 'nodequeue') . '/nodequeue.css');
+  backdrop_add_js(backdrop_get_path('module', 'nodequeue') . '/js/nodequeue.js');
+  backdrop_add_css(backdrop_get_path('module', 'nodequeue') . '/css/nodequeue.css');
   return $output;
 }
 

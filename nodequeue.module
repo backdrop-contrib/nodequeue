@@ -1757,8 +1757,8 @@ function nodequeue_node_links($node) {
         );
       }
     }
-    backdrop_add_js(backdrop_get_path('module', 'nodequeue') . '/nodequeue.js');
-    backdrop_add_css(backdrop_get_path('module', 'nodequeue') . '/nodequeue.css');
+    backdrop_add_js(backdrop_get_path('module', 'nodequeue') . '/js/nodequeue.js');
+    backdrop_add_css(backdrop_get_path('module', 'nodequeue') . '/css/nodequeue.css');
   }
   return $links;
 }
@@ -2323,7 +2323,7 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
   $output = '';
 
   // Get css to hide some of the help text if javascript is disabled.
-  backdrop_add_css(backdrop_get_path('module', 'nodequeue') . '/nodequeue.css');
+  backdrop_add_css(backdrop_get_path('module', 'nodequeue') . '/css/nodequeue.css');
 
   $table_id = 'nodequeue-dragdrop-' . $form['#subqueue']['sqid'];
   $table_classes = array(
@@ -2333,7 +2333,7 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
     'nodequeue-dragdrop-reference-' . $form['#subqueue']['reference'],
   );
   backdrop_add_tabledrag($table_id, 'order', 'sibling', 'node-position');
-  backdrop_add_js(backdrop_get_path('module', 'nodequeue') . '/nodequeue_dragdrop.js');
+  backdrop_add_js(backdrop_get_path('module', 'nodequeue') . '/js/nodequeue_dragdrop.js');
 
   $reverse[str_replace('-', '_', $table_id)] = (bool) $form['#queue']['reverse'];
   backdrop_add_js(
