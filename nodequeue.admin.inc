@@ -1139,6 +1139,16 @@ function nodequeue_autocomplete() {
   backdrop_json_output(backdrop_map_assoc($matches));
 }
 
+/**
+ * Internal autocomplete function.
+ *
+ * @param int $sqid
+ *  SubQueue ID
+ * @param string $string
+ *   Entire argument string.
+ *
+ * @return [type]
+ */
 function _nodequeue_autocomplete($sqid, $string) {
   $output = array();
 
