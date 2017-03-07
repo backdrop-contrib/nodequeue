@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Creates a node queue for each taxonomy vocabulary.
+ */
 
 /**
  * Implements hook_nodequeue_info().
