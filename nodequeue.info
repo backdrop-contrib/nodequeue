@@ -6,19 +6,5 @@ backdrop = 1.x
 
 configure = admin/structure/nodequeue/settings
 
-; Includes
-files[] = includes/views/nodequeue.views.inc
-
-; Views Handlers
-files[] = includes/views/nodequeue_handler_argument_subqueue_qid.inc
-files[] = includes/views/nodequeue_handler_field_all_queues.inc
-files[] = includes/views/nodequeue_handler_field_all_subqueues.inc
-files[] = includes/views/nodequeue_handler_field_links.inc
-files[] = includes/views/nodequeue_handler_field_queue_tab.inc
-files[] = includes/views/nodequeue_handler_filter_in_queue.inc
-files[] = includes/views/nodequeue_handler_relationship_nodequeue.inc
-files[] = includes/views/nodequeue_handler_sort_by_position_and_other.inc
-files[] = includes/views/nodequeue_handler_sort_in_queue.inc
-
 ; Tests
 files[] = tests/nodequeue.test

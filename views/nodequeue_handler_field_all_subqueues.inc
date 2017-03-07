@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Field handler for all subqueues

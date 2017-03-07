@@ -1,6 +1,6 @@
 <?php
 /**
- * @file nodequeue.actions.inc
+ * @file
  * Provides actions integration for nodequeues.
  */
 

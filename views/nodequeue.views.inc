@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file nodequeue.views.inc
  * Provides support for the Views module.

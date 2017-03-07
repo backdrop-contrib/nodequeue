@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Argument handler for subqueues.

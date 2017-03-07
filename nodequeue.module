@@ -35,26 +35,6 @@ function nodequeue_config_info() {
 }
 
 /**
- * Implements hook_permission().
- */
-function nodequeue_permission() {
-  return array(
-    'administer nodequeue' => array(
-      'title' => t('Administer nodequeue'),
-      'description' => t('Administer the nodequeue module.'),
-    ),
-   'manipulate queues' => array(
-      'title' => t('Manipulate queues'),
-      'description' => t('Manipulate queues.'),
-    ),
-    'manipulate all queues' => array(
-      'title' => t('Manipulate all queues'),
-      'description' => t('Manipulate all queues.'),
-    ),
-  );
-}
-
-/**
  * Implements hook_action_info().
  */
 function nodequeue_action_info() {
@@ -81,6 +61,55 @@ function nodequeue_action_info() {
     ),
   );
 }
+
+/**
+ * Implements hook_views_api().
+ */
+function nodequeue_views_api() {
+  return array(
+    'api' => 3,
+    'path' => backdrop_get_path('module', 'nodequeue') . '/views',
+  );
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function nodequeue_autoload_info() {
+  return array(
+    // Views handlers.
+    'nodequeue_handler_argument_subqueue_qid' => 'views/nodequeue_handler_argument_subqueue_qid.inc',
+    'nodequeue_handler_field_all_queues' => 'views/nodequeue_handler_field_all_queues.inc',
+    'nodequeue_handler_field_all_subqueues' => 'views/nodequeue_handler_field_all_subqueues.inc',
+    'nodequeue_handler_field_links' => 'views/nodequeue_handler_field_links.inc',
+    'nodequeue_handler_field_queue_tab' => 'views/nodequeue_handler_field_queue_tab.inc',
+    'nodequeue_handler_filter_in_queue' => 'views/nodequeue_handler_filter_in_queue.inc',
+    'nodequeue_handler_relationship_nodequeue' => 'views/nodequeue_handler_relationship_nodequeue.inc',
+    'nodequeue_handler_sort_by_position_and_other' => 'views/nodequeue_handler_sort_by_position_and_other.inc',
+    'nodequeue_handler_sort_in_queue' => 'views/nodequeue_handler_sort_in_queue.inc',
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+function nodequeue_permission() {
+  return array(
+    'administer nodequeue' => array(
+      'title' => t('Administer nodequeue'),
+      'description' => t('Administer the nodequeue module.'),
+    ),
+   'manipulate queues' => array(
+      'title' => t('Manipulate queues'),
+      'description' => t('Manipulate queues.'),
+    ),
+    'manipulate all queues' => array(
+      'title' => t('Manipulate all queues'),
+      'description' => t('Manipulate all queues.'),
+    ),
+  );
+}
+
 
 /**
  * Implements hook_menu().
@@ -458,16 +487,6 @@ function nodequeue_contextual_links_view_alter(&$element, $items) {
       }
     }
   }
-}
-
-/**
- * Implements hook_views_api().
- */
-function nodequeue_views_api() {
-  return array(
-    'api' => 2,
-    'path' => backdrop_get_path('module', 'nodequeue') . '/includes/views',
-  );
 }
 
 // --------------------------------------------------------------------------

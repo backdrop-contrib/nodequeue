@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Views field handler for the nodequeue queue links

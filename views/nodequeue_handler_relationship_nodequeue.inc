@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Specialized relationship handler to add nodequeues.
@@ -58,8 +57,7 @@ class nodequeue_handler_relationship_nodequeue extends views_handler_relationshi
       '#title' => t('Queues'),
       '#options' => $options,
       '#default_value' => $this->options['names'],
-      '#process' => array('form_process_checkboxes', 'ctools_dependent_process'),
-      '#dependency' => array('edit-options-limit' => array(TRUE)),
+      '#process' => array('form_process_checkboxes'),
     );
   }
 

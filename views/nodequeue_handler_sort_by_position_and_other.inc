@@ -1,12 +1,9 @@
 <?php
-
 /**
  * @file
  * Views handler for sorting nodes by position in nodequeue and some other
  * parameter.
- */
-
-/**
+ *
  * Allows combining the nodequeue position with another (random) parameter
  * (created date for example). This handler is useful only if the nodequeue
  * relationship is NOT required.
