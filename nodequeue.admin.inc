@@ -309,25 +309,34 @@ function nodequeue_view_queues() {
     $operations = array();
     $sub_text = $queue->subqueues;
 
+    $operations['view'] = array(
+      'title' => t('View SubQueues'),
+      'href' => 'admin/structure/nodequeue/' . $queue->qid . '/view',
+    );
+
     // If this queue has only one subqueue.
     if ($sub_text == 1) {
-      $sub_text .= " (" . nodequeue_subqueue_size_text($queue->size, $queue->subqueue->count) . ")";
-      $operations['view'] = l(t('View'), "admin/structure/nodequeue/$queue->qid/view/" . $queue->subqueue->sqid);
-    }
-    else {
-      $operations['view'] = l(t('View'), "admin/structure/nodequeue/$queue->qid/view");
+      $sub_text .= ' (' . nodequeue_subqueue_size_text($queue->size, $queue->subqueue->count) . ')';
+      $operations['view']['title'] = t('Manage Queue');
+      $operations['view']['href'] .= '/' . $queue->subqueue->sqid;
     }
 
     if (user_access('administer nodequeue')) {
-      $operations['edit'] = l(t('Configure'), "admin/structure/nodequeue/$queue->qid/edit");
-      $operations['delete'] = l(t('Delete'), "admin/structure/nodequeue/$queue->qid/delete");
+      $operations['edit'] = array(
+        'title' => t('Configure'),
+        'href' => 'admin/structure/nodequeue/' . $queue->qid . '/edit',
+      );
+      $operations['delete'] = array(
+        'title' => t('Delete'),
+        'href' => 'admin/structure/nodequeue/' . $queue->qid . '/delete',
+      );
     }
 
     $rows[] = array(
       array('class' => array('nodequeue-title'), 'data' => check_plain($queue->title)),
       array('class' => array('nodequeue-max-nodes'), 'data' => $queue->size == 0 ? t('Infinite') : $queue->size),
       array('class' => array('nodequeue-subqueues'), 'data' => $sub_text),
-      array('class' => array('nodequeue-operation'), 'data' => implode(' | ', $operations)),
+      array('class' => array('nodequeue-operation'), 'data' => array('#type' => 'operations', '#links' => $operations)),
     );
   }
 
@@ -348,13 +357,21 @@ function nodequeue_view_subqueues($queue) {
 
   $rows = array();
   foreach ($subqueues as $subqueue) {
-    if (nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
-      $sub_text = nodequeue_subqueue_size_text($queue->size, $subqueue->count, FALSE);
-      $rows[] = array(
-        array('class' => array('nodequeue-title'), 'data' => check_plain($subqueue->title)),
-        array('class' => array('nodequeue-subqueues'), 'data' => $sub_text),
-        array('class' => array('nodequeue-operation'), 'data' => l(t('View'), "admin/structure/nodequeue/$queue->qid/view/$subqueue->sqid"))
-      );
+    if (!empty($subqueue->title)) { // @todo why are these even in here?
+      if (nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
+        $sub_text = nodequeue_subqueue_size_text($queue->size, $subqueue->count, FALSE);
+        $operations = array(
+          'view' => array(
+            'title' => t('Manage Queue'),
+            'href' => 'aadmin/structure/nodequeue/' . $queue->qid . '/view/' . $subqueue->sqid,
+          ),
+        );
+        $rows[] = array(
+          array('class' => array('nodequeue-title'), 'data' => check_plain($subqueue->title)),
+          array('class' => array('nodequeue-subqueues'), 'data' => $sub_text),
+          array('class' => array('nodequeue-operation'), 'data' => array('#type' => 'operations', '#links' => $operations)),
+        );
+      }
     }
   }
 
