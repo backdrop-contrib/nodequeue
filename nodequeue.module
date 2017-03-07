@@ -158,7 +158,7 @@ function nodequeue_menu() {
   );
   // Actual administrative items.
   $items['admin/structure/nodequeue/%nodequeue/edit'] = array(
-    'title' => 'Edit queue',
+    'title' => 'Configure queue',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('nodequeue_edit_queue_form', 3),
     'access arguments' => $admin_access,
@@ -413,7 +413,7 @@ function nodequeue_contextual_links_view_alter(&$element, $items) {
       $qid = $qid_map[$queue_name];
       $queue = nodequeue_load($qid);
       $element['#links'][$queue_name] = array(
-        'title' => t('Edit queue'),
+        'title' => t('Configure queue'),
         'href' => 'admin/structure/nodequeue/' . $qid . '/view',
         'query' => array('destination' => current_path()),
       );
@@ -431,7 +431,7 @@ function nodequeue_contextual_links_view_alter(&$element, $items) {
         $subqueues = nodequeue_load_subqueues_by_reference(array($qid => $arg->value));
         foreach ($subqueues as $sqid => $subqueue) {
           $element['#links'][$queue_name . '_' . $sqid] = array(
-            'title' => t('Edit Subqueue'),
+            'title' => t('Configure Subqueue'),
             'href' => 'admin/structure/nodequeue/' . $qid . '/view/' . $sqid,
             'query' => array('destination' => current_path()),
           );

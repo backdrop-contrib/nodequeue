@@ -41,7 +41,7 @@ function nodequeue_admin_settings($form, &$form_state) {
     '#description' => t("A contextual link to edit the nodequeue will be displayed on Views that have a nodequeue relationship."),
     '#default_value' => config_get('nodequeue.settings', 'nodequeue_show_contextual_links'),
   );
-  
+
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -334,7 +334,7 @@ function nodequeue_view_queues() {
     }
 
     if (user_access('administer nodequeue')) {
-      $operations['edit'] = l(t('Edit'), "admin/structure/nodequeue/$queue->qid/edit");
+      $operations['edit'] = l(t('Configure'), "admin/structure/nodequeue/$queue->qid/edit");
       $operations['delete'] = l(t('Delete'), "admin/structure/nodequeue/$queue->qid/delete");
     }
 
@@ -381,7 +381,7 @@ function nodequeue_view_subqueues($queue) {
 }
 
 /**
- * Add or edit a queue.
+ * Add or Confogure a queue.
  */
 function nodequeue_edit_queue_form($form, &$form_state, $queue) {
   $info = nodequeue_api_info();
@@ -828,7 +828,7 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
     }
 
     if (node_access('update', $node)) {
-      $form['nodes'][$key]['edit'] = array('#markup' => l(t('edit'), 'node/' . $node->nid . '/edit', array('attributes' => array('title' => t('Edit this node')))));
+      $form['nodes'][$key]['edit'] = array('#markup' => l(t('Edit'), 'node/' . $node->nid . '/edit', array('attributes' => array('title' => t('Edit this node')))));
     }
     $form['nodes'][$key]['position'] = array(
       '#type' => 'position',
@@ -848,7 +848,7 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
       ),
       'query' => nodequeue_get_query_string($node->nid, TRUE),
     );
-    $form['nodes'][$key]['remove'] = array('#markup' => l(t('remove'), 'nodequeue/' . $queue->qid . '/remove-node/' . $subqueue->sqid . '/' . $node->nid, $attr));
+    $form['nodes'][$key]['remove'] = array('#markup' => l(t('Remove'), 'nodequeue/' . $queue->qid . '/remove-node/' . $subqueue->sqid . '/' . $node->nid, $attr));
 
     $key++;
   }
