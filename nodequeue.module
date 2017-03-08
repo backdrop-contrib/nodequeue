@@ -103,6 +103,7 @@ function nodequeue_permission() {
  */
 function nodequeue_menu() {
   $items = array();
+
   $admin_access = array('administer nodequeue');
 
   // administrative items
@@ -112,7 +113,7 @@ function nodequeue_menu() {
     'access callback' => '_nodequeue_access_admin_or_manipulate',
     'description' => 'Create and maintain simple nodequeues.',
     'file' => 'nodequeue.admin.inc',
-    'type' => MENU_NORMAL_ITEM
+    'type' => MENU_NORMAL_ITEM,
   );
   $items['admin/structure/nodequeue/list'] = array(
     'title' => 'List',
@@ -120,7 +121,7 @@ function nodequeue_menu() {
     'access callback' => '_nodequeue_access_admin_or_manipulate',
     'file' => 'nodequeue.admin.inc',
     'weight' => -1,
-    'type' => MENU_DEFAULT_LOCAL_TASK
+    'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   $items['admin/structure/nodequeue/settings'] = array(
     'title' => 'Settings',
@@ -128,15 +129,9 @@ function nodequeue_menu() {
     'page arguments' => array('nodequeue_admin_settings'),
     'access arguments' => $admin_access,
     'file' => 'nodequeue.admin.inc',
-    'type' => MENU_LOCAL_TASK
+    'type' => MENU_LOCAL_TASK,
   );
-  $items['nodequeue/autocomplete'] = array(
-    'title' => 'Autocomplete',
-    'page callback' => 'nodequeue_autocomplete',
-    'access callback' => '_nodequeue_access_admin_or_manipulate',
-    'file' => 'nodequeue.admin.inc',
-    'type' => MENU_CALLBACK
-  );
+
   $info = nodequeue_api_info();
   foreach ($info as $key => $data) {
     $items['admin/structure/nodequeue/add/' . $key] = array(
@@ -146,9 +141,64 @@ function nodequeue_menu() {
       'page arguments' => array('nodequeue_edit_queue_form', $key),
       'access arguments' => $admin_access,
       'file' => 'nodequeue.admin.inc',
-      'type' => MENU_LOCAL_ACTION
+      'type' => MENU_LOCAL_ACTION,
     );
   }
+
+  // Administrative items for an parent queue.
+  $items['admin/structure/nodequeue/%nodequeue'] = array(
+    'title callback' => 'nodequeue_admin_view_title',
+    'title arguments' => array(3),
+    'page callback' => 'nodequeue_admin_view',
+    'page arguments' => array(3),
+    'access callback' => 'nodequeue_queue_access',
+    'access arguments' => array(3),
+    'file' => 'nodequeue.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  // Administrative items for a subqueue.
+  $items['admin/structure/nodequeue/%nodequeue/view/%subqueue'] = array(
+    'title callback' => 'nodequeue_admin_view_title',
+    'title arguments' => array(3, 5),
+    'page callback' => 'nodequeue_admin_view',
+    'page arguments' => array(3, 5),
+    'access callback' => 'nodequeue_queue_access',
+    'access arguments' => array(3, 5),
+    'file' => 'nodequeue.admin.inc',
+    'weight' => -10,
+    'tab parent' => 'admin/structure/nodequeue/%',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // Administrative items for the parent queue.
+  $items['admin/structure/nodequeue/%nodequeue/edit'] = array(
+    'title' => 'Configure queue',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('nodequeue_edit_queue_form', 3),
+    'access arguments' => $admin_access,
+    'file' => 'nodequeue.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/structure/nodequeue/%nodequeue/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('nodequeue_admin_delete', 3),
+    'access arguments' => $admin_access,
+    'file' => 'nodequeue.admin.inc',
+    'weight' => 5,
+    'type' => MENU_CALLBACK,
+  );
+  $items["admin/structure/nodequeue/%nodequeue/clear/%subqueue"] = array(
+    'title' => 'Clear',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('nodequeue_clear_confirm', 3, 5),
+    'access callback' => 'nodequeue_queue_access',
+    'access arguments' => array(3, 5),
+    'file' => 'nodequeue.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  // Node paths.
   $items['node/%node/nodequeue'] = array(
     'title' => '@tab',
     'title arguments' => array('@tab' => config_get('nodequeue.settings', 'nodequeue_tab_name')),
@@ -158,56 +208,16 @@ function nodequeue_menu() {
     'access arguments' => array(1),
     'file' => 'nodequeue.admin.inc',
     'weight' => 5,
-    'type' => MENU_LOCAL_TASK
+    'type' => MENU_LOCAL_TASK,
   );
 
-  // Administrative items for an individual queue.
-  $items['admin/structure/nodequeue/%nodequeue'] = array(
-    'page callback' => 'nodequeue_admin_view',
-    'page arguments' => array(3),
-    'access callback' => 'nodequeue_queue_access',
-    'access arguments' => array(3),
+  // Menu callbacks.
+  $items['nodequeue/autocomplete'] = array(
+    'title' => 'Autocomplete',
+    'page callback' => 'nodequeue_autocomplete',
+    'access callback' => '_nodequeue_access_admin_or_manipulate',
     'file' => 'nodequeue.admin.inc',
-    'type' => MENU_CALLBACK
-  );
-  $items['admin/structure/nodequeue/%nodequeue/view'] = array(
-    'title' => 'View',
-    'page callback' => 'nodequeue_admin_view',
-    'page arguments' => array(3),
-    'access callback' => 'nodequeue_queue_access',
-    'access arguments' => array(3),
-    'file' => 'nodequeue.admin.inc',
-    'weight' => -10,
-    'type' => MENU_DEFAULT_LOCAL_TASK
-  );
-  $items['admin/structure/nodequeue/%nodequeue/view/%subqueue'] = array(
-    'title' => 'View',
-    'page callback' => 'nodequeue_admin_view',
-    'page arguments' => array(3, 5),
-    'access callback' => 'nodequeue_queue_access',
-    'access arguments' => array(3, 5),
-    'file' => 'nodequeue.admin.inc',
-    'weight' => -10,
-    'tab parent' => 'admin/structure/nodequeue/%',
-    'type' => MENU_CALLBACK
-  );
-  // Actual administrative items.
-  $items['admin/structure/nodequeue/%nodequeue/edit'] = array(
-    'title' => 'Configure queue',
-    'page callback' => 'backdrop_get_form',
-    'page arguments' => array('nodequeue_edit_queue_form', 3),
-    'access arguments' => $admin_access,
-    'file' => 'nodequeue.admin.inc',
-    'type' => MENU_LOCAL_TASK
-  );
-  $items['admin/structure/nodequeue/%nodequeue/delete'] = array(
-    'title' => 'Delete',
-    'page callback' => 'backdrop_get_form',
-    'page arguments' => array('nodequeue_admin_delete', 3),
-    'access arguments' => $admin_access,
-    'file' => 'nodequeue.admin.inc',
-    'weight' => 5,
-    'type' => MENU_CALLBACK
+    'type' => MENU_CALLBACK,
   );
   $items['nodequeue/%nodequeue/add-node/%subqueue/%node'] = array(
     'page callback' => 'nodequeue_admin_add_node',
@@ -215,7 +225,7 @@ function nodequeue_menu() {
     'access callback' => 'nodequeue_node_and_queue_access',
     'access arguments' => array(4, 1, 3),
     'file' => 'nodequeue.admin.inc',
-    'type' => MENU_CALLBACK
+    'type' => MENU_CALLBACK,
   );
   $items['nodequeue/%nodequeue/remove-node/%subqueue/%node'] = array(
     'page callback' => 'nodequeue_admin_remove_node',
@@ -223,16 +233,7 @@ function nodequeue_menu() {
     'access callback' => 'nodequeue_node_and_queue_access',
     'access arguments' => array(4, 1, 3),
     'file' => 'nodequeue.admin.inc',
-    'type' => MENU_CALLBACK
-  );
-  $items["admin/structure/nodequeue/%nodequeue/clear/%subqueue"] = array(
-    'title' => 'Clear',
-    'page callback' => 'backdrop_get_form',
-    'page arguments' => array('nodequeue_clear_confirm', 3, 5),
-    'access callback' => 'nodequeue_queue_access',
-    'access arguments' => array(3, 5),
-    'file' => 'nodequeue.admin.inc',
-    'type' => MENU_CALLBACK
+    'type' => MENU_CALLBACK,
   );
 
   return $items;

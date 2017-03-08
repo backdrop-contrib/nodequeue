@@ -310,15 +310,15 @@ function nodequeue_view_queues() {
     $sub_text = $queue->subqueues;
 
     $operations['view'] = array(
-      'title' => t('View SubQueues'),
-      'href' => 'admin/structure/nodequeue/' . $queue->qid . '/view',
+      'title' => t('Manage Queue'),
+      'href' => 'admin/structure/nodequeue/' . $queue->qid,
     );
 
     // If this queue has only one subqueue.
-    if ($sub_text == 1) {
+    if ($sub_text > 1) {
       $sub_text .= ' (' . nodequeue_subqueue_size_text($queue->size, $queue->subqueue->count) . ')';
-      $operations['view']['title'] = t('Manage Queue');
-      $operations['view']['href'] .= '/' . $queue->subqueue->sqid;
+      $operations['view']['title'] = t('View SubQueues');
+      $operations['view']['href'] .= '/view/' . $queue->subqueue->sqid;
     }
 
     if (user_access('administer nodequeue')) {
@@ -363,7 +363,7 @@ function nodequeue_view_subqueues($queue) {
         $operations = array(
           'view' => array(
             'title' => t('Manage Queue'),
-            'href' => 'aadmin/structure/nodequeue/' . $queue->qid . '/view/' . $subqueue->sqid,
+            'href' => 'admin/structure/nodequeue/' . $queue->qid . '/view/' . $subqueue->sqid,
           ),
         );
         $rows[] = array(
@@ -703,43 +703,66 @@ function nodequeue_admin_delete_submit($formid, &$form_state) {
 
 /**
  * Page callback to view a queue.
+ *
+ * @param $queue
+ *   Fully loaded queue.
+ * @param array $subqueue
+ *   Fully loaded subqueue.
+ *
+ * @return stribg
+ *   Rendered HTML or render array for the page.
  */
 function nodequeue_admin_view($queue, $subqueue = array()) {
-  backdrop_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)), PASS_THROUGH);
-  $qid = $queue->qid;
-
-  // If the queue has just one subqueue, it gets special treatment.
-  if (empty($subqueue->sqid)) {
-    if ($queue->subqueues == 1) {
-      $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
-      $subqueue = array_shift($subqueues);
-    }
-    else {
-      // display subqueue list page.
-      return nodequeue_view_subqueues($queue);
-    }
-  }
-  elseif ($subqueue->sqid) {
+  // If a specific subqueue is requested, display that one.
+  if ($subqueue->sqid != NULL) {
     if (!nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
       return backdrop_not_found();
     }
-    // Adjust properties of the page so our subqueue is in the right
-    // visual place.
-    backdrop_set_title(t("Subqueue '@title'",
-      array('@title' => nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue))), PASS_THROUGH);
-    $breadcrumb = backdrop_get_breadcrumb();
-    $breadcrumb[] = l($queue->title, "admin/structure/nodequeue/$queue->qid");
-    backdrop_set_breadcrumb($breadcrumb);
   }
+
+  // If the queue has subqueues but not are requested, display a list:
+  elseif ($queue->subqueues > 1 ) {
+    return nodequeue_view_subqueues($queue);
+  }
+
+  // If the queue has just one subqueue, it gets special treatment.
+  elseif ($queue->subqueues == 1) {
+    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+    $subqueue = array_shift($subqueues);
+  }
+
   return nodequeue_arrange_subqueue($queue, $subqueue);
+}
+
+/**
+ * Title callback for nodequeue view pages.
+ *
+ * @param $queue
+ *   Fully loaded queue.
+ * @param array $subqueue
+ *   Fully loaded subqueue.
+ *
+ * @return stribg
+ *   Page title.
+ */
+function nodequeue_admin_view_title($queue, $subqueue = array()) {
+  if ($subqueue->sqid != NULL) {
+    $page_title = t("Manage subqueue '@title'", array('@title' => nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue)));
+  }
+  elseif ($queue->subqueues > 1 ) {
+    $page_title = t("Subqueues for '@title'", array('@title' => $queue->title));
+  }
+  elseif ($queue->subqueues == 1) {
+    $page_title = t("Manage queue '@title'", array('@title' => $queue->title));
+  }
+
+  return $page_title;
 }
 
 /**
  * View the contents of a subqueue, with links to re-order the queue.
  */
 function nodequeue_arrange_subqueue($queue, $subqueue = NULL) {
-  // set title and load subqueue if it's not provided
-  backdrop_set_title(t("Nodequeue '@title'", array('@title' => $queue->title)), PASS_THROUGH);
   if (!$subqueue->sqid) {
     if ($queue->subqueues == 1) {
       $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
@@ -753,7 +776,7 @@ function nodequeue_arrange_subqueue($queue, $subqueue = NULL) {
     if (!nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
       return backdrop_not_found();
     }
-    backdrop_set_title(t("Subqueue '@title'", array('@title' => nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue))), PASS_THROUGH);
+    // @todo backdrop_set_title(t("Subqueue '@title'", array('@title' => nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue))), PASS_THROUGH);
   }
 
   // get nodes from the queue
