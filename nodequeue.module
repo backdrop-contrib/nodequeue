@@ -151,7 +151,7 @@ function nodequeue_menu() {
   }
   $items['node/%node/nodequeue'] = array(
     'title' => '@tab',
-    'title arguments' => array('@tab' => config_get('nodequeue.settings', 'nodequeue_tab_name')),
+    'title arguments' => array('@tab' => config_get('nodequeue.settings', 'tab_name')),
     'page callback' => 'nodequeue_node_tab',
     'page arguments' => array(1),
     'access callback' => 'nodequeue_node_tab_access',
@@ -2271,7 +2271,7 @@ function nodequeue_queue_access($queue, $subqueue = NULL, $account = NULL) {
 }
 
 function nodequeue_node_tab_access($node) {
-  if (!config_get('nodequeue.settings', 'nodequeue_use_tab') || !user_access('manipulate queues')) {
+  if (!config_get('nodequeue.settings', 'use_tab') || !user_access('manipulate queues')) {
     // For performance reasons: If the menu tab is disabled or the user can't
     // manipulate queues, there is no reason to run the rest of these queries.
     return FALSE;
