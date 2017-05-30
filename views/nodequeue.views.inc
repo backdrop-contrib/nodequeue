@@ -217,7 +217,6 @@ function nodequeue_views_data() {
   $data['nodequeue_subqueue']['reference'] = array(
     'title' => t('Subqueue reference'),
     'help' => t('The reference that defines a subqueue (depends upon the type of subqueue). It is a taxonomy tid for smartqueue taxonomy, or a uid for an authorview.'),
-    'real field' => 'sqid',
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
