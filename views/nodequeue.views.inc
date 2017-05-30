@@ -22,6 +22,7 @@ function nodequeue_views_data() {
 
   // ----------------------------------------------------------------
   // nodequeue_nodes table
+  // ----------------------------------------------------------------
   $data['nodequeue_nodes']['table']['group'] = t('Nodequeue');
 
   // The nodequeue_nodes table is how nodequeue connects to the
@@ -153,6 +154,7 @@ function nodequeue_views_data() {
 
   // ----------------------------------------------------------------
   // nodequeue_queue table
+  // ----------------------------------------------------------------
   $data['nodequeue_queue']['table']['group'] = t('Nodequeue');
 
   // For use with the relationship.
@@ -183,6 +185,7 @@ function nodequeue_views_data() {
 
   // ----------------------------------------------------------------
   // nodequeue_subqueue table
+  // ----------------------------------------------------------------
   $data['nodequeue_subqueue']['table']['group'] = t('Nodequeue');
 
   // For use with the relationship.
@@ -213,7 +216,8 @@ function nodequeue_views_data() {
 
   $data['nodequeue_subqueue']['reference'] = array(
     'title' => t('Subqueue reference'),
-    'help' => t('The reference that defines a subqueue; what this actually is depends upon the type of subqueue, but is a taxonomy tid for smartqueue taxonomy, or a uid for authorview.'),
+    'help' => t('The reference that defines a subqueue (depends upon the type of subqueue). It is a taxonomy tid for smartqueue taxonomy, or a uid for an authorview.'),
+    'real field' => 'sqid',
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
