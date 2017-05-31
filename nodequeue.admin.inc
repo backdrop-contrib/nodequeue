@@ -47,7 +47,38 @@ function nodequeue_admin_settings($form, &$form_state) {
     '#value' => t('Save configuration'),
   );
 
+  // Add a submit handler to create the views.
+  $form['#submit'] = array('nodequeue_admin_settings_submit');
+
   return system_settings_form($form);
+}
+
+/**
+ * Submit handler for nodequeue_admin_settings().
+ */
+function nodequeue_admin_settings_submit($form, &$form_state) {
+  $set_message = FALSE;
+  if ((config_get('nodequeue.settings', 'view_per_queue') != 1) && ($form_state['values']['view_per_queue'] == 1)) {
+    // Generate the default views.
+    module_load_include('inc', 'nodequeue', 'views/nodequeue.views_default');
+    nodequeue_views_default_views();
+    backdrop_set_message(t('Default nodequeue views have been created.'));
+  }
+  elseif ((config_get('nodequeue.settings', 'view_per_queue') == 1) && ($form_state['values']['view_per_queue'] != 1)) {
+    // Delete the default views.
+    $queues = nodequeue_load_queues(nodequeue_get_all_qids());
+    foreach ($queues as $queue) {
+      $config = config('views.view.nodequeue_' . $queue->qid);
+      // Check to see that the state has not been overridden.
+      if ($config->get('storage') == 2) {
+        $config->delete();
+        $set_message = TRUE;
+      }
+    }
+    if ($set_message) {
+      backdrop_set_message(t('Default nodequeue views have been deleted.'), 'warning');
+    }
+  }
 }
 
 /**
