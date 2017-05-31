@@ -317,8 +317,10 @@ function nodequeue_view_queues() {
     // If this queue has only one subqueue.
     if ($sub_text == 1) {
       $sub_text .= " (" . nodequeue_subqueue_size_text($queue->size, $queue->subqueue->count) . ")";
-      $operations['view']['title'] = t('View SubQueues');
       $operations['view']['href'] .= '/view/' . $queue->subqueue->sqid;
+    }
+    else {
+      $operations['view']['title'] = t('View SubQueues');
     }
 
     if (user_access('administer nodequeue')) {
