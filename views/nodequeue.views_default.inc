@@ -8,7 +8,7 @@
  */
 function nodequeue_views_default_views() {
   $views = array();
-  if (config_get('nodequeue.settings', 'nodequeue_view_per_queue') != 1) {
+  if (config_get('nodequeue.settings', 'view_per_queue') != 1) {
     return $views;
   }
 
