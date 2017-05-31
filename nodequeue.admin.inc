@@ -315,8 +315,8 @@ function nodequeue_view_queues() {
     );
 
     // If this queue has only one subqueue.
-    if ($sub_text > 1) {
-      $sub_text .= ' (' . nodequeue_subqueue_size_text($queue->size, $queue->subqueue->count) . ')';
+    if ($sub_text == 1) {
+      $sub_text .= " (" . nodequeue_subqueue_size_text($queue->size, $queue->subqueue->count) . ")";
       $operations['view']['title'] = t('View SubQueues');
       $operations['view']['href'] .= '/view/' . $queue->subqueue->sqid;
     }
@@ -714,19 +714,19 @@ function nodequeue_admin_delete_submit($formid, &$form_state) {
  */
 function nodequeue_admin_view($queue, $subqueue = array()) {
   // If a specific subqueue is requested, display that one.
-  if (is_object($subqueue) && $subqueue->sqid != NULL) {
+  if ($subqueue->sqid != NULL) {
     if (!nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
       return backdrop_not_found();
     }
   }
 
   // If the queue has subqueues but not are requested, display a list:
-  elseif (is_object($queue) && $queue->subqueues > 1 ) {
+  elseif ($queue->subqueues > 1 ) {
     return nodequeue_view_subqueues($queue);
   }
 
   // If the queue has just one subqueue, it gets special treatment.
-  elseif (is_object($queue) && $queue->subqueues == 1) {
+  elseif ($queue->subqueues == 1) {
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
     $subqueue = array_shift($subqueues);
   }
@@ -746,13 +746,13 @@ function nodequeue_admin_view($queue, $subqueue = array()) {
  *   Page title.
  */
 function nodequeue_admin_view_title($queue, $subqueue = array()) {
-  if (is_object($subqueue) && $subqueue->sqid != NULL) {
+  if ($subqueue->sqid != NULL) {
     $page_title = t("Manage subqueue '@title'", array('@title' => nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue)));
   }
-  elseif (is_object($queue) && $queue->subqueues > 1 ) {
+  elseif ($queue->subqueues > 1 ) {
     $page_title = t("Subqueues for '@title'", array('@title' => $queue->title));
   }
-  elseif (is_object($queue) && $queue->subqueues == 1) {
+  elseif ($queue->subqueues == 1) {
     $page_title = t("Manage queue '@title'", array('@title' => $queue->title));
   }
 
