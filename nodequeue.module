@@ -404,7 +404,7 @@ function nodequeue_contextual_links_view_alter(&$element, $items) {
     return;
   }
 
-  if (!config_get('nodequeue.settings', 'nodequeue_show_contextual_links')) {
+  if (!config_get('nodequeue.settings', 'show_contextual_links')) {
     return;
   }
 
