@@ -747,21 +747,21 @@ function nodequeue_admin_delete_submit($formid, &$form_state) {
  */
 function nodequeue_admin_view($queue, $subqueue = array()) {
   // If a specific subqueue is requested, display that one.
-  if ($subqueue->sqid != NULL) {
+  if (!empty($subqueue->sqid)) {
     if (!nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
       return backdrop_not_found();
     }
-  }
-
-  // If the queue has subqueues but not are requested, display a list:
-  elseif ($queue->subqueues > 1 ) {
-    return nodequeue_view_subqueues($queue);
   }
 
   // If the queue has just one subqueue, it gets special treatment.
   elseif ($queue->subqueues == 1) {
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
     $subqueue = array_shift($subqueues);
+  }
+
+  // If the queue has subqueues but not are requested, display a list:
+  else {
+    return nodequeue_view_subqueues($queue);
   }
 
   return nodequeue_arrange_subqueue($queue, $subqueue);
@@ -779,14 +779,14 @@ function nodequeue_admin_view($queue, $subqueue = array()) {
  *   Page title.
  */
 function nodequeue_admin_view_title($queue, $subqueue = array()) {
-  if ($subqueue->sqid != NULL) {
+  if (!empty($subqueue->sqid)) {
     $page_title = t("Manage subqueue '@title'", array('@title' => nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue)));
-  }
-  elseif ($queue->subqueues > 1 ) {
-    $page_title = t("Subqueues for '@title'", array('@title' => $queue->title));
   }
   elseif ($queue->subqueues == 1) {
     $page_title = t("Manage queue '@title'", array('@title' => $queue->title));
+  }
+  else {
+    $page_title = t("Subqueues for '@title'", array('@title' => $queue->title));
   }
 
   return $page_title;
