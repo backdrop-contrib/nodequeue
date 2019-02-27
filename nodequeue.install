@@ -111,19 +111,18 @@ function nodequeue_schema() {
         'type' => 'int',
         'size' => 'big',
         'unsigned' => TRUE,
-        'not null' => TRUE
+        'not null' => TRUE,
       ),
-      'rid' => array(
+      'role' => array(
         'description' => 'Primary key for roles',
-        'type' => 'int',
-        'size' => 'big',
-        'unsigned' => TRUE,
-        'not null' => TRUE
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
       ),
     ), // fields
     'indexes' => array(
       'qid' => array('qid'),
-      'rid' => array('rid'),
+      'role' => array('role'),
     ), // indexes
   ); // nodequeue_roles
 
@@ -238,7 +237,7 @@ function nodequeue_schema() {
 }
 
 /**
- * Convert variables to config.
+ * Converts variables to config.
  */
 function nodequeue_update_1000() {
   // Convert variables to config.
@@ -256,4 +255,19 @@ function nodequeue_update_1000() {
   variable_del('nodequeue_autocomplete_limit');
   variable_del('nodequeue_view_per_queue');
   variable_del('nodequeue_show_contextual_links');
+}
+
+/**
+ * Adds a column for Role Name.
+ */
+function nodequeue_update_1001() {
+  db_drop_primary_key('nodequeue_roles');
+  db_change_field('nodequeue_roles', 'rid', 'role',
+    array(
+      'description' => 'Primary key for roles',
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+    ),
+    array('primary key' => array('qid', 'role')));
 }

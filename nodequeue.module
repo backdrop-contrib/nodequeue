@@ -693,7 +693,7 @@ function nodequeue_get_qids($type, $account = NULL, $bypass_cache = FALSE) {
       $roles_join = "INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid ";
       $roles = array_keys((array) $account->roles) + array(BACKDROP_AUTHENTICATED_ROLE);
 
-      $roles_where .= "AND nr.rid IN (:roles)";
+      $roles_where .= "AND nr.role IN (:roles)";
     }
 
     $sql = 'SELECT nq.qid, nq.show_in_tab, nq.show_in_links, nq.show_in_ui, nq.i18n ' .
@@ -786,9 +786,9 @@ function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
       $loaded[$queue->qid]->count = 0;
     }
 
-    $result = db_query("SELECT qid, rid FROM {nodequeue_roles} WHERE qid IN (:to_load)", array(':to_load' => $to_load));
+    $result = db_query("SELECT qid, role FROM {nodequeue_roles} WHERE qid IN (:to_load)", array(':to_load' => $to_load));
     foreach ($result as $obj) {
-      $loaded[$obj->qid]->roles[] = $obj->rid;
+      $loaded[$obj->qid]->roles[] = $obj->role;
     }
 
     $result = db_query("SELECT qid, type FROM {nodequeue_types} WHERE qid IN (:to_load)", array(':to_load' => $to_load));
@@ -1076,11 +1076,11 @@ function nodequeue_save(&$queue) {
   }
 
   if (is_array($queue->roles)) {
-    foreach ($queue->roles as $rid) {
+    foreach ($queue->roles as $role) {
       db_insert('nodequeue_roles')
         ->fields(array(
           'qid' => $queue->qid,
-          'rid' => $rid,
+          'role' => $role,
         ))
         ->execute();
     }
