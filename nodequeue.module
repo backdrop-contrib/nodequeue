@@ -1054,7 +1054,7 @@ function nodequeue_save(&$queue) {
       if (config_get('nodequeue.settings', 'view_per_queue')) {
         // Generate the default view.
         module_load_include('inc', 'nodequeue', 'views/nodequeue.views_default');
-        nodequeue_views_default_views();
+        nodequeue_views_default_views($queue->qid);
       }
 
       views_invalidate_cache();
