@@ -1051,6 +1051,12 @@ function nodequeue_save(&$queue) {
       ->execute();
 
     if (module_exists('views')) {
+      if (config_get('nodequeue.settings', 'view_per_queue')) {
+        // Generate the default view.
+        module_load_include('inc', 'nodequeue', 'views/nodequeue.views_default');
+        nodequeue_views_default_views();
+      }
+
       views_invalidate_cache();
     }
   }
@@ -1139,6 +1145,17 @@ function nodequeue_delete($qid) {
   db_delete('nodequeue_subqueue')
     ->condition('qid', $qid)
     ->execute();
+
+  if (config_get('nodequeue.settings', 'view_per_queue') == 1) {
+    // Load the view for this queue.
+    $config = config('views.view.nodequeue_' . $qid);
+    // Check to see that the state has not been overridden.
+    if ($config->get('storage') == 2) {
+      $config->delete();
+      $set_message = TRUE;
+      views_invalidate_cache();
+    }
+  }
 
   // Invoke a hook to notify other modules that a nodequeue has been deleted.
   module_invoke_all('nodequeue_delete', $qid, $queue);
