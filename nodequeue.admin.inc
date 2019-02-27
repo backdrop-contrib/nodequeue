@@ -535,10 +535,10 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
   if (!empty($roles)) {
     $form['roles'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('Roles'),
+      '#title' => t('Roles that can add nodes to the queue'),
       '#default_value' => is_array($queue->roles) ? $queue->roles : array(),
       '#options' => $roles,
-      '#description' => t('Check each role that can add nodes to the queue. Be sure that roles you want to appear here have "manipulate queues" access in the main access control panel.'),
+      '#description' => t('Only roles that already have the "manipulate queues" permission appear here.'),
     );
 
     foreach ($roles as $rid => $role) {
