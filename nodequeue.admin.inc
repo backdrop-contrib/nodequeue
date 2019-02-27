@@ -363,7 +363,7 @@ function nodequeue_view_queues() {
 
     if (user_access('administer nodequeue')) {
       $operations['edit'] = array(
-        'title' => t('Configure'),
+        'title' => t('Edit'),
         'href' => 'admin/structure/nodequeue/' . $queue->qid . '/edit',
       );
       $operations['delete'] = array(
