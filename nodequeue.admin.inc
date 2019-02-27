@@ -353,7 +353,7 @@ function nodequeue_view_queues() {
     );
 
     // If this queue has only one subqueue.
-    if ($sub_text > 1) {
+    if ($sub_text == 1) {
       $sub_text .= ' (' . nodequeue_subqueue_size_text($queue->size, $queue->subqueue->count) . ')';
       $operations['view']['href'] .= '/view/' . $queue->subqueue->sqid;
     }
