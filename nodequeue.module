@@ -19,6 +19,9 @@ function nodequeue_config_info() {
     'label' => t('Nodequeue settings'),
     'group' => t('Configuration'),
   );
+
+  // @todo convert queue information into config.
+
   return $prefixes;
 }
 
