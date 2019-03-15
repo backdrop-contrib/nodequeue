@@ -349,7 +349,7 @@ function nodequeue_view_queues() {
 
     $operations['view'] = array(
       'title' => t('Manage Queue'),
-      'href' => 'admin/structure/nodequeue/' . $queue->qid,
+      'href' => 'admin/structure/nodequeue/' . $queue->qid . '/view',
     );
 
     // If this queue has only one subqueue.
@@ -358,7 +358,7 @@ function nodequeue_view_queues() {
       $operations['view']['href'] .= '/view/' . $queue->subqueue->sqid;
     }
     else {
-      $operations['view']['title'] = t('View SubQueues');
+      $operations['view']['title'] = t('List SubQueues');
     }
 
     if (user_access('administer nodequeue')) {
