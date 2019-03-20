@@ -391,15 +391,13 @@ function nodequeue_view_queues() {
  */
 function nodequeue_view_subqueues($queue) {
   // Fetch all of the subqueues.
-  // @todo add a limit of 100 subqueues here as soon as pager is working.
-  // @see https://github.com/backdrop-contrib/nodequeue/issues/25
-  $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+  $subqueues = nodequeue_load_subqueues_by_queue($queue->qid, 100);
 
   $header = array(t('Title'), t('In queue'), t('Operation'));
 
   $rows = array();
   foreach ($subqueues as $subqueue) {
-    if (!empty($subqueue->title)) { // @todo why are these even in here?
+    if (!empty($subqueue->title)) {
       if (nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
         $sub_text = nodequeue_subqueue_size_text($queue->size, $subqueue->count, FALSE);
         $operations = array(
@@ -417,10 +415,9 @@ function nodequeue_view_subqueues($queue) {
     }
   }
 
+
   $output = '<p>' . t('Max nodes in queue: @size', array('@size' => $queue->size ? $queue->size : t("Infinite"))) . '</p>';
   $output .= theme('table', array('header' => $header, 'rows' => $rows));
-  // @todo find out why there is no pager on this page.
-  // @see https://github.com/backdrop-contrib/nodequeue/issues/25
   $output .= theme('pager', array('tags' => NULL));
 
   return $output;
@@ -898,22 +895,20 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
 
     $form['nodes'][$key]['operations'] = array(
       '#type' => 'operations',
-      '#links' => array(),
-    );
-
-    $options = array(
-      'attributes' => array(
-        'class' => array('nodequeue-remove'),
-        'id' => 'nodequeue-remove-' . $key,
+      '#links' => array(
+        'remove' => array(
+          'title' => t('Remove'),
+          'href' => 'nodequeue/' . $queue->qid . '/remove-node/' . $subqueue->sqid . '/' . $node->nid,
+          'options' => array(
+            'attributes' => array(
+              'class' => array('nodequeue-remove'),
+              'id' => 'nodequeue-remove-' . $key,
+            ),
+            'query' => nodequeue_get_query_string($node->nid, TRUE),
+          ),
+        ),
       ),
-      'query' => nodequeue_get_query_string($node->nid, TRUE),
     );
-    $form['nodes'][$key]['operations']['#links']['remove'] = array(
-      'title' => t('Remove'),
-      'href' => 'nodequeue/' . $queue->qid . '/remove-node/' . $subqueue->sqid . '/' . $node->nid,
-      'options' => $options,
-    );
-
     if (node_access('update', $node)) {
       $form['nodes'][$key]['operations']['#links']['edit'] = array(
         'title' => t('Edit'),

@@ -719,7 +719,7 @@ function nodequeue_get_qids($type, $account = NULL, $bypass_cache = FALSE) {
  * does no permission checking, so should only be available to users who
  * have passed the 'administer queues' check.
  *
- * @param $page_size
+ * @param $num_per_page
  *   The page size to use. If this is 0 or NULL, all queues will be returned.
  *   Defaults to 0.
  * @param $pager_element
@@ -730,24 +730,24 @@ function nodequeue_get_qids($type, $account = NULL, $bypass_cache = FALSE) {
  * @return $qids
  *   An array in the format: @code { array($qid => $qid) }
  */
-function nodequeue_get_all_qids($page_size = 0, $pager_element = 0, $bypass_cache = FALSE) {
+function nodequeue_get_all_qids($num_per_page = 0, $pager_element = 0, $bypass_cache = FALSE) {
   $cache = &backdrop_static(__FUNCTION__, array());
-  if ($bypass_cache || empty($cache[$page_size])) {
+  if ($bypass_cache || empty($cache[$num_per_page])) {
     $query = db_select('nodequeue_queue', 'nq')
       ->fields('nq', array('qid'));
 
-    if (!empty($page_size)) {
+    if (!empty($num_per_page)) {
       $query->extend('PagerDefault')
         ->extend('TableSort')
-        ->limit($page_size)
+        ->limit($num_per_page)
         ->element($pager_element);
     }
 
     $qids = $query->execute()->fetchAllKeyed(0, 0);
 
-    $cache[$page_size] = $qids;
+    $cache[$num_per_page] = $qids;
   }
-  return $cache[$page_size];
+  return $cache[$num_per_page];
 }
 
 /**
@@ -917,38 +917,39 @@ function nodequeue_load_subqueue($sqid, $bypass_cache = FALSE) {
  *
  * @param $qids
  *   A $qid or array of $qids
- * @param $page_size
+ * @param $num_per_page
  *   If non-zero, use the pager_query and limit the page-size to the parameter.
  *
  * @return array
  *   If $qids is empty it will return empty array else $subqueues.
  *
  */
-function nodequeue_load_subqueues_by_queue($qids, $page_size = 0) {
-  if (is_numeric($qids)) {
-    $qids = array($qids);
-  }
-
+function nodequeue_load_subqueues_by_queue($qids, $num_per_page = 0) {
   if (empty($qids)) {
     return array();
   }
 
+  if (is_numeric($qids)) {
+    $qids = array($qids);
+  }
+
   $query = "SELECT s.*, (SELECT count(*) FROM {nodequeue_nodes} n WHERE n.sqid = s.sqid) AS count FROM {nodequeue_subqueue} s WHERE s.qid IN (:qids)";
-  if ($page_size == 0) {
+
+  if ($num_per_page == 0) {
     $result = db_query($query, array(':qids' => $qids));
   }
   else {
-    // @todo get the current page the proper way.
-    // @see https://github.com/backdrop-contrib/nodequeue/issues/25
-    $page = 0;
-    if (isset($_GET['page']) && $_GET['page']) {
-      $page = $_GET['page'];
-    }
-    $result = db_query_range($query, $page, $page_size, array(':qids' => $qids));
+    // First find the total number of items and initialize the pager.
+    $count_query = "SELECT COUNT(*) AS count FROM {nodequeue_subqueue} s WHERE s.qid IN (:qids)";
+    $total = db_query($count_query, array(':qids' => $qids))->fetchField();
+    $page = pager_default_initialize($total, $num_per_page);
+
+    // Next, retrieve and display the items for the current page.
+    $offset = $num_per_page * $page;
+    $result = db_query_range($query, $offset, $num_per_page, array(':qids' => $qids))->fetchAll();
   }
 
   $subqueues = array();
-
   foreach ($result as $subqueue) {
     $subqueues[$subqueue->sqid] = $subqueue;
   }
