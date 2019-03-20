@@ -934,7 +934,18 @@ function nodequeue_load_subqueues_by_queue($qids, $page_size = 0) {
   }
 
   $query = "SELECT s.*, (SELECT count(*) FROM {nodequeue_nodes} n WHERE n.sqid = s.sqid) AS count FROM {nodequeue_subqueue} s WHERE s.qid IN (:qids)";
-  $result = db_query($query, array(':qids' => $qids));
+  if ($page_size == 0) {
+    $result = db_query($query, array(':qids' => $qids));
+  }
+  else {
+    // @todo get the current page the proper way.
+    // @see https://github.com/backdrop-contrib/nodequeue/issues/25
+    $page = 0;
+    if (isset($_GET['page']) && $_GET['page']) {
+      $page = $_GET['page'];
+    }
+    $result = db_query_range($query, $page, $page_size, array(':qids' => $qids));
+  }
 
   $subqueues = array();
 
@@ -2406,8 +2417,8 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
       $row[] = backdrop_render($form[$key]['author']);
       $row[] = backdrop_render($form[$key]['date']);
       $row[] = backdrop_render($form[$key]['position']);
-      $row[] = (!empty($form[$key]['edit'])) ? backdrop_render($form[$key]['edit']) : '&nbsp;';
-      $row[] = backdrop_render($form[$key]['remove']);
+      $row[] = backdrop_render($form[$key]['operations']);
+
       $row[] = array(
         'data' => $counter,
         'class' => array('position')
@@ -2424,16 +2435,27 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
     $counter++;
   }
   if (empty($rows)) {
-    $rows[] = array(array('data' => t('No nodes in this queue.'), 'colspan' => 7));
+    $rows[] = array(array('data' => t('No nodes in this queue.'), 'colspan' => 6));
   }
 
   // Render the main nodequeue table.
-  $header = array(t('Title'), t('Author'), t('Post Date'), t('Position'), array('data' => t('Operations'), 'colspan' => 2), t('Position'));
+  $header = array(
+    t('Title'),
+    t('Author'),
+    t('Post Date'),
+    t('Position'),
+    t('Operations'),
+    t('Position'),
+  );
 
   // Allow other modules to alter the table setup before output.
   backdrop_alter('nodequeue_arrange_subqueue_form', $form, $header, $rows);
 
-  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => $table_classes)));
+  $output .= theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array('id' => $table_id, 'class' => $table_classes),
+  ));
 
   return $output;
 }

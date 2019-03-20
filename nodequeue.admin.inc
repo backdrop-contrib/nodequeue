@@ -391,6 +391,8 @@ function nodequeue_view_queues() {
  */
 function nodequeue_view_subqueues($queue) {
   // Fetch all of the subqueues.
+  // @todo add a limit of 100 subqueues here as soon as pager is working.
+  // @see https://github.com/backdrop-contrib/nodequeue/issues/25
   $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
 
   $header = array(t('Title'), t('In queue'), t('Operation'));
@@ -417,6 +419,8 @@ function nodequeue_view_subqueues($queue) {
 
   $output = '<p>' . t('Max nodes in queue: @size', array('@size' => $queue->size ? $queue->size : t("Infinite"))) . '</p>';
   $output .= theme('table', array('header' => $header, 'rows' => $rows));
+  // @todo find out why there is no pager on this page.
+  // @see https://github.com/backdrop-contrib/nodequeue/issues/25
   $output .= theme('pager', array('tags' => NULL));
 
   return $output;
@@ -892,9 +896,31 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
       $form['nodes'][$key]['date'] = array('#markup' => '');
     }
 
+    $form['nodes'][$key]['operations'] = array(
+      '#type' => 'operations',
+      '#links' => array(),
+    );
+
+    $options = array(
+      'attributes' => array(
+        'class' => array('nodequeue-remove'),
+        'id' => 'nodequeue-remove-' . $key,
+      ),
+      'query' => nodequeue_get_query_string($node->nid, TRUE),
+    );
+    $form['nodes'][$key]['operations']['#links']['remove'] = array(
+      'title' => t('Remove'),
+      'href' => 'nodequeue/' . $queue->qid . '/remove-node/' . $subqueue->sqid . '/' . $node->nid,
+      'options' => $options,
+    );
+
     if (node_access('update', $node)) {
-      $form['nodes'][$key]['edit'] = array('#markup' => l(t('Edit'), 'node/' . $node->nid . '/edit', array('attributes' => array('title' => t('Edit this node')))));
+      $form['nodes'][$key]['operations']['#links']['edit'] = array(
+        'title' => t('Edit'),
+        'href' => 'node/' . $node->nid . '/edit',
+      );
     }
+
     $form['nodes'][$key]['position'] = array(
       '#type' => 'position',
       '#delta' => $count,
@@ -903,17 +929,6 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
         'class' => array('node-position'),
       ),
     );
-
-    $attr = array(
-      'attributes' => array(
-        'title' => t('Remove from queue'),
-        'style' => 'display: none;',
-        'class' => array('nodequeue-remove'),
-        'id' => 'nodequeue-remove-' . $key,
-      ),
-      'query' => nodequeue_get_query_string($node->nid, TRUE),
-    );
-    $form['nodes'][$key]['remove'] = array('#markup' => l(t('Remove'), 'nodequeue/' . $queue->qid . '/remove-node/' . $subqueue->sqid . '/' . $node->nid, $attr));
 
     $key++;
   }
@@ -932,7 +947,7 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
   );
   $form['add']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Add content'),
+    '#value' => t('Add to queue'),
     '#submit' => array('nodequeue_arrange_subqueue_form_add_submit'),
   );
 
@@ -940,7 +955,7 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save'),
+    '#value' => t('Save order'),
     '#submit' => array('nodequeue_arrange_subqueue_form_submit'),
   );
   $form['actions']['reverse'] = array(
