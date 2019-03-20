@@ -2417,7 +2417,6 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
       $row[] = backdrop_render($form[$key]['title']);
       $row[] = backdrop_render($form[$key]['author']);
       $row[] = backdrop_render($form[$key]['date']);
-      $row[] = backdrop_render($form[$key]['position']);
       $row[] = backdrop_render($form[$key]['operations']);
 
       $row[] = array(
@@ -2436,7 +2435,7 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
     $counter++;
   }
   if (empty($rows)) {
-    $rows[] = array(array('data' => t('No nodes in this queue.'), 'colspan' => 6));
+    $rows[] = array(array('data' => t('There is no content in this queue.'), 'colspan' => 6));
   }
 
   // Render the main nodequeue table.
@@ -2444,7 +2443,6 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
     t('Title'),
     t('Author'),
     t('Post Date'),
-    t('Position'),
     t('Operations'),
     t('Position'),
   );
