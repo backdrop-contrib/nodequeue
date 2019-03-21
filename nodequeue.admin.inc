@@ -431,7 +431,8 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
 
   // For adding queues.
   if (is_string($queue)) {
-    // If the $queue is a string - name of a queue type, basically - then we test that it's a valid queue type.
+    // If the $queue is a string - name of a queue type, basically - then we
+    // test that it's a valid queue type.
     $queue = strtolower($queue);
     if (!isset($info[$queue])) {
       return FALSE;
@@ -950,7 +951,7 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save order'),
+    '#value' => t('Save'),
     '#submit' => array('nodequeue_arrange_subqueue_form_submit'),
   );
   $form['actions']['reverse'] = array(
@@ -967,6 +968,7 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
     '#type' => 'submit',
     '#value' => t('Clear'),
     '#submit' => array('nodequeue_arrange_subqueue_form_clear_submit'),
+    '#attributes' => array('class' => array('button-danger')),
   );
 
   // Disable all buttons if the queue is empty.
