@@ -249,10 +249,7 @@ function smartqueue_taxonomy_nodequeue_subqueue_title($queue, $reference) {
   foreach ($tids as $tid) {
     // $tid can be 0, specifically meaning this term is unset.
     if ($tid) {
-      $term = taxonomy_term_load($tid);
-      if (is_object($term)) {
-        $titles[$tid] = $term->name;
-      }
+      $titles[$tid] = taxonomy_term_load($tid)->name;
     }
   }
 
