@@ -58,6 +58,14 @@ class nodequeue_handler_relationship_nodequeue extends views_handler_relationshi
       '#options' => $options,
       '#default_value' => $this->options['names'],
       '#process' => array('form_process_checkboxes'),
+      /* @todo find out why this does not work.
+      '#states' => array(
+        'visible' => array(
+          ':input[name="options[limit]"]' => array('checked' => TRUE),
+        ),
+      ),
+      '#after_build' => array('backdrop_process_states'),
+      */
     );
   }
 
