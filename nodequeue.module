@@ -186,13 +186,23 @@ function nodequeue_menu() {
   );
 
   // Administrative items for the parent queue.
+  $items['admin/structure/nodequeue/%nodequeue/view'] = array(
+    'title callback' => 'nodequeue_admin_view_title',
+    'title arguments' => array(3),
+    'page callback' => 'nodequeue_admin_view',
+    'page arguments' => array(3),
+    'access callback' => 'nodequeue_queue_access',
+    'access arguments' => array(3),
+    'file' => 'nodequeue.admin.inc',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
   $items['admin/structure/nodequeue/%nodequeue/edit'] = array(
-    'title' => 'Configure queue',
+    'title' => 'Edit queue settings',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('nodequeue_edit_queue_form', 3),
     'access arguments' => $admin_access,
     'file' => 'nodequeue.admin.inc',
-    'type' => MENU_NORMAL_ITEM,
+    'type' => MENU_LOCAL_TASK,
   );
   $items['admin/structure/nodequeue/%nodequeue/delete'] = array(
     'title' => 'Delete',
