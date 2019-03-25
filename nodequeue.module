@@ -1617,6 +1617,8 @@ function nodequeue_set_subqueue_positions(&$subqueues, $nid) {
  *   else $subqueues.
  */
 function nodequeue_get_subqueues_by_node($queues, $node) {
+  // @todo add static cache here
+
   // Determine which subqueues are valid for each queue.
   $references = array();
   $last_nid = &backdrop_static(__FUNCTION__, 0);
