@@ -355,10 +355,15 @@ function nodequeue_view_queues() {
     // If this queue has only one subqueue.
     if ($sub_text == 1) {
       $sub_text .= ' (' . nodequeue_subqueue_size_text($queue->size, $queue->subqueue->count) . ')';
-      $operations['view']['href'] .= '/view/' . $queue->subqueue->sqid;
+      $operations['view']['href'] .= '/' . $queue->subqueue->sqid;
     }
     else {
+      $queue_id = $queue->qid;
+      if (property_exists($queue, 'subqueue') && isset($queue->subqueue->sqid)) {
+        $queue_id = $queue->subqueue->sqid;
+      }
       $operations['view']['title'] = t('List SubQueues');
+      $operations['view']['href'] .= '/' . $queue_id;
     }
 
     if (user_access('administer nodequeue')) {
@@ -798,7 +803,9 @@ function nodequeue_admin_view_title($queue, $subqueue = array()) {
     $page_title = t("Manage queue '@title'", array('@title' => $queue->title));
   }
 
-  return $page_title;
+  if (isset($page_title)) {
+    return $page_title;
+  }
 }
 
 /**
