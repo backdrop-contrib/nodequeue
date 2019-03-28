@@ -8,3 +8,5 @@ dependencies[] = services
 dependencies[] = nodequeue
 
 files[] = nodequeue_service.inc
+
+hidden = true
