@@ -529,8 +529,8 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
     '#type' => 'textfield',
     '#title' => t('Link "add to queue" text'),
     '#default_value' => $queue->link,
-    '#size' => 40,
-    '#maxlength' => 40,
+    '#size' => 64,
+    '#maxlength' => 64,
     '#description' => t('If you want a link to add a node to a queue in the "links" section (next to "add new comment"), enter the text here. If left blank no link will be given; note that enabling this feature for any queue will cause an extra query to be run every time a node is loaded. "%subqueue" will be replaced with the subqueue title, if applicable.'),
   );
 
@@ -538,8 +538,8 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
     '#type' => 'textfield',
     '#title' => t('Link "remove from queue" text'),
     '#default_value' => $queue->link_remove,
-    '#size' => 40,
-    '#maxlength' => 40,
+    '#size' => 64,
+    '#maxlength' => 64,
     '#description' => t('Enter the text for the corresponding link to remove a node from a queue. This may be blank (in which case no link will appear) but a remove link will only appear if link, above, is set.'),
   );
 
