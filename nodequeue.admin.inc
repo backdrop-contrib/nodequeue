@@ -289,6 +289,7 @@ function nodequeue_view_queues() {
   }
 
   $header = array(
+    array('data' => t('Queue ID'), 'field' => 'qid'),
     array('data' => t('Title'), 'field' => 'title', 'sort' => 'asc'),
     array('data' => t('Max nodes'), 'field' => 'size'),
     array('data' => t('Subqueues'), 'field' => 'subqueues'),
@@ -349,22 +350,26 @@ function nodequeue_view_queues() {
 
     $operations['view'] = array(
       'title' => t('Manage Queue'),
-      'href' => 'admin/structure/nodequeue/' . $queue->qid . '/view',
+      'href' => 'admin/structure/nodequeue/' . $queue->qid,
     );
 
-    // If this queue has only one subqueue.
+    // If only one subqueue link direclty to it & add subqueue item count.
     if ($sub_text == 1) {
       $sub_text .= ' (' . nodequeue_subqueue_size_text($queue->size, $queue->subqueue->count) . ')';
-      $operations['view']['href'] .= '/' . $queue->subqueue->sqid;
+      $operations['view']['href'] .= '/view/' . $queue->subqueue->sqid;
     }
     else {
+      $operations['view']['title'] = t('List SubQueues');
+      $operations['view']['href'] .= '/view';
+    }
+
+    /*
       $queue_id = $queue->qid;
       if (property_exists($queue, 'subqueue') && isset($queue->subqueue->sqid)) {
         $queue_id = $queue->subqueue->sqid;
       }
-      $operations['view']['title'] = t('List SubQueues');
       $operations['view']['href'] .= '/' . $queue_id;
-    }
+    */
 
     if (user_access('administer nodequeue')) {
       $operations['edit'] = array(
@@ -378,6 +383,7 @@ function nodequeue_view_queues() {
     }
 
     $rows[] = array(
+      array('class' => array('nodequeue-id'), 'data' => $queue->qid),
       array('class' => array('nodequeue-title'), 'data' => check_plain($queue->title)),
       array('class' => array('nodequeue-max-nodes'), 'data' => $queue->size == 0 ? t('Infinite') : $queue->size),
       array('class' => array('nodequeue-subqueues'), 'data' => $sub_text),
@@ -419,9 +425,11 @@ function nodequeue_view_subqueues($queue) {
       }
     }
   }
+  if (empty($rows)) {
+    $rows[] = array(array('data' => t('No subqueues. To create a subqueue, add an item to a queue through the links on that item.'), 'colspan' => 3));
+  }
 
-
-  $output = '<p>' . t('Max nodes in queue: @size', array('@size' => $queue->size ? $queue->size : t("Infinite"))) . '</p>';
+  $output = '<p>' . t('Max items in subqueues: @size', array('@size' => $queue->size ? $queue->size : t("Infinite"))) . '</p>';
   $output .= theme('table', array('header' => $header, 'rows' => $rows));
   $output .= theme('pager', array('tags' => NULL));
 
@@ -802,26 +810,28 @@ function nodequeue_admin_view_title($queue, $subqueue = array()) {
   elseif (is_object($queue) && $queue->subqueues == 1) {
     $page_title = t("Manage queue '@title'", array('@title' => $queue->title));
   }
-
-  if (isset($page_title)) {
-    return $page_title;
+  else {
+    $page_title = 'Subqueues';
   }
+
+  return $page_title;
 }
 
 /**
  * View the contents of a subqueue, with links to re-order the queue.
  */
-function nodequeue_arrange_subqueue($queue, $subqueue = NULL) {
-  if (!$subqueue->sqid) {
+function nodequeue_arrange_subqueue($queue, $subqueue = array()) {
+  if (empty($subqueue->sqid)) {
     if ($queue->subqueues == 1) {
       $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
       $subqueue = array_shift($subqueues);
     }
     else {
-      return backdrop_not_found();
+      // display subqueue list page.
+      return nodequeue_view_subqueues($queue);
     }
   }
-  elseif ($subqueue->sqid) {
+  elseif (is_object($subqueue) && $subqueue->sqid) {
     if (!nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
       return backdrop_not_found();
     }
@@ -838,37 +848,39 @@ function nodequeue_arrange_subqueue($queue, $subqueue = NULL) {
  * Return a list of nodes in a specific subqueue.
  */
 function _nodequeue_dragdrop_get_nodes($queue, $subqueue) {
-  $order = $queue->reverse ? 'DESC' : 'ASC';
+  if (is_object($subqueue) && $subqueue->sqid) {
+    $order = $queue->reverse ? 'DESC' : 'ASC';
 
-  // Get a list of all nodes in the subqueue, regardless of access restrictions.
-  $query = db_select('nodequeue_nodes', 'nq');
+    // Get a list of all nodes in the subqueue, regardless of access restrictions.
+    $query = db_select('nodequeue_nodes', 'nq');
 
-  $query->innerJoin('node', 'n', 'nq.nid = n.nid');
-  $query->fields('n', array('nid'))
-    ->fields('nq', array('position'))
-    ->condition('nq.sqid', $subqueue->sqid)
-    ->orderBy('nq.position', $order);
-  $result = $query->execute();
+    $query->innerJoin('node', 'n', 'nq.nid = n.nid');
+    $query->fields('n', array('nid'))
+      ->fields('nq', array('position'))
+      ->condition('nq.sqid', $subqueue->sqid)
+      ->orderBy('nq.position', $order);
+    $result = $query->execute();
 
-  $nids = array();
-  $sq_nodes = array();
-  $key = 0;
-  foreach ($result as $sq_node) {
-    $nids[] = $sq_node->nid;
-    // Save node position in a separate array so we can reference it later.
-    $sq_nodes[$key] = (array) $sq_node;
-    $key++;
+    $nids = array();
+    $sq_nodes = array();
+    $key = 0;
+    foreach ($result as $sq_node) {
+      $nids[] = $sq_node->nid;
+      // Save node position in a separate array so we can reference it later.
+      $sq_nodes[$key] = (array) $sq_node;
+      $key++;
+    }
+    $nodes = node_load_multiple($nids);
+
+    foreach ($sq_nodes as $key => $sq_node) {
+      $nid = $sq_node['nid'];
+      $sq_node += (array) $nodes[$nid];
+      $sq_node['visible'] = node_access('view', $nodes[$nid]) ? TRUE : FALSE;
+      $sq_nodes[$key] = (object) $sq_node;
+    }
+
+    return $sq_nodes;
   }
-  $nodes = node_load_multiple($nids);
-
-  foreach ($sq_nodes as $key => $sq_node) {
-    $nid = $sq_node['nid'];
-    $sq_node += (array) $nodes[$nid];
-    $sq_node['visible'] = node_access('view', $nodes[$nid]) ? TRUE : FALSE;
-    $sq_nodes[$key] = (object) $sq_node;
-  }
-
-  return $sq_nodes;
 }
 
 /**
