@@ -404,7 +404,7 @@ function nodequeue_view_subqueues($queue) {
   // Fetch all of the subqueues.
   $subqueues = nodequeue_load_subqueues_by_queue($queue->qid, 100);
 
-  $header = array(t('Title'), t('In queue'), t('Operation'));
+  $header = array(t('SubQueue title'), t('In queue'), t('Operation'));
 
   $rows = array();
   foreach ($subqueues as $subqueue) {
@@ -470,7 +470,6 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
     '#size' => 50,
     '#required' => TRUE,
     '#maxlength' => 64,
-    '#description' => t('Enter the name of the queue'),
   );
 
   $form['name'] = array(
@@ -550,7 +549,7 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
   if (!empty($roles)) {
     $form['roles'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('Roles that can add nodes to the queue'),
+      '#title' => t('Roles that can add nodes to this queue'),
       '#default_value' => is_array($queue->roles) ? $queue->roles : array(),
       '#options' => $roles,
       '#description' => t('Only roles that already have the "manipulate queues" permission appear here.'),
@@ -582,10 +581,9 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
 
   $form['types'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Types'),
+    '#title' => t('Content types that can be added to this queue'),
     '#default_value' => $queue->types,
     '#options' => $nodes,
-    '#description' => t('Check each node type that can be added to this queue.'),
   );
 
   $form['i18n'] = array(
@@ -606,7 +604,10 @@ function nodequeue_edit_queue_form($form, &$form_state, $queue) {
 
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Submit'),
+    '#value' => t('Save'),
+    '#attributes' => array(
+      'class' => array('button-primary'),
+    ),
   );
 
   $form['owner'] = array(
