@@ -404,12 +404,13 @@ function nodequeue_view_subqueues($queue) {
   // Fetch all of the subqueues.
   $subqueues = nodequeue_load_subqueues_by_queue($queue->qid, 100);
 
-  $header = array(t('SubQueue title'), t('In queue'), t('Operation'));
+  $header = array(t('Subqueue title'), t('References'), t('In queue'), t('Operation'));
 
   $rows = array();
   foreach ($subqueues as $subqueue) {
     if (!empty($subqueue->title)) {
       if (nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
+        $title = nodequeue_title_substitute($queue->subqueue_title, $queue, $subqueue);
         $sub_text = nodequeue_subqueue_size_text($queue->size, $subqueue->count, FALSE);
         $operations = array(
           'view' => array(
@@ -417,9 +418,18 @@ function nodequeue_view_subqueues($queue) {
             'href' => 'admin/structure/nodequeue/' . $queue->qid . '/view/' . $subqueue->sqid,
           ),
         );
+        if (is_string($subqueue->reference)) {
+          $subqueue->reference = array($subqueue->reference);
+        }
+        $references = array();
+        foreach ($subqueue->reference as $tid) {
+          $term = taxonomy_term_load($tid);
+          $references[] = l($term->name, 'taxonomy/term/' . $term->tid);
+        }
         $rows[] = array(
-          array('class' => array('nodequeue-title'), 'data' => check_plain($subqueue->title)),
-          array('class' => array('nodequeue-subqueues'), 'data' => $sub_text),
+          array('class' => array('nodequeue-title'), 'data' => $title),
+          array('class' => array('nodequeue-subqueues'), 'data' => implode(',', $references)),
+          array('class' => array('nodequeue-refs'), 'data' => $sub_text),
           array('class' => array('nodequeue-operation'), 'data' => array('#type' => 'operations', '#links' => $operations)),
         );
       }
