@@ -285,12 +285,12 @@ function nodequeue_view_queues() {
   }
 
   if (empty($queues)) {
-    return $output . t('No nodequeues exist.');
+    return $output . t('No queues exist.');
   }
 
   $header = array(
-    array('data' => t('Queue ID'), 'field' => 'qid'),
     array('data' => t('Title'), 'field' => 'title', 'sort' => 'asc'),
+    array('data' => t('ID'), 'field' => 'qid'),
     array('data' => t('Max nodes'), 'field' => 'size'),
     array('data' => t('Subqueues'), 'field' => 'subqueues'),
     array('data' => t('Operation')),
@@ -383,8 +383,8 @@ function nodequeue_view_queues() {
     }
 
     $rows[] = array(
-      array('class' => array('nodequeue-id'), 'data' => $queue->qid),
       array('class' => array('nodequeue-title'), 'data' => check_plain($queue->title)),
+      array('class' => array('nodequeue-id'), 'data' => $queue->qid),
       array('class' => array('nodequeue-max-nodes'), 'data' => $queue->size == 0 ? t('Infinite') : $queue->size),
       array('class' => array('nodequeue-subqueues'), 'data' => $sub_text),
       array('class' => array('nodequeue-operation'), 'data' => array('#type' => 'operations', '#links' => $operations)),
