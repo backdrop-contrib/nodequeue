@@ -15,6 +15,112 @@ function smartqueue_nodequeue_info() {
 }
 
 /**
+ * Implements hook_menu().
+ */
+function smartqueue_menu() {
+
+  // Term paths.
+  $items['taxonomy/term/%taxonomy_term/queue'] = array(
+    'title' => 'Queues',
+    'page callback' => 'smartqueue_term_tab',
+    'page arguments' => array(2),
+    'access callback' => 'smartqueue_term_tab_access',
+    'access arguments' => array(2),
+    'file' => 'smartqueue.admin.inc',
+    'weight' => 15,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function smartqueue_admin_paths() {
+  $paths = array(
+    'taxonomy/term/*/queue' => TRUE,
+  );
+  return $paths;
+}
+
+/**
+ * Access callback for smartqueue_term_tab().
+ *
+ * @param $term
+ *   The fully loaded taxonomy term that will be loaded by the hook_menu.
+ *
+ * @return boolean
+ */
+function smartqueue_term_tab_access($term) {
+  if (!config_get('nodequeue.settings', 'use_tab') || !user_access('manipulate queues')) {
+    // For performance reasons: If the menu tab is disabled or the user can't
+    // manipulate queues, there is no reason to run the rest of these queries.
+    return FALSE;
+  }
+
+  // Check that user has access.
+  if (_nodequeue_access_admin_or_manipulate()) {
+
+    // Check that there are queues.
+    $subqueues = smartqueue_get_subqueues_by_term($term);
+    if (empty($subqueues)) {
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Fetches info about all subqueues for a term.
+ *
+ * @param $term
+ *   The fully loaded taxonomy term that will be loaded by the hook_menu.
+ *
+ * @return array
+ *   Array of all subqueues for this term keyed by Queue ID.
+ */
+function smartqueue_get_subqueues_by_term($term) {
+  // SELECT nq.reference AS reference, sq.reference AS sqref, sq.sqid as id FROM nodequeue_queue nq INNER JOIN nodequeue_subqueue sq ON nq.qid = sq.qid WHERE nq.owner = 'smartqueue_taxonomy' AND sq.reference = 717;
+  $result = db_query(
+    "SELECT
+      nq.title as title,
+      nq.qid as queue_id,
+      nq.reference AS field_name,
+      sq.reference AS subqueue_ref,
+      sq.sqid as subqueue_id
+    FROM {nodequeue_queue} nq
+    INNER JOIN {nodequeue_subqueue} sq ON nq.qid = sq.qid
+    WHERE nq.owner = 'smartqueue_taxonomy'
+    AND (sq.reference = :tid
+      OR sq.reference LIKE :like2
+      OR sq.reference LIKE :like3
+      OR sq.reference LIKE :like4)",
+    array(
+      ':tid' => $term->tid,
+      ':like2' => '%-' . $term->tid,
+      ':like3' => $term->tid . '-%',
+      ':like4' => '%-' . $term->tid . '-%',
+    )
+  )->fetchAll();
+
+  $subqueues = array();
+  foreach ($result as $row) {
+    $subqueues[$row->queue_id] = array(
+      'title' => $row->title,
+      'qid' => $row->queue_id,
+      'subqueue_id' => $row->subqueue_id,
+      'path' => 'admin/structure/nodequeue/' . $row->queue_id . '/view/' . $row->subqueue_id,
+    );
+  }
+
+  return $subqueues;
+}
+
+/**
  * Implements hook_nodequeue_form().
  */
 function smartqueue_taxonomy_nodequeue_form($queue, &$form) {
