@@ -9,7 +9,7 @@
  * up
  * down
  * top
- * bottom: 
+ * bottom:
  * delete: input image
  * order: input hidden
  * add: input to add items
@@ -70,7 +70,7 @@ Backdrop.nodequeue = function(base, settings) {
       var tr = $(item).parents('tr').get(0);
       var id = $(tr).attr('id').replace(settings.tr, '');
       var index = -1;
-    
+
       for (var i in order) {
         if (order[i] == id) {
           index = parseInt(i);
@@ -106,7 +106,7 @@ Backdrop.nodequeue = function(base, settings) {
         order.push(temp);
         break;
     }
-    
+
     saveOrder(order);
   }
 
@@ -266,7 +266,7 @@ Backdrop.nodequeue = function(base, settings) {
         .click(function(e) {
           var item = $(this).parents(settings.container);
           var last = $(item).siblings(':last');
-          
+
           // move item
           last.after(item);
           restripeTable('#' + base);
