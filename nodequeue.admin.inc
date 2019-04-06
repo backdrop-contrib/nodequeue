@@ -1000,6 +1000,12 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
     '#attributes' => array('class' => array('button-danger')),
   );
 
+  $form['actions']['cancel'] = array(
+    '#type' => 'link',
+    '#title' => t('Cancel'),
+    '#href' => current_path(),
+  );
+
   // Disable all buttons if the queue is empty.
   if ($count == 0) {
     $form['actions']['submit']['#disabled']  = TRUE;
