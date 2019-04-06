@@ -930,16 +930,15 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
         'remove' => array(
           'title' => t('Remove'),
           'href' => 'nodequeue/' . $queue->qid . '/remove-node/' . $subqueue->sqid . '/' . $node->nid,
-          'options' => array(
-            'attributes' => array(
-              'class' => array('nodequeue-remove'),
-              'id' => 'nodequeue-remove-' . $key,
-            ),
-            'query' => nodequeue_get_query_string($node->nid, TRUE),
+          'attributes' => array(
+            'class' => array('nodequeue-remove'),
+            'id' => 'nodequeue-remove-' . $key,
           ),
+          'query' => nodequeue_get_query_string($node->nid, TRUE),
         ),
       ),
     );
+
     if (node_access('update', $node)) {
       $form['nodes'][$key]['operations']['#links']['edit'] = array(
         'title' => t('Edit'),
