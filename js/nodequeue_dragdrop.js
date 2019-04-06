@@ -118,7 +118,7 @@ Backdrop.behaviors.nodequeueRemoveNode = {
       $(node_edit).removeClass('node-position');
 
       // Hide the current row.
-      $(this).parent().parent().fadeOut('fast', function() {
+      $(this).closest(tr).fadeOut('fast', function() {
         var $table = $(this).parent().parent();
         var table_id = $table.attr('id');
 
