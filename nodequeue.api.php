@@ -278,9 +278,9 @@ function hook_nodequeue_alter($loaded, $context) {
  * @param array $form
  *   The form to access submitted values.
  * @param array $header
- *   The table headers before sending it to theming layer.
+ *   The table headers before sending it to theme layer.
  * @param array $rows
- *   The table rows before sending it to theming layer.
+ *   The table rows before sending it to theme layer.
  *
  * @see theme_nodequeue_arrange_subqueue_form_table().
  */
