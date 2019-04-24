@@ -131,8 +131,6 @@ Backdrop.behaviors.nodequeueRemoveNode = {
           nodequeueInsertChangedWarning(table_id);
         }
       });
-
-      return false;
     });
   }
 }
