@@ -90,7 +90,7 @@ function nodequeue_permission() {
       'title' => t('Administer nodequeue'),
       'description' => t('Administer the nodequeue module.'),
     ),
-   'manipulate queues' => array(
+    'manipulate queues' => array(
       'title' => t('Manipulate queues'),
       'description' => t('Manipulate queues.'),
     ),
@@ -99,6 +99,57 @@ function nodequeue_permission() {
       'description' => t('Manipulate all queues.'),
     ),
   );
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ * - Adds a vertical tab for nodequeue settings.
+ */
+function nodequeue_form_node_type_form_alter(&$form, &$form_state) {
+  $form['nodequeue'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Queues'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'additional_settings',
+    '#access' => 'administer nodequeue',
+  );
+
+
+  $options = array();
+  $defaults = array();
+  $queues = nodequeue_load_queues(array_keys(nodequeue_get_all_qids()));
+  foreach ($queues as $qid => $queue) {
+    $options[$qid] = t($queue->title);
+    if (in_array($form['#node_type']->type, $queue->types)) {
+      $defaults[] = $qid;
+    }
+  }
+  $form['nodequeue']['nodequeue_queues'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Queues where this content type can be added'),
+    '#options' => $options,
+    '#default_value' => $defaults,
+  );
+
+  // Add a submit handler.
+  $form['#submit'][] = 'nodequeue_form_node_type_form_submit';
+}
+
+/**
+ * Submit handler for the node type form.
+ */
+function nodequeue_form_node_type_form_submit(&$form, &$form_state) {
+  $enabled_queues = $form_state['values']['nodequeue_queues'];
+  foreach ($enabled_queues as $qid => $enabled) {
+    if ($enabled !== 0) {
+      $queue = nodequeue_load($qid);
+      $types = $queue->types;
+      $types[] = $form_state['values']['type'];
+      $queue->types = array_filter($types);
+      $qid = nodequeue_save($queue); // sets $queue->qid if needed.
+    }
+  }
 }
 
 /**
@@ -499,7 +550,7 @@ function nodequeue_contextual_links_view_alter(&$element, $items) {
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function nodequeue_form_apachesolr_search_bias_form_alter(&$form, &$form_state, $form_id) {
+function nodequeue_form_apachesolr_search_bias_form_alter(&$form, &$form_state) {
   // Setup for the form building.
   $weights = backdrop_map_assoc(array('21.0', '13.0', '8.0', '5.0', '3.0', '2.0', '1.0', '0.8', '0.5', '0.3', '0.2', '0.1'));
   $weights['0'] = t('Normal');
