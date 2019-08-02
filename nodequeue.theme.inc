@@ -24,7 +24,7 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
     'nodequeue-dragdrop-sqid-' . $form['#subqueue']['sqid'],
     'nodequeue-dragdrop-reference-' . $form['#subqueue']['reference'],
   );
-  backdrop_add_tabledrag($table_id, 'order', 'sibling', 'position');
+  backdrop_add_tabledrag($table_id, 'order', 'sibling', 'node-position');
   backdrop_add_js(backdrop_get_path('module', 'nodequeue') . '/js/nodequeue_dragdrop.js');
 
   $reverse[str_replace('-', '_', $table_id)] = (bool) $form['#queue']['reverse'];
@@ -50,6 +50,7 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
       $row[] = backdrop_render($form[$key]['title']);
       $row[] = backdrop_render($form[$key]['author']);
       $row[] = backdrop_render($form[$key]['date']);
+      $row[] = backdrop_render($form[$key]['position']);
       $row[] = backdrop_render($form[$key]['operations']);
 
       $row[] = array(
@@ -76,6 +77,7 @@ function theme_nodequeue_arrange_subqueue_form_table($variables) {
     t('Title'),
     t('Author'),
     t('Post Date'),
+    t('Position Field'),
     t('Operations'),
     t('Position'),
   );
