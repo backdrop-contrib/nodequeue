@@ -1054,7 +1054,9 @@ function nodequeue_load_subqueues_by_reference($references, $bypass_cache = FALS
   if (!empty($references)) {
     $query = db_select('nodequeue_subqueue', 's')
       ->groupBy('s.sqid')
-      ->fields('s');
+      ->groupBy('s.qid')
+      ->groupBy('s.reference')
+      ->fields('s', array('title', 'sqid', 'qid', 'reference'));
     $query->leftJoin('nodequeue_nodes', 'n', 'n.sqid = s.sqid');
     $query->addExpression('COUNT(n.position)', 'count');
 
