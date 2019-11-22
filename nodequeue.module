@@ -219,7 +219,7 @@ function nodequeue_menu() {
     'type' => MENU_LOCAL_TASK
   );
 
-  // Administrative items for an parent queue.
+  // Administrative items for an individual queue.
   $items['admin/structure/nodequeue/%nodequeue'] = array(
     'title callback' => 'nodequeue_admin_view_title',
     'title arguments' => array(3),
@@ -230,6 +230,17 @@ function nodequeue_menu() {
     'file' => 'nodequeue.admin.inc',
     'type' => MENU_NORMAL_ITEM,
   );
+  $items['admin/structure/nodequeue/%nodequeue/view'] = array(
+    'title callback' => 'nodequeue_admin_view_title',
+    'title arguments' => array(3),
+    'page callback' => 'nodequeue_admin_view',
+    'page arguments' => array(3),
+    'access callback' => 'nodequeue_queue_access',
+    'access arguments' => array(3),
+    'file' => 'nodequeue.admin.inc',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
   // Administrative items for a subqueue.
   $items['admin/structure/nodequeue/%nodequeue/view/%subqueue'] = array(
     'title callback' => 'nodequeue_admin_view_title',
@@ -244,17 +255,6 @@ function nodequeue_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-  // Administrative items for the parent queue.
-  $items['admin/structure/nodequeue/%nodequeue/view'] = array(
-    'title callback' => 'nodequeue_admin_view_title',
-    'title arguments' => array(3),
-    'page callback' => 'nodequeue_admin_view',
-    'page arguments' => array(3),
-    'access callback' => 'nodequeue_queue_access',
-    'access arguments' => array(3),
-    'file' => 'nodequeue.admin.inc',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
   $items['admin/structure/nodequeue/%nodequeue/edit'] = array(
     'title' => 'Edit queue settings',
     'page callback' => 'backdrop_get_form',
