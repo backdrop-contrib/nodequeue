@@ -420,7 +420,9 @@ function nodequeue_view_subqueues($queue) {
         $references = array();
         foreach ($subqueue->reference as $tid) {
           $term = taxonomy_term_load($tid);
-          $references[] = l($term->name, 'taxonomy/term/' . $term->tid);
+          if ($term) {
+            $references[] = l($term->name, 'taxonomy/term/' . $term->tid);
+          }
         }
         $rows[] = array(
           array('class' => array('nodequeue-title'), 'data' => $title),
