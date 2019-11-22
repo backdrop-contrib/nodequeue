@@ -353,23 +353,19 @@ function nodequeue_view_queues() {
       'href' => 'admin/structure/nodequeue/' . $queue->qid,
     );
 
-    // If only one subqueue link direclty to it & add subqueue item count.
+    // If only one subqueue link direclty to it.
     if ($sub_text == 1) {
       $sub_text .= ' (' . nodequeue_subqueue_size_text($queue->size, $queue->subqueue->count) . ')';
       $operations['view']['href'] .= '/view/' . $queue->subqueue->sqid;
     }
     else {
-      $operations['view']['title'] = t('List SubQueues');
-      $operations['view']['href'] .= '/view';
-    }
-
-    /*
       $queue_id = $queue->qid;
       if (property_exists($queue, 'subqueue') && isset($queue->subqueue->sqid)) {
         $queue_id = $queue->subqueue->sqid;
+        $operations['view']['href'] .= '/view/' . $queue_id;
       }
-      $operations['view']['href'] .= '/' . $queue_id;
-    */
+      $operations['view']['title'] = t('List SubQueues');
+    }
 
     if (user_access('administer nodequeue')) {
       $operations['edit'] = array(
@@ -875,19 +871,20 @@ function _nodequeue_dragdrop_get_nodes($queue, $subqueue) {
     $nids = array();
     $sq_nodes = array();
     $key = 0;
-    foreach ($result as $sq_node) {
-      $nids[] = $sq_node->nid;
+    foreach ($result as $record) {
+      $nids[] = $record->nid;
       // Save node position in a separate array so we can reference it later.
-      $sq_nodes[$key] = (array) $sq_node;
+      $sq_nodes[$key] = (array) $record;
       $key++;
     }
     $nodes = node_load_multiple($nids);
 
     foreach ($sq_nodes as $key => $sq_node) {
       $nid = $sq_node['nid'];
-      $sq_node += (array) $nodes[$nid];
-      $sq_node['visible'] = node_access('view', $nodes[$nid]) ? TRUE : FALSE;
-      $sq_nodes[$key] = (object) $sq_node;
+      // Add the fully loaded Node object.
+      $sq_node = $nodes[$nid];
+      $sq_node->visible = node_access('view', $sq_node) ? TRUE : FALSE;
+      $sq_nodes[$key] = $sq_node;
     }
 
     return $sq_nodes;
@@ -941,7 +938,7 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
 
     if (node_access('update', $node)) {
       $form['nodes'][$key]['operations']['#links']['edit'] = array(
-        'title' => t('Edit'),
+        'title' => t('Edit content'),
         'href' => 'node/' . $node->nid . '/edit',
       );
     }
