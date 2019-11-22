@@ -940,6 +940,7 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
       $form['nodes'][$key]['operations']['#links']['edit'] = array(
         'title' => t('Edit content'),
         'href' => 'node/' . $node->nid . '/edit',
+        'query' => array('destination' => current_path()),
       );
     }
 
