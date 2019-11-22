@@ -142,13 +142,21 @@ function nodequeue_form_node_type_form_alter(&$form, &$form_state) {
 function nodequeue_form_node_type_form_submit(&$form, &$form_state) {
   $enabled_queues = $form_state['values']['nodequeue_queues'];
   foreach ($enabled_queues as $qid => $enabled) {
-    if ($enabled !== 0) {
-      $queue = nodequeue_load($qid);
-      $types = $queue->types;
-      $types[] = $form_state['values']['type'];
-      $queue->types = array_filter($types);
-      $qid = nodequeue_save($queue); // sets $queue->qid if needed.
+    $type = $form_state['values']['type'];
+    $queue = nodequeue_load($qid);
+    $types = $queue->types;
+    if ($enabled) {
+      if (!in_array($type, $types)) {
+        $types[] = $type;
+      }
     }
+    else {
+      $key = array_search($type, $types);
+      unset($types[$key]);
+    }
+
+    $queue->types = array_filter($types);
+    $qid = nodequeue_save($queue); // sets $queue->qid if needed.
   }
 }
 
