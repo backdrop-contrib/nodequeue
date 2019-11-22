@@ -852,7 +852,7 @@ function nodequeue_arrange_subqueue($queue, $subqueue = array()) {
 }
 
 /**
- * Return a list of nodes in a specific subqueue.
+ * Return a list of Node objects in a specific subqueue.
  */
 function _nodequeue_dragdrop_get_nodes($queue, $subqueue) {
   if (is_object($subqueue) && $subqueue->sqid) {
@@ -881,13 +881,13 @@ function _nodequeue_dragdrop_get_nodes($queue, $subqueue) {
 
     foreach ($sq_nodes as $key => $sq_node) {
       $nid = $sq_node['nid'];
-      // Add the fully loaded Node object.
-      $sq_node = $nodes[$nid];
-      $sq_node->visible = node_access('view', $sq_node) ? TRUE : FALSE;
-      $sq_nodes[$key] = $sq_node;
+      // Add posiiton into node object.
+      $nodes[$nid]->position = $key;
+      // Add visibility property too, for convenience.
+      $nodes[$nid]->visible = node_access('view', $nodes[$nid]) ? TRUE : FALSE;
     }
 
-    return $sq_nodes;
+    return $nodes;
   }
 }
 
