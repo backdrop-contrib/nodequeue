@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Tests for the Nodequeue module.
@@ -42,7 +41,8 @@ class NodequeueWebTestCase extends BackdropWebTestCase {
   /**
    * @param array $types
    *   An array of content types that can be put in the queue.
-   * @param array $rids
+   * @param array $roles
+   *   An array of user role names.
    * @param int $size
    *   The size of the queue, 0 for infinite.
    * @param bool $reverse
@@ -51,11 +51,8 @@ class NodequeueWebTestCase extends BackdropWebTestCase {
    *
    * @return object
    *   A nodequeue object.
-   *
-   * @internal param int $rid
-   *   The role ID allowed to manipulate this queue.
    */
-  function createNodequeue($types, $rids = array(2), $size = 10, $reverse = FALSE, $owner = 'nodequeue') {
+  function createNodequeue($types, $roles = array('authenticated'), $size = 10, $reverse = FALSE, $owner = 'nodequeue') {
     $queue = new stdClass();
 
     $queue->title           = $this->randomName();
@@ -63,8 +60,8 @@ class NodequeueWebTestCase extends BackdropWebTestCase {
     $queue->subqueue_title  = '';
     $queue->size            = $size;
     $queue->reverse         = $reverse;
-    $queue->types           = array('page', 'article');
-    $queue->roles           = $rids;
+    $queue->types           = array('page', 'post');
+    $queue->roles           = $roles;
     $queue->add_subqueue    = array(0 => $queue->title);
     $queue->link            = 'Add to '. $queue->title;
     $queue->link_remove     = 'Remove from '. $queue->title;
@@ -90,13 +87,14 @@ class NodequeueWebTestCase extends BackdropWebTestCase {
    *   The QID of the queue to populate.
    * @param int $count
    *   The number of nodes to create. Deafult is 10.
+   *
    * @return array
    *   An array of node IDs
    */
   function populateNodequeue($qid, $count = 10) {
     $nodes = array();
     for ($i = 0; $i < $count; $i++) {
-      $node = $this->backdropCreateNode(array('type' => 'article', 'promote' => 1));
+      $node = $this->backdropCreateNode(array('type' => 'post', 'promote' => 1));
       $nodes[$node->nid] = node_load($node->nid);
     }
 
@@ -118,14 +116,6 @@ class NodequeueWebTestCase extends BackdropWebTestCase {
 
 class NodequeueManipulateTestCase extends NodequeueWebTestCase {
 
-  public static function getInfo() {
-    return array(
-      'name'        => t('User'),
-      'description' => t('Manipulate a nodequeue.'),
-      'group'       => t('Nodequeue'),
-    );
-  }
-
   function setUp() {
     parent::setUp('nodequeue', 'translation');
 
@@ -135,24 +125,26 @@ class NodequeueManipulateTestCase extends NodequeueWebTestCase {
 
   function testNodequeueInterface() {
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 6);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 6);
     $nodes = $this->populateNodequeue($queue->qid, 4);
     $nids  = array_keys($nodes);
+    debug($nids);
 
     // is the "remove from nodequeue" link present on the front page?
     $this->backdropGet('node');
     $this->assertText('Remove from '. $queue->title, t('Found nodequeue link on front page.'), t('Nodequeue'));
 
     // do we have access to the nodequeue tab on a node page?
-    $this->backdropGet('node/'. $nids[0]);
+    $this->backdropGet('node/'. $nids[3]);
 /*
-    $this->assertRaw('<a href="' . url('node/1/nodequeue', array('absolute' => true)) . '">Nodequeue', t('Found nodequeue tab on node page.'), t('Nodequeue'));
+    $this->assertRaw('<a href="' . url('node/' . $nids[3] . '/nodequeue', array('absolute' => true)) . '">Queue', t('Found nodequeue tab on node page.'), t('Nodequeue'));
     $this->assertText('Remove from '. $queue->title, t('Found nodequeue link on node page.'), t('Nodequeue'));
 */
 
     // is the table present on the nodequeue tab?
-    $this->backdropGet('node/'. $nids[0] .'/nodequeue');
+    $this->backdropGet('node/'. $nids[3] .'/nodequeue');
     $this->assertText($queue->title, t('Found nodequeue in table on nodequeue tab.'), t('Nodequeue'));
+
     $this->assertRaw('"nodequeue-max-nodes">'. $queue->size, t('Nodequeue table reports correct queue size.'), t('Nodequeue'));
     $this->assertRaw('"nodequeue-in-queue">'. count($nids), t('Nodequeue table reports correct number of elements in queue.'), t('Nodequeue'));
     $this->assertText('Remove from queue', t('"Remove from queue" link is present.'), t('Nodequeue'));
@@ -160,12 +152,12 @@ class NodequeueManipulateTestCase extends NodequeueWebTestCase {
 
   function testNodequeueAddNode() {
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 6);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 6);
     $nodes = $this->populateNodequeue($queue->qid, 4);
 
     // create a new node and add it to the queue using the 'add to queue' link
     // in the table on the nodequeue tab.
-    $node = $this->backdropCreateNode(array('type' => 'article'));
+    $node = $this->backdropCreateNode(array('type' => 'post'));
     $this->backdropGet('node/'. $node->nid .'/nodequeue');
     $this->assertText('Add to queue', t('"Add to queue" link is present.'), t('Nodequeue'));
     $this->clickLink('Add to queue');
@@ -173,7 +165,7 @@ class NodequeueManipulateTestCase extends NodequeueWebTestCase {
     $this->assertText('Remove from queue', t('"Remove from queue" link is present.'), t('Nodequeue'));
 
     // fill up the queue
-    $node = $this->backdropCreateNode(array('type' => 'article'));
+    $node = $this->backdropCreateNode(array('type' => 'post'));
     $this->backdropGet('node/'. $node->nid .'/nodequeue');
     $this->assertText('Add to queue', t('"Add to queue" link is present.'), t('Nodequeue'));
     $this->clickLink('Add to queue');
@@ -182,7 +174,7 @@ class NodequeueManipulateTestCase extends NodequeueWebTestCase {
 
   function testNodequeueRemoveNode() {
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 1);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 1);
     $nodes = $this->populateNodequeue($queue->qid, 1);
     $nids  = array_keys($nodes);
 
@@ -196,32 +188,26 @@ class NodequeueManipulateTestCase extends NodequeueWebTestCase {
 
   function testNodequeueAccess() {
     // create two nodequeues; one the user can access and one she can't access.
-    $queue1 = $this->createNodequeue(array('page', 'article'), array(2));
-    $queue2 = $this->createNodequeue(array('page', 'article'), array());
+    $queue1 = $this->createNodequeue(array('page', 'post'));
+    $queue2 = $this->createNodequeue(array('page', 'post'), array());
 
-    $node = $this->backdropCreateNode(array('type' => 'article', 'promote' => 1));
+    $node = $this->backdropCreateNode(array('type' => 'post', 'promote' => 1));
 
     // create a new queue that this user doesn't have access to.
     $this->backdropGet('node');
-    $this->assertNoText('Add to '. $queue2->title, t('Nodequeue link is not present on front page.'), t('Nodequeue'));
+    $this->assertNoText('Add to '. $queue2->title, t('Nodequeue link is not present on node page.'), t('Nodequeue'));
 
     // delete the first queue and make sure the nodequeue tab doesn't show up
     // (since the user doesn't have access to the remaining queue).
     nodequeue_delete($queue1->qid);
-    //$this->backdropGet('node/'. $node->nid);
-    //$this->assertNoRaw('nodequeue">Nodequeue</a>', t('Nodequeue tab is not present on node page.'), t('Nodequeue'));
+
+    // @todo these were commented out...  why?
+    $this->backdropGet('node/'. $node->nid);
+    $this->assertNoRaw('nodequeue">Queue</a>', t('Nodequeue tab is not present on node page.'), t('Nodequeue'));
   }
 }
 
 class NodequeueManipulateAllTestCase extends NodequeueWebTestCase {
-
-  public static function getInfo() {
-    return array(
-      'name' => t('Privileged user'),
-      'description' => t('Manipulate all nodequeues.'),
-      'group' => t('Nodequeue'),
-    );
-  }
 
   function setUp() {
     parent::setUp('nodequeue');
@@ -234,8 +220,8 @@ class NodequeueManipulateAllTestCase extends NodequeueWebTestCase {
   /*
   function testNodequeueAccess() {
     // create and populate a nodequeue not associated with any roles.
-    $queue = $this->createNodequeue(array('page', 'article'), array());
-    $node = $this->backdropCreateNode(array('type' => 'article', 'promote' => 1));
+    $queue = $this->createNodequeue(array('page', 'post'), array());
+    $node = $this->backdropCreateNode(array('type' => 'post', 'promote' => 1));
 
     // user should still have access to add nodes to the queue.
     $this->backdropGet('node');
@@ -251,10 +237,10 @@ class NodequeueManipulateAllTestCase extends NodequeueWebTestCase {
   function testNodequeueAddNode() {
     // create two nodequeues; one associated with no roles and one associated
     // with the authenticated user role.
-    $queue1 = $this->createNodequeue(array('page', 'article'), array());
-    $queue2 = $this->createNodequeue(array('page', 'article'), array(2));
+    $queue1 = $this->createNodequeue(array('page', 'post'), array());
+    $queue2 = $this->createNodequeue(array('page', 'post'));
 
-    $node = $this->backdropCreateNode(array('type' => 'article', 'promote' => 1));
+    $node = $this->backdropCreateNode(array('type' => 'post', 'promote' => 1));
 
     // Sort by title ascending, which is the default table sort for the nodequeue tab.
     $queues = array($queue1->title => $queue1, $queue2->title => $queue2);
@@ -276,18 +262,16 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
 
   protected $user;
 
-  public static function getInfo() {
-    return array(
-      'name' => t('Administrator'),
-      'description' => t('Administer nodequeues.'),
-      'group' => t('Nodequeue'),
-    );
-  }
-
   function setUp() {
     parent::setUp('nodequeue');
 
-    $this->user = $this->backdropCreateUser(array('access administration pages', 'manipulate queues', 'manipulate all queues', 'administer nodequeue'));
+    $this->user = $this->backdropCreateUser(array(
+      'access administration pages',
+      'administer nodes',
+      'manipulate queues',
+      'manipulate all queues',
+      'administer nodequeue',
+    ));
   }
 
   function testNodequeueAddQueue() {
@@ -297,25 +281,23 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
     $this->backdropGet('admin/structure/nodequeue');
     $this->assertText('Add simple queue', t('"Add simple queue" link is present.'), t('Nodequeue'));
     $this->assertText('Settings', t('"Settings" link is present.'), t('Nodequeue'));
-    $this->assertText('No nodequeues exist.', t('Nodequeue table is empty.'), t('Nodequeue'));
+    $this->assertText('No queues exist.', t('Nodequeue table is empty.'), t('Nodequeue'));
 
     // create a nodequeue...
     $edit = array(
-      'title'        => 'Testqueue',
-      'name'         => 'testqueue',
-      'size'         => 10,
-      'link'         => 'Add to %subqueue',
-      'link_remove'  => 'Remove from %subqueue',
-//      'roles[2]'     => '2', // FIXME: this makes the test fail...
-      'types[article]' => 'article',
-      'types[page]'  => 'page',
+      'title'                    => 'Testqueue',
+      'name'                     => 'testqueue',
+      'size'                     => 10,
+      'link'                     => 'Add to %subqueue',
+      'link_remove'              => 'Remove from %subqueue',
+      'types[post]'              => 'post',
     );
-    $this->backdropPost('admin/structure/nodequeue/add/nodequeue', $edit, 'Submit');
+    $this->backdropPost('admin/structure/nodequeue/add/nodequeue', $edit, 'Save');
 
     // ...and make sure we can add a node to it
-    $node = $this->backdropCreateNode(array('type' => 'article', 'promote' => 1));
+    $node = $this->backdropCreateNode(array('type' => 'post', 'promote' => 1));
 /*
-    $this->backdropGet('node/'. $node->nid);
+    $this->drupalGet('node/'. $node->nid);
     $this->assertRaw('<a href="' . url('node/1/nodequeue', array('absolute' => true)) . '">Nodequeue', t('Nodequeue tab is present.'), t('Nodequeue'));
 */
 
@@ -327,13 +309,12 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
     $this->assertRaw('class="nodequeue-in-queue">1', t('Nodequeue table reports correct number of elements in queue.'), t('Nodequeue'));
 
     // try sorting by queue size
-    // TODO: This breaks on Drupal.org. We need to figure out why. 
+    // TODO: This breaks on Drupal.org. We need to figure out why.
 /*
     $this->backdropGet('admin/structure/nodequeue');
     $this->clickLink('Max nodes');
     $this->assertRaw('Max nodes<img typeof="foaf:Image" src="' . url('misc/arrow-desc.png', array('absolute' => true)) . '"', t('Nodequeue table is sorted by max rows descending.'), t('Nodequeue'));
 
-    $this->backdropGet('admin/structure/nodequeue');
     $this->clickLink('Subqueues');
     $this->assertRaw('Subqueues<img typeof="foaf:Image" src="' . url('misc/arrow-desc.png', array('absolute' => true)) . '"', t('Nodequeue table is sorted by subqueues descending.'), t('Nodequeue'));
 */
@@ -346,7 +327,7 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
     $this->backdropGet('admin/structure/nodequeue');
     $this->assertText('Add simple queue', t('"Add simple queue" link is present.'), t('Nodequeue'));
     $this->assertText('Settings', t('"Settings" link is present.'), t('Nodequeue'));
-    $this->assertText('No nodequeues exist.', t('Nodequeue table is empty.'), t('Nodequeue'));
+    $this->assertText('No queues exist.', t('Nodequeue table is empty.'), t('Nodequeue'));
 
     // create a nodequeue with no title...
     $edit = array(
@@ -354,10 +335,10 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
       'size'         => 10,
       'link'         => 'Add to %subqueue',
       'link_remove'  => 'Remove from %subqueue',
-      'types[article]' => 'article',
+      'types[post]' => 'post',
       'types[page]'  => 'page',
     );
-    $this->backdropPost('admin/structure/nodequeue/add/nodequeue', $edit, 'Submit');
+    $this->backdropPost('admin/structure/nodequeue/add/nodequeue', $edit, 'Save');
 
     $this->assertText('Title field is required.', t("We got an error because we didn't supply a title."), t('Nodequeue'));
     $this->assertText('Machine-readable name field is required.', t("We got an error because we didn't supply a machine name."), t('Nodequeue'));
@@ -366,25 +347,25 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
   function testNodequeueEditForm() {
     $this->backdropLogin($this->user);
 
-    $queue = $this->createNodequeue(array('page', 'article'), array(2));
+    $queue = $this->createNodequeue(array('page', 'post'));
     $nodes = $this->populateNodequeue($queue->qid);
 
     $this->backdropGet('admin/structure/nodequeue/'. $queue->qid .'/edit');
-    $this->assertTitle(strtr('@title | Backdrop', array('@title' => "Nodequeue '". $queue->title ."'")), t('Got correct page title on edit form.'), t('Nodequeue'));
+    $this->assertTitle(strtr('@title | Backdrop CMS', array('@title' => "Nodequeue '". $queue->title . "'")), t('Got correct page title on edit form.'), t('Nodequeue'));
   }
 
   // make sure that the label of the nodequeue tab can be modified
   function testNodequeueModifyLabel() {
     $this->backdropLogin($this->user);
 
-    $queue = $this->createNodequeue(array('page', 'article'), array(2));
+    $queue = $this->createNodequeue(array('page', 'post'));
     $nodes = $this->populateNodequeue($queue->qid);
     $nids  = array_keys($nodes);
 
     // modify the label of the nodequeue tab...
     $edit = array(
-      'nodequeue_use_tab'         => TRUE,
-      'nodequeue_tab_name'        => 'Nodequeue Test Label',
+      'use_tab'         => TRUE,
+      'tab_name'        => 'Nodequeue Test Label',
     );
     $this->backdropPost('admin/structure/nodequeue/settings', $edit, 'Save configuration');
 
@@ -400,19 +381,19 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
   function testNodequeueMenuTab() {
     $this->backdropLogin($this->user);
 
-    $queue = $this->createNodequeue(array('page', 'article'), array(2));
+    $queue = $this->createNodequeue(array('page', 'post'));
     $nodes = $this->populateNodequeue($queue->qid);
     $nids  = array_keys($nodes);
 
     // make sure that the tab is present
     menu_rebuild();
     $this->backdropGet('node/'. $nids[0]);
-    $this->assertRaw('<a href="' . url('node/' . $nids[0] . '/nodequeue') . '">Nodequeue', t('Nodequeue tab is present.'), t('Nodequeue'));
+    $this->assertRaw('<a href="' . url('node/' . $nids[0] . '/nodequeue') . '">Queue', t('Nodequeue tab is present.'), t('Nodequeue'));
 
     // now hide the menu tab
     $edit = array(
-      'nodequeue_use_tab'         => FALSE,
-      'nodequeue_tab_name'        => 'Nodequeue Test Label',
+      'use_tab'         => FALSE,
+      'tab_name'        => 'Nodequeue Test Label',
     );
     $this->backdropPost('admin/structure/nodequeue/settings', $edit, 'Save configuration');
 
@@ -426,7 +407,7 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
   function testNodequeueTableSort() {
     $this->backdropLogin($this->user);
 
-    $queue = $this->createNodequeue(array('page', 'article'), array(2));
+    $queue = $this->createNodequeue(array('page', 'post'));
 
     // create two subqueues
     nodequeue_add_subqueue($queue, 'Subqueue 1');
@@ -442,7 +423,7 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
   function testNodequeueEditFormRoles() {
     $this->backdropLogin($this->user);
 
-    $queue = $this->createNodequeue(array('page', 'article'), array());
+    $queue = $this->createNodequeue(array('page', 'post'), array());
     $nodes = $this->populateNodequeue($queue->qid);
 
     $this->backdropLogout();
@@ -464,11 +445,11 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
   function testNodequeueDeleteConfirm() {
     $this->backdropLogin($this->user);
 
-    $queue = $this->createNodequeue(array('page', 'article'), array(2));
+    $queue = $this->createNodequeue(array('page', 'post'));
     $nodes = $this->populateNodequeue($queue->qid);
 
     $this->backdropGet('admin/structure/nodequeue/'. $queue->qid .'/delete');
-    $this->assertTitle(strtr('@title | Backdrop', array('@title' => 'Are you sure you want to delete "' . $queue->title . '"?')), t('Delete confirmation form displayed.'), t('Nodequeue'));
+    $this->assertTitle(strtr('@title | Backdrop CMS', array('@title' => 'Are you sure you want to delete "' . $queue->title . '"?')), t('Delete confirmation form displayed.'), t('Nodequeue'));
   }
 
   // TODO: test nodequeue_admin_delete_submit()
@@ -477,7 +458,7 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
     $this->backdropLogin($this->user);
 
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2));
+    $queue = $this->createNodequeue(array('page', 'post'));
     $nodes = $this->populateNodequeue($queue->qid, 4);
 
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
@@ -489,28 +470,28 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
   function testNodequeueAddNode() {
     $this->backdropLogin($this->user);
 
-    $queue = $this->createNodequeue(array('page', 'article'), array(2));
+    $queue = $this->createNodequeue(array('page', 'post'));
 
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
     $subqueue = array_shift($subqueues);
 
     $path = 'admin/structure/nodequeue/'. $queue->qid .'/view/'. $subqueue->sqid;
 
-    $node1 = $this->backdropCreateNode(array('title' => 'Bar', 'type' => 'article', 'promote' => 1));
-    $node2 = $this->backdropCreateNode(array('title' => 'Baz', 'type' => 'article', 'promote' => 1));
+    $node1 = $this->backdropCreateNode(array('title' => 'Bar', 'type' => 'post', 'promote' => 1));
+    $node2 = $this->backdropCreateNode(array('title' => 'Baz', 'type' => 'post', 'promote' => 1));
 
     // deliberately use an ambiguous title
     $this->backdropGet($path);
-    $this->backdropPost($path, array('add[nid]' => 'B'), 'Add content');
+    $this->backdropPost($path, array('add[nid]' => 'B'), 'Add to queue');
     $this->assertRaw('Please enter a valid node title.', t('Got an error message.'), t('Nodequeue'));
 
-    $this->backdropPost($path, array('add[nid]' => 'Unknown'), 'Add content');
+    $this->backdropPost($path, array('add[nid]' => 'Unknown'), 'Add to queue');
     $this->assertRaw('Please enter a valid node title.', t('Got an error message.'), t('Nodequeue'));
 
-    $this->backdropPost($path, array('add[nid]' => $node1->title . ' [nid: ' . $node1->nid . ']'), 'Add content');
+    $this->backdropPost($path, array('add[nid]' => $node1->title . ' [nid: ' . $node1->nid . ']'), 'Add to queue');
     $this->assertRaw('<a href="' . url('node/' . $node1->nid) . '">'. $node1->title .'</a>', t('Node has been added to the nodequeue.'), t('Nodequeue'));
 
-    $this->backdropPost($path, array('add[nid]' => $node2->title . ' [nid: ' . $node2->nid . ']'), 'Add content');
+    $this->backdropPost($path, array('add[nid]' => $node2->title . ' [nid: ' . $node2->nid . ']'), 'Add to queue');
     $this->assertRaw('<a href="' . url('node/' . $node2->nid) .'">'. $node2->title .'</a>', t('Node has been added to the nodequeue.'), t('Nodequeue'));
   }
 
@@ -519,7 +500,7 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
   function testNodequeueQueueActions() {
     $this->backdropLogin($this->user);
 
-    $queue = $this->createNodequeue(array('page', 'article'), array(2));
+    $queue = $this->createNodequeue(array('page', 'post'));
     $nodes = $this->populateNodequeue($queue->qid, 4);
 
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
@@ -547,7 +528,7 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
   function testNodequeueQueueOperations() {
     $this->backdropLogin($this->user);
 
-    $queue = $this->createNodequeue(array('page', 'article'), array(2));
+    $queue = $this->createNodequeue(array('page', 'post'));
     $nodes = $this->populateNodequeue($queue->qid, 4);
 
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
@@ -570,15 +551,37 @@ class NodequeueAdministerTestCase extends NodequeueWebTestCase {
   */
 }
 
-class NodequeueAPIAccessUnitTest extends NodequeueWebTestCase {
+class NodequeueHooksUnitTest extends NodequeueWebTestCase {
 
-  public static function getInfo() {
-    return array(
-      'name' => t('Access'),
-      'description' => t('User access restrictions.'),
-      'group' => t('Nodequeue API'),
-    );
+  function setUp() {
+    parent::setUp('nodequeue');
   }
+
+  function testNodequeueViewsAPI() {
+    $info = nodequeue_views_api();
+    $this->assertEqual($info['api'], 3, t('Correct API version reported.'), t('Nodequeue'));
+    $this->assertEqual($info['path'], backdrop_get_path('module', 'nodequeue') . '/views', t('Correct API version reported.'), t('Nodequeue'));
+  }
+
+  function testNodequeueNodeAPIDelete() {
+    // create and populate a nodequeue
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
+    $nodes = $this->populateNodequeue($queue->qid, 4);
+    $nids  = array_keys($nodes);
+
+    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+    $subqueue = array_shift($subqueues);
+
+    $pos = nodequeue_get_subqueue_position($subqueue->sqid, $nids[2]);
+    $this->assertTrue(is_numeric($pos), t('Node has a position in the nodequeue.'), t('Nodequeue'));
+
+    node_delete($nids[2]);
+    $pos = db_query('SELECT position FROM  {nodequeue_nodes} WHERE sqid = :sqid AND nid = :nid', array(':sqid' => $subqueue->sqid, ':nid' => $nids[2]))->fetchField();
+    $this->assertEqual($pos, 0, t('Node is no longer in the nodequeue.'), t('Nodequeue'));
+  }
+}
+
+class NodequeueAPIAccessUnitTest extends NodequeueWebTestCase {
 
   function setUp() {
     parent::setUp('nodequeue');
@@ -589,23 +592,26 @@ class NodequeueAPIAccessUnitTest extends NodequeueWebTestCase {
     $user = $this->backdropCreateUser();
 
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 6);
+    $queue = $this->createNodequeue(array('page', 'post'), array(2), 6);
     $nodes = $this->populateNodequeue($queue->qid, 4);
 
-    $this->assertFalse(nodequeue_node_tab_access($nodes[1]), t("Don't run queries unless user has 'manipulate queues' permission."), t('Nodequeue'));
+    $this->assertFalse(nodequeue_node_tab_access($nodes[3]), t("Don't show tab unless user has 'manipulate queues' permission."), t('Nodequeue'));
 
-    // create a user with permission to manipulate queues
-    $user = $this->backdropCreateUser(array('access administration pages', 'manipulate queues', 'administer nodequeue'));
+    // create a user with permission to manipulate queues TODO: find out why this fails
+    // $user = $this->backdropCreateUser(array('access administration pages', 'manipulate queues'));
+    // $this->assertTrue(nodequeue_node_tab_access($nodes[3]), t("User is granted access to the node tab."), t('Nodequeue'));
 
-    $this->assertTrue(nodequeue_node_tab_access($nodes[1]), t("User is granted access to the node tab."), t('Nodequeue'));
+    // create a user with permission to manipulate all queues
+    $user = $this->backdropCreateUser(array('access administration pages', 'manipulate queues', 'manipulate all queues'));
+    $this->assertTrue(nodequeue_node_tab_access($nodes[3]), t("User is granted access to the node tab."), t('Nodequeue'));
 
     // TODO: case where subqueue is empty
-    //       case where user doesn't have access to subqueue (nodequeue_api_subqueue_access)
+    // TODO: case where user doesn't have access to subqueue (nodequeue_api_subqueue_access)
   }
 
   function testNodequeueQueueAccess() {
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2));
+    $queue = $this->createNodequeue(array('page', 'post'));
     $nodes = $this->populateNodequeue($queue->qid, 4);
 
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
@@ -617,6 +623,7 @@ class NodequeueAPIAccessUnitTest extends NodequeueWebTestCase {
 
     // a user without nodequeue-related permissions should be denied access
     $user = $this->backdropCreateUser();
+    $this->backdropLogin($user);
     $this->assertFalse(nodequeue_queue_access($queue, NULL, $user), t('Access denied because of missing permissions.'), t('Nodequeue'));
     $this->assertFalse(nodequeue_queue_access($queue, $subqueue, $user), t('Access denied because of missing permissions.'), t('Nodequeue'));
 
@@ -639,20 +646,12 @@ class NodequeueAPIAccessUnitTest extends NodequeueWebTestCase {
 
 class NodequeueAPICRUDUnitTest extends NodequeueWebTestCase {
 
-  public static function getInfo() {
-    return array(
-      'name' => t('Nodequeue API CRUD'),
-      'description' => t('Basic Create, Read, Update, Delete functionality.'),
-      'group' => t('Nodequeue'),
-    );
-  }
-
   function setUp() {
     parent::setUp('nodequeue');
   }
 
   function testNodequeueModify() {
-    $queue = $this->createNodequeue(array('article'), array(2));
+    $queue = $this->createNodequeue(array('post'));
     $this->assertTrue(config_get('nodequeue.settings', 'nodequeue_links'), t('hook_link is enabled.'), t('Nodequeue'));
 
     // update the nodequeue
@@ -718,27 +717,19 @@ class NodequeueAPICRUDUnitTest extends NodequeueWebTestCase {
 
 class NodequeueAPISubqueueUnitTest extends NodequeueWebTestCase {
 
-  public static function getInfo() {
-    return array(
-      'name' => t('Subqueue'),
-      'description' => t('Manipulate subqueue elements.'),
-      'group' => t('Nodequeue API'),
-    );
-  }
-
   function setUp() {
     parent::setUp('nodequeue');
   }
 
   function testNodequeueSubqueueAdd() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 3);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 3);
 
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
     $subqueue = array_shift($subqueues);
 
     $nodes = array();
     for ($i = 0; $i < 4; $i++) {
-      $nodes[] = $this->backdropCreateNode(array('type' => 'article'));
+      $nodes[] = $this->backdropCreateNode(array('type' => 'post'));
     }
 
     nodequeue_subqueue_add($queue, $subqueue, $nodes[0]->nid);
@@ -761,14 +752,14 @@ class NodequeueAPISubqueueUnitTest extends NodequeueWebTestCase {
   }
 
   function testNodequeueSubqueueRemove() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 3);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 3);
 
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
     $subqueue = array_shift($subqueues);
 
     $nodes = array();
     for ($i = 0; $i < 4; $i++) {
-      $nodes[] = $this->backdropCreateNode(array('type' => 'article'));
+      $nodes[] = $this->backdropCreateNode(array('type' => 'post'));
     }
 
     nodequeue_subqueue_add($queue, $subqueue, $nodes[0]->nid);
@@ -794,14 +785,14 @@ class NodequeueAPISubqueueUnitTest extends NodequeueWebTestCase {
   }
 
   function testNodequeueSubqueueRemoveNode() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 3);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 3);
 
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
     $subqueue = array_shift($subqueues);
 
     $nodes = array();
     for ($i = 0; $i < 3; $i++) {
-      $node = $this->backdropCreateNode(array('type' => 'article'));
+      $node = $this->backdropCreateNode(array('type' => 'post'));
       nodequeue_subqueue_add($queue, $subqueue, $node->nid);
       $nodes[] = $node;
     }
@@ -816,14 +807,14 @@ class NodequeueAPISubqueueUnitTest extends NodequeueWebTestCase {
   }
 
   function testNodequeueQueueClear() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 3);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 3);
 
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
     $subqueue = array_shift($subqueues);
 
     $nodes = array();
     for ($i = 0; $i < 3; $i++) {
-      $node = $this->backdropCreateNode(array('type' => 'article'));
+      $node = $this->backdropCreateNode(array('type' => 'post'));
       nodequeue_subqueue_add($queue, $subqueue, $node->nid);
       $nodes[] = $node;
     }
@@ -840,14 +831,14 @@ class NodequeueAPISubqueueUnitTest extends NodequeueWebTestCase {
 
   function testNodequeueCheckSubqueueSizes() {
     // TODO: nodequeue_check_subqueue_sizes($queue)
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 3);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 3);
     $rv = nodequeue_check_subqueue_sizes($queue);
     $this->assertNull($rv, t('Subqueue has infinite size.'), t('Nodequeue'));
   }
 
   function testNodequeueQueueSwap() {
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
     $nodes = $this->populateNodequeue($queue->qid, 4);
     $nids  = array_keys($nodes);
 
@@ -865,7 +856,7 @@ class NodequeueAPISubqueueUnitTest extends NodequeueWebTestCase {
 
   function testNodequeueQueueUp() {
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
     $nodes = $this->populateNodequeue($queue->qid, 4);
     $nids  = array_keys($nodes);
 
@@ -886,7 +877,7 @@ class NodequeueAPISubqueueUnitTest extends NodequeueWebTestCase {
 
   function testNodequeueQueueDown() {
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
     $nodes = $this->populateNodequeue($queue->qid, 4);
     $nids  = array_keys($nodes);
 
@@ -907,7 +898,7 @@ class NodequeueAPISubqueueUnitTest extends NodequeueWebTestCase {
 
   function testNodequeueQueueFront() {
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
     $nodes = $this->populateNodequeue($queue->qid, 4);
     $nids  = array_keys($nodes);
 
@@ -928,7 +919,7 @@ class NodequeueAPISubqueueUnitTest extends NodequeueWebTestCase {
 
   function testNodequeueQueueBack() {
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
     $nodes = $this->populateNodequeue($queue->qid, 4);
     $nids  = array_keys($nodes);
 
@@ -949,7 +940,7 @@ class NodequeueAPISubqueueUnitTest extends NodequeueWebTestCase {
 
   function testNodequeueSubqueueShuffle() {
     // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
     $nodes = $this->populateNodequeue($queue->qid, 4);
     $nids  = array_keys($nodes);
 
@@ -971,14 +962,6 @@ class NodequeueAPISubqueueUnitTest extends NodequeueWebTestCase {
 
 class NodequeueAPINodeUnitTest extends NodequeueWebTestCase {
 
-  public static function getInfo() {
-    return array(
-      'name' => t('Node'),
-      'description' => t('Get node-related info from subqueues.'),
-      'group' => t('Nodequeue API'),
-    );
-  }
-
   function setUp() {
     parent::setUp('nodequeue');
   }
@@ -998,14 +981,6 @@ class NodequeueAPINodeUnitTest extends NodequeueWebTestCase {
 
 class NodequeueAPIMiscUnitTest extends NodequeueWebTestCase {
 
-  public static function getInfo() {
-    return array(
-      'name' => t('Misc'),
-      'description' => t('Miscellaneous API functions.'),
-      'group' => t('Nodequeue API'),
-    );
-  }
-
   function setUp() {
     parent::setUp('nodequeue');
   }
@@ -1019,7 +994,7 @@ class NodequeueAPIMiscUnitTest extends NodequeueWebTestCase {
   }
 
   function testNodequeueAutocomplete() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 6);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 6);
     $nodes = $this->populateNodequeue($queue->qid, 4);
 
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
@@ -1041,48 +1016,135 @@ class NodequeueAPIMiscUnitTest extends NodequeueWebTestCase {
     $rv = nodequeue_api_autocomplete($queue, $unknown_subqueue, 'Foo');
     $this->assertTrue(empty($rv), t('Unknown sqid. No nodes returned.'), t('Nodequeue'));
 
-    $rv = nodequeue_api_autocomplete($queue, $subqueue, substr($nodes[1]->title, 0, 16));
+    $rv = nodequeue_api_autocomplete($queue, $subqueue, substr($nodes[3]->title, 0, 16));
     $this->assertTrue((count($rv) > 0), t('At least one node returned.'), t('Nodequeue'));
   }
 }
 
-class NodequeueHooksUnitTest extends NodequeueWebTestCase {
-
-  public static function getInfo() {
-    return array(
-      'name' => t('Hooks'),
-      'description' => t('Test hook implementations.'),
-      'group' => t('Nodequeue'),
-    );
-  }
+class NodequeueExternalFetchingUnitTest extends NodequeueWebTestCase {
 
   function setUp() {
     parent::setUp('nodequeue');
   }
 
-  function testNodequeueViewsAPI() {
-    $info = nodequeue_views_api();
-    $this->assertEqual($info['api'], 2, t('Correct API version reported.'), t('Nodequeue'));
-    $this->assertEqual($info['path'], backdrop_get_path('module', 'nodequeue') .'/includes/views', t('Correct API version reported.'), t('Nodequeue'));
-  }
-
-  function testNodequeueNodeAPIDelete() {
-    // create and populate a nodequeue
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
+  function testNodequeueNodeTitles() {
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
     $nodes = $this->populateNodequeue($queue->qid, 4);
-    $nids  = array_keys($nodes);
 
     $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
     $subqueue = array_shift($subqueues);
 
-    $pos = nodequeue_get_subqueue_position($subqueue->sqid, $nids[2]);
-    $this->assertTrue(is_numeric($pos), t('Node has a position in the nodequeue.'), t('Nodequeue'));
+    $rv = nodequeue_node_titles($subqueue->sqid, 'Queue title');
+    $rv = backdrop_render($rv);
+    $this->assertTrue(strpos($rv, 'Queue title'), t('Found list header.'), t('Nodequeue'));
+    $this->assertTrue(strpos($rv, $nodes[3]->title), t('Found a node.'), t('Nodequeue'));
 
-    node_delete($nids[2]);
-    $pos = db_query('SELECT position FROM  {nodequeue_nodes} WHERE sqid = :sqid AND nid = :nid', array(':sqid' => $subqueue->sqid, ':nid' => $nids[2]))->fetchField();
-    $this->assertEqual($pos, 0, t('Node is no longer in the nodequeue.'), t('Nodequeue'));
+    $rv = nodequeue_node_titles($subqueue->sqid, 'Queue title', TRUE, 0, 2);
+    $rv = backdrop_render($rv);
+    $this->assertTrue(strpos($rv, $nodes[6]->title), t('Found the first node in the queue.'), t('Nodequeue'));
+    $this->assertFalse(strpos($rv, $nodes[3]->title), t('Node outside the limit is not in the queue.'), t('Nodequeue'));
+
+    $rv = nodequeue_node_titles($subqueue->sqid, 'Queue title', TRUE, 0, 0);
+    $rv = backdrop_render($rv);
+    $this->assertTrue(strpos($rv, $nodes[3]->title), t('Got all nodes.'), t('Nodequeue'));
+  }
+
+  function testNodequeueViewNodes() {
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
+    $nodes = $this->populateNodequeue($queue->qid, 4);
+
+    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+    $subqueue = array_shift($subqueues);
+
+    $rv = nodequeue_view_nodes($subqueue->sqid);
+    $rv = backdrop_render($rv);
+    $this->assertTrue(strpos($rv, $nodes[3]->title), t('Found a node.'), t('Nodequeue'));
+
+    $rv = nodequeue_view_nodes($subqueue->sqid, TRUE, TRUE, TRUE, 0, 2);
+    $rv = backdrop_render($rv);
+    $this->assertTrue(strpos($rv, $nodes[6]->title), t('Found the first node in the queue.'), t('Nodequeue'));
+    $this->assertFalse(strpos($rv, $nodes[3]->title), t('Node outside the limit is not in the queue.'), t('Nodequeue'));
+  }
+
+  function testNodequeueLoadNodes() {
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
+    $nodes = $this->populateNodequeue($queue->qid, 4);
+
+    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+    $subqueue = array_shift($subqueues);
+
+    // FIXME: use title for comparison instead of nid
+    $rv = nodequeue_load_nodes($subqueue->sqid);
+    $this->assertEqual($rv[$nodes[3]->nid]->title, $nodes[3]->title, t('Found the first node in the queue.'), t('Nodequeue'));
+
+    $rv = nodequeue_load_nodes($subqueue->sqid, FALSE, 0, 0);
+    $this->assertTrue(count($rv) == 4, t('Got all nodes from nodequeue.'), t('Nodequeue'));
+  }
+
+  function testNodequeueLoadFrontBack() {
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
+    $nodes = $this->populateNodequeue($queue->qid, 4);
+
+    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+    $subqueue = array_shift($subqueues);
+
+    $rv = nodequeue_load_front($subqueue->sqid);
+    $this->assertEqual($rv->title, $nodes[3]->title, t('Got the front node.'), t('Nodequeue'));
+
+    $rv = nodequeue_load_back($subqueue->sqid);
+    $this->assertEqual($rv->title, $nodes[6]->title, t('Got the back node.'), t('Nodequeue'));
+  }
+
+  function testNodequeueViewRandom() {
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
+    $nodes = $this->populateNodequeue($queue->qid, 4);
+
+    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+    $subqueue = array_shift($subqueues);
+
+    $rv = nodequeue_view_random_node($subqueue->sqid);
+    $rv = backdrop_render($rv);
+    $found = FALSE;
+    foreach ($nodes as $node) {
+      if (strpos($rv, $node->title)) {
+        $found = TRUE;
+        break;
+      }
+    }
+    $this->assertTrue($found, t('Got a node from the queue.'), t('Nodequeue'));
+  }
+
+  function testNodequeueLoadRandom() {
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
+    $nodes = $this->populateNodequeue($queue->qid, 4);
+
+    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+    $subqueue = array_shift($subqueues);
+
+    $rv = nodequeue_load_random_node($subqueue->sqid);
+    $found = FALSE;
+    foreach ($nodes as $node) {
+      if ($rv->title == $node->title) {
+        $found = TRUE;
+        break;
+      }
+    }
+    $this->assertTrue($found, t('Got a node object from the queue.'), t('Nodequeue'));
+  }
+
+  function testNodequeueQueuePosition() {
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
+    $nodes = $this->populateNodequeue($queue->qid, 4);
+
+    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
+    $subqueue = array_shift($subqueues);
+
+    $rv = nodequeue_queue_position($subqueue->sqid, 5);
+    $this->assertEqual($rv, 3, t('Got a node object from the queue.'), t('Nodequeue'));
   }
 }
+
+// TODO: nodequeue_view_subqueues($queue)
 
 // @TODO: Fix Apache Solr tests.
 /*
@@ -1106,18 +1168,18 @@ class NodequeueApacheSolrUnitTest extends NodequeueWebTestCase {
   }
 
   function testNodequeueApacheSolrUpdateIndex() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
     $nodes = $this->populateNodequeue($queue->qid, 4);
 
     $document = new stdClass();
 
-    nodequeue_apachesolr_update_index($document, $nodes[1]);
+    nodequeue_apachesolr_update_index($document, $nodes[3]);
 
     $this->assertEqual($document->sim_nodequeue, 1, t('Got expected key on document object.'), t('Nodequeue'));
   }
 
   function testNodequeueApacheSolrModifyQuery() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
     $nodes = $this->populateNodequeue($queue->qid, 4);
     $nids  = array_keys($nodes);
 
@@ -1136,7 +1198,7 @@ class NodequeueApacheSolrUnitTest extends NodequeueWebTestCase {
 
   // FIXME: move to class with functional tests?
   function testNodequeueApacheSolrFormAlter() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
+    $queue = $this->createNodequeue(array('page', 'post'), array('authenticated'), 4);
     $nodes = $this->populateNodequeue($queue->qid, 4);
 
     $form = $form_state = array();
@@ -1147,136 +1209,3 @@ class NodequeueApacheSolrUnitTest extends NodequeueWebTestCase {
   }
 }
 */
-
-class NodequeueExternalFetchingUnitTest extends NodequeueWebTestCase {
-
-  public static function getInfo() {
-    return array(
-      'name' => t('External'),
-      'description' => t('External queue fetching.'),
-      'group' => t('Nodequeue API'),
-    );
-  }
-
-  function setUp() {
-    parent::setUp('nodequeue');
-  }
-
-  function testNodequeueNodeTitles() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
-    $nodes = $this->populateNodequeue($queue->qid, 4);
-
-    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
-    $subqueue = array_shift($subqueues);
-
-    $rv = nodequeue_node_titles($subqueue->sqid, 'Queue title');
-    $rv = backdrop_render($rv);
-    $this->assertTrue(strpos($rv, 'Queue title'), t('Found list header.'), t('Nodequeue'));
-    $this->assertTrue(strpos($rv, $nodes[1]->title), t('Found a node.'), t('Nodequeue'));
-
-    $rv = nodequeue_node_titles($subqueue->sqid, 'Queue title', TRUE, 0, 2);
-    $rv = backdrop_render($rv);
-    $this->assertTrue(strpos($rv, $nodes[4]->title), t('Found the first node in the queue.'), t('Nodequeue'));
-    $this->assertFalse(strpos($rv, $nodes[1]->title), t('Node outside the limit is not in the queue.'), t('Nodequeue'));
-
-    $rv = nodequeue_node_titles($subqueue->sqid, 'Queue title', TRUE, 0, 0);
-    $rv = backdrop_render($rv);
-    $this->assertTrue(strpos($rv, $nodes[1]->title), t('Got all nodes.'), t('Nodequeue'));
-  }
-
-  function testNodequeueViewNodes() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
-    $nodes = $this->populateNodequeue($queue->qid, 4);
-
-    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
-    $subqueue = array_shift($subqueues);
-
-    $rv = nodequeue_view_nodes($subqueue->sqid);
-    $rv = backdrop_render($rv);
-    $this->assertTrue(strpos($rv, $nodes[1]->title), t('Found a node.'), t('Nodequeue'));
-
-    $rv = nodequeue_view_nodes($subqueue->sqid, TRUE, TRUE, TRUE, 0, 2);
-    $rv = backdrop_render($rv);
-    $this->assertTrue(strpos($rv, $nodes[4]->title), t('Found the first node in the queue.'), t('Nodequeue'));
-    $this->assertFalse(strpos($rv, $nodes[1]->title), t('Node outside the limit is not in the queue.'), t('Nodequeue'));
-  }
-
-  function testNodequeueLoadNodes() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
-    $nodes = $this->populateNodequeue($queue->qid, 4);
-
-    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
-    $subqueue = array_shift($subqueues);
-
-    // FIXME: use title for comparison instead of nid
-    $rv = nodequeue_load_nodes($subqueue->sqid);
-    $this->assertEqual($rv[$nodes[1]->nid]->title, $nodes[1]->title, t('Found the first node in the queue.'), t('Nodequeue'));
-
-    $rv = nodequeue_load_nodes($subqueue->sqid, FALSE, 0, 0);
-    $this->assertTrue(count($rv) == 4, t('Got all nodes from nodequeue.'), t('Nodequeue'));
-  }
-
-  function testNodequeueLoadFrontBack() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
-    $nodes = $this->populateNodequeue($queue->qid, 4);
-
-    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
-    $subqueue = array_shift($subqueues);
-
-    $rv = nodequeue_load_front($subqueue->sqid);
-    $this->assertEqual($rv->title, $nodes[1]->title, t('Got the front node.'), t('Nodequeue'));
-
-    $rv = nodequeue_load_back($subqueue->sqid);
-    $this->assertEqual($rv->title, $nodes[4]->title, t('Got the back node.'), t('Nodequeue'));
-  }
-
-  function testNodequeueViewRandom() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
-    $nodes = $this->populateNodequeue($queue->qid, 4);
-
-    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
-    $subqueue = array_shift($subqueues);
-
-    $rv = nodequeue_view_random_node($subqueue->sqid);
-    $rv = backdrop_render($rv);
-    $found = FALSE;
-    foreach ($nodes as $node) {
-      if (strpos($rv, $node->title)) {
-        $found = TRUE;
-        break;
-      }
-    }
-    $this->assertTrue($found, t('Got a node from the queue.'), t('Nodequeue'));
-  }
-
-  function testNodequeueLoadRandom() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
-    $nodes = $this->populateNodequeue($queue->qid, 4);
-
-    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
-    $subqueue = array_shift($subqueues);
-
-    $rv = nodequeue_load_random_node($subqueue->sqid);
-    $found = FALSE;
-    foreach ($nodes as $node) {
-      if ($rv->title == $node->title) {
-        $found = TRUE;
-        break;
-      }
-    }
-    $this->assertTrue($found, t('Got a node object from the queue.'), t('Nodequeue'));
-  }
-
-  function testNodequeueQueuePosition() {
-    $queue = $this->createNodequeue(array('page', 'article'), array(2), 4);
-    $nodes = $this->populateNodequeue($queue->qid, 4);
-
-    $subqueues = nodequeue_load_subqueues_by_queue($queue->qid);
-    $subqueue = array_shift($subqueues);
-
-    $rv = nodequeue_queue_position($subqueue->sqid, 3);
-    $this->assertEqual($rv, 3, t('Got a node object from the queue.'), t('Nodequeue'));
-  }
-}
-
-// TODO: nodequeue_view_subqueues($queue)

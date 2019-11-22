@@ -5,6 +5,3 @@ package = Nodequeue
 backdrop = 1.x
 
 configure = admin/structure/nodequeue/settings
-
-; Tests
-files[] = tests/nodequeue.test

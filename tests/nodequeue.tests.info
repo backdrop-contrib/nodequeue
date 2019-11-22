@@ -1,0 +1,60 @@
+[NodequeueManipulateTestCase]
+name = User
+description = Manipulate a nodequeue.
+group = Nodequeue
+file = nodequeue.test
+
+[NodequeueManipulateAllTestCase]
+name = Privileged user
+description = Manipulate all nodequeues.
+group = Nodequeue
+file = nodequeue.test
+
+[NodequeueAdministerTestCase]
+name = Administrator
+description = Administer nodequeues
+group = Nodequeue
+file = nodequeue.test
+
+
+[NodequeueHooksUnitTest]
+name = Hooks
+description = Test hook implementations.
+group = Nodequeue API
+file = nodequeue.test
+
+[NodequeueAPIAccessUnitTest]
+name = Access
+description = User access restrictions.
+group = Nodequeue API
+file = nodequeue.test
+
+[NodequeueAPICRUDUnitTest]
+name = Nodequeue API CRUD
+description = Basic Create, Read, Update, Delete functionality.
+group = Nodequeue API
+file = nodequeue.test
+
+[NodequeueAPISubqueueUnitTest]
+name = Subqueue
+description = Manipulate subqueue elements.
+group = Nodequeue API
+file = nodequeue.test
+
+[NodequeueAPINodeUnitTest]
+name = Node
+description = Get node-related info from subqueues.
+group = Nodequeue API
+file = nodequeue.test
+
+[NodequeueAPIMiscUnitTest]
+name = Misc
+description = Miscellaneous API functions.
+group = Nodequeue API
+file = nodequeue.test
+
+[NodequeueExternalFetchingUnitTest]
+name = External
+description = External queue fetching.
+group = Nodequeue API
+file = nodequeue.test
