@@ -400,7 +400,7 @@ function nodequeue_view_subqueues($queue) {
   // Fetch all of the subqueues.
   $subqueues = nodequeue_load_subqueues_by_queue($queue->qid, 100);
 
-  $header = array(t('Subqueue title'), t('References'), t('In queue'), t('Operation'));
+  $header = array(t('Subqueue title'), t('Term references'), t('In queue'), t('Operation'));
 
   $rows = array();
   foreach ($subqueues as $subqueue) {
