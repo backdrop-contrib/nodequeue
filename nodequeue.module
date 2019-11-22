@@ -178,7 +178,7 @@ function nodequeue_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
   $items['admin/structure/nodequeue/list'] = array(
-    'title' => 'List',
+    'title' => 'List nodequeues',
     'page callback' => 'nodequeue_view_queues',
     'access callback' => '_nodequeue_access_admin_or_manipulate',
     'file' => 'nodequeue.admin.inc',
