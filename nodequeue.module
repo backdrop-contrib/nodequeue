@@ -842,55 +842,72 @@ function nodequeue_get_all_qids($num_per_page = 0, $pager_element = 0, $bypass_c
  *   else from database.
  */
 function nodequeue_load_queues($qids = array(), $bypass_cache = FALSE) {
-  $cache = &backdrop_static(__FUNCTION__, array());
-  $to_load = $loaded = array();
+  $static = backdrop_static(__FUNCTION__, array(
+    'queues' => array(),
+    'qids' => array(),
+  ));
 
+  // Create a list of queues that need to be loaded.
+  $to_load = array();
   foreach ($qids as $qid) {
-    if ($bypass_cache || !isset($cache[$qid])) {
+    if ($bypass_cache || !isset($static['qids'][$qid])) {
       $to_load[] = $qid;
     }
   }
 
+  // Load fresh queues from the database.
+  $new_queues = array();
   if (!empty($to_load)) {
-    $result = db_query("SELECT q.*, (SELECT count(*) FROM {nodequeue_subqueue} s WHERE q.qid = s.qid) AS subqueues FROM {nodequeue_queue} q WHERE q.qid IN (:to_load)", array(':to_load' => $to_load));
 
+    $result = db_query("SELECT q.*, (SELECT count(*) FROM {nodequeue_subqueue} s WHERE q.qid = s.qid) AS subqueues FROM {nodequeue_queue} q WHERE q.qid IN (:to_load)", array(':to_load' => $to_load));
     foreach ($result as $queue) {
-      $loaded[$queue->qid] = $queue;
-      // ensure valid defaults:
-      $loaded[$queue->qid]->types = array();
-      $loaded[$queue->qid]->roles = array();
-      $loaded[$queue->qid]->count = 0;
+      $qid = $queue->qid;
+      if (!isset($static['queues'][$qid])) {
+        $new_queues[$qid] = $queue;
+        // Add valid defaults values.
+        $new_queues[$qid]->types = array();
+        $new_queues[$qid]->roles = array();
+        $new_queues[$qid]->count = 0;
+      }
     }
 
+    // Add role data to all new queues.
     $result = db_query("SELECT qid, role FROM {nodequeue_roles} WHERE qid IN (:to_load)", array(':to_load' => $to_load));
     foreach ($result as $obj) {
-      $loaded[$obj->qid]->roles[] = $obj->role;
+      $qid = $obj->qid;
+      $new_queues[$qid]->roles[] = $obj->role;
     }
 
+    // Add type data to all new queues.
     $result = db_query("SELECT qid, type FROM {nodequeue_types} WHERE qid IN (:to_load)", array(':to_load' => $to_load));
     foreach ($result as $obj) {
-      $loaded[$obj->qid]->types[] = $obj->type;
+      $qid = $obj->qid;
+      $new_queues[$qid]->types[] = $obj->type;
     }
 
+    // Allow other modules to load additional data to the new queues.
     $context = 'load_queues';
-    backdrop_alter('nodequeue', $loaded, $context);
+    backdrop_alter('nodequeue', $new_queues, $context);
   }
 
   if ($bypass_cache) {
-    return $loaded;
+    return $new_queues;
   }
-  else {
-    if (!empty($loaded)) {
-      $cache += $loaded;
-    }
-    $queues = array();
-    foreach ($qids as $qid) {
-      if (isset($cache[$qid])) {
-        $queues[$qid] = $cache[$qid];
-      }
-    }
-    return $queues;
+
+  if (!empty($new_queues)) {
+    $static['queues'] += $new_queues;
+    $static['qids']   += array_keys($new_queues);
   }
+
+  // Return only the requested queues.
+  $return = array();
+  foreach ($qids as $qid) {
+    if (isset($static['queues'][$qid])) {
+      $return[$qid] = $static['queues'][$qid];
+    }
+  }
+
+  return $return;
 }
 
 /**
