@@ -2054,6 +2054,14 @@ function nodequeue_subqueue_position($sqid, $nid) {
 /**
  * Get the position of a node in a queue; this queue MUST have only one
  * subqueue or the results of this function will be unpredictable.
+ *
+ * @param $qid
+ *   Queue ID for the queue with the node in it.
+ * @param $nid
+ *   Node ID for the node you are seeking.
+ *
+ * return int
+ *   Position of the node in the quue.
  */
 function nodequeue_queue_position($qid, $nid) {
   $sqid = db_select('nodequeue_subqueue', 'ns')
