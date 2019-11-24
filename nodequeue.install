@@ -271,3 +271,14 @@ function nodequeue_update_1001() {
     ),
     array('primary key' => array('qid', 'role')));
 }
+
+/**
+ * Converts the node links setting from varaible to config.
+ */
+function nodequeue_update_1002() {
+  // Convert this variable we missed.
+  config_set('nodequeue.settings', 'node_links', update_variable_get('nodequeue_links', FALSE));
+
+  // Delete old variables.
+  variable_del('nodequeue_links');
+}

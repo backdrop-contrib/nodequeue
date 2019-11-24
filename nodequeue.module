@@ -707,8 +707,19 @@ class nodequeue_queue {
 }
 
 /**
- * Fetch a list of available queues for a given location. These queues
- * will be fully loaded and ready to go.
+ * Fetch a list of available queues for a given location.
+ *
+ * @param $type
+ *   Content type of the node.
+ * @param  $location
+ *   Location where the link can appear, for example: link or tab
+ * @param $account
+ *   The user account, or NULL to use logged-in user.
+ * @param $bypass_cache
+ *   Whether or not to bypass the cache and load all qids fresh.
+ *
+ * @return array
+ *   Array of fully loaded queues keyed by qid.
  */
 function nodequeue_load_queues_by_type($type, $location = NULL, $account = NULL, $bypass_cache = FALSE) {
   $qids = nodequeue_get_qids($type, $account, $bypass_cache);
@@ -767,8 +778,7 @@ function nodequeue_get_qids($type, $account = NULL, $bypass_cache = FALSE) {
     // superuser always has access.
     if (!user_access('manipulate all queues', $account)) {
       $roles_join = "INNER JOIN {nodequeue_roles} nr ON nr.qid = nq.qid ";
-      $roles = array_keys((array) $account->roles) + array(BACKDROP_AUTHENTICATED_ROLE);
-
+      $roles = $account->roles  + array(BACKDROP_AUTHENTICATED_ROLE);
       $roles_where .= "AND nr.role IN (:roles)";
     }
 
@@ -1204,12 +1214,12 @@ function nodequeue_save(&$queue) {
     }
   }
 
-  // set our global that tells us whether or not we need to activate hook_link
+  // Set global that tells us if we need to activate nodequeue_node_links().
   if (db_query("SELECT COUNT(*) FROM {nodequeue_queue} WHERE link <> ''")->fetchField()) {
-    config_set('nodequeue.settings', 'nodequeue_links', TRUE);
+    config_set('nodequeue.settings', 'node_links', TRUE);
   }
   else {
-    config_set('nodequeue.settings', 'nodequeue_links', FALSE);
+    config_set('nodequeue.settings', 'node_links', FALSE);
   }
 
   if (isset($queue->add_subqueue) && is_array($queue->add_subqueue)) {
@@ -1857,8 +1867,9 @@ function nodequeue_node_titles($sqid, $title = '', $backward = TRUE, $from = 0, 
  */
 function nodequeue_node_links($node) {
   $links = array();
-  if (config_get('nodequeue.settings', 'nodequeue_links') &&
+  if (config_get('nodequeue.settings', 'node_links') &&
       user_access('manipulate queues')) {
+
     $queues = nodequeue_load_queues_by_type($node->type, 'links');
     $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
     if (empty($subqueues)) {

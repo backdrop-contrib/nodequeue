@@ -652,7 +652,7 @@ class NodequeueAPICRUDUnitTest extends NodequeueWebTestCase {
 
   function testNodequeueModify() {
     $queue = $this->createNodequeue(array('post'));
-    $this->assertTrue(config_get('nodequeue.settings', 'nodequeue_links'), t('hook_link is enabled.'), t('Nodequeue'));
+    $this->assertTrue(config_get('nodequeue.settings', 'node_links'), t('hook_link is enabled.'), t('Nodequeue'));
 
     // update the nodequeue
     $queue = nodequeue_load($queue->qid);
@@ -661,7 +661,7 @@ class NodequeueAPICRUDUnitTest extends NodequeueWebTestCase {
     $queue->link  = '';
     $qid = nodequeue_save($queue);
     $this->assertTrue(is_numeric($qid), t('Nodequeue was updated.'), t('Nodequeue'));
-    $this->assertFalse(config_get('nodequeue.settings', 'nodequeue_links'), t('hook_link is disabled.'), t('Nodequeue'));
+    $this->assertFalse(config_get('nodequeue.settings', 'node_links'), t('hook_link is disabled.'), t('Nodequeue'));
 
     // load the nodequeue and compare it to the one we saved.
     // this also tests nodequeue_load_queues().
