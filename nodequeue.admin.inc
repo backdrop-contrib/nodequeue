@@ -777,6 +777,7 @@ function nodequeue_admin_delete_submit($formid, &$form_state) {
  *   Rendered HTML or render array for the page.
  */
 function nodequeue_admin_view($queue, $subqueue = array()) {
+
   // If a specific subqueue is requested, display that one.
   if (is_object($subqueue) && $subqueue->sqid != NULL) {
     if (!nodequeue_api_subqueue_access($subqueue, NULL, $queue)) {
@@ -909,7 +910,9 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
   $form['nodes']['#subqueue'] = (array) $subqueue;
 
   $key = 0;
+  $position = 1;
   foreach ($nodes as $node) {
+
     $form['nodes'][$key]['#node'] = (array) $node;
     if ($node->visible) {
       $form['nodes'][$key]['#node'] = (array) $node;
@@ -949,13 +952,14 @@ function nodequeue_arrange_subqueue_form($form, $form_state, $queue, $nodes, $su
     $form['nodes'][$key]['position'] = array(
       '#type' => 'position',
       '#delta' => $count,
-      '#default_value' => $node->position,
+      '#default_value' => $position,
       '#attributes' => array(
         'class' => array('node-position'),
       ),
     );
 
     $key++;
+    $position++;
   }
 
   // Textfield for adding nodes to the queue.
