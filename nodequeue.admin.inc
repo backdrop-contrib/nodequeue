@@ -165,7 +165,7 @@ function nodequeue_node_tab($node) {
   $header[] = array('data' => t('Title'), 'field' => 'title', 'sort' => 'asc', 'class' => array('nodequeue-title'));
   $header[] = array('data' => t('Max nodes'), 'field' => 'size', 'class' => array('nodequeue-max-nodes'));
   $header[] = array('data' => t('In queue'), 'field' => 'count', 'class' => array('nodequeue-in-queue'));
-  $header[] = array('data' => t('Operation'), 'class' => array('nodequeue-operation'));
+  $header[] = array('data' => t('Operations'), 'class' => array('nodequeue-operation'));
   $table_sort = tablesort_init($header);
 
   $subqueues = nodequeue_get_subqueues_by_node($queues, $node);
@@ -214,24 +214,27 @@ function nodequeue_node_tab($node) {
       nodequeue_set_subqueue_positions($subqueue, $id);
       $subqueue = array_shift($subqueue);
     }
+    $links = array();
     if (empty($subqueue->position)) {
-      $op = l(
-        t('Add to queue'),
-        "nodequeue/$queue->qid/add-node/$subqueue->sqid/$id",
-        array('attributes' => array('class' => array('nodequeue-ajax-toggle')),
-          'query' => nodequeue_get_query_string($id, TRUE, array('tab' => '1')),
-          'purl' => array('disabled' => TRUE))
+      $links['add'] = array(
+        'title' => t('Add to queue'),
+        'href' => "nodequeue/$queue->qid/add-node/$subqueue->sqid/$id",
+        'attributes' => array('class' => array('nodequeue-ajax-toggle')),
+        'query' => nodequeue_get_query_string($id, TRUE, array('tab' => '1')),
+        'purl' => array('disabled' => TRUE),
+
       );
     }
     else {
-      $op = l(
-        t('Remove from queue'),
-        "nodequeue/$queue->qid/remove-node/$subqueue->sqid/$id",
-        array('attributes' => array('class' => array('nodequeue-ajax-toggle')),
-          'query' => nodequeue_get_query_string($id, TRUE, array('tab' => '1')),
-          'purl' => array('disabled' => TRUE))
+      $links['remove'] = array(
+        'title' => t('Remove from queue'),
+        'href' => "nodequeue/$queue->qid/remove-node/$subqueue->sqid/$id",
+        'attributes' => array('class' => array('nodequeue-ajax-toggle')),
+        'query' => nodequeue_get_query_string($id, TRUE, array('tab' => '1')),
+        'purl' => array('disabled' => TRUE),
       );
     }
+
     $row = array();
     $row[] = array(
       'class' => array('nodequeue-title'),
@@ -246,7 +249,13 @@ function nodequeue_node_tab($node) {
       'class' => array('nodequeue-in-queue'),
       'data' => nodequeue_subqueue_size_text($queue->size, $subqueue->count, FALSE)
     );
-    $row[] = array('class' => array('nodequeue-operation'), 'data' => $op);
+    $row[] = array(
+      'class' => array('nodequeue-operation'),
+      'data' => array(
+        '#type' => 'operations',
+        '#links' => $links,
+      ),
+    );
     $rows[] = $row;
   }
 
