@@ -152,7 +152,9 @@ function nodequeue_form_node_type_form_submit(&$form, &$form_state) {
     }
     else {
       $key = array_search($type, $types);
-      unset($types[$key]);
+      if ($key !== FALSE) {
+        unset($types[$key]);
+      }
     }
 
     $queue->types = array_filter($types);
