@@ -535,8 +535,11 @@ function nodequeue_contextual_links_view_alter(&$element, $items) {
     'Subqueue reference (optional)',
   );
 
-  $elview = $element['#element']['#views_contextual_links_info']['views_ui']['view'];
-  $relationship = $elview->display_handler->handlers['argument']['name']->relationship;
+  $elview = views_get_view($element['#element']['#views_contextual_links_info']['views_ui']['view_name']);
+  $elview->set_display($element['#element']['#views_contextual_links_info']['views_ui']['view_display_id']);
+  if (!empty($elview->display_handler->handlers)) {
+    $relationship = $elview->display_handler->handlers['argument']['name']->relationship;
+  }
   if (!empty($relationship) && $relationship == 'nodequeue_nodes_node') {
     $node_queue = $elview->display_handler->handlers['argument']['name']->argument;
   }
