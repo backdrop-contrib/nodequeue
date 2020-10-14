@@ -535,12 +535,6 @@ function nodequeue_contextual_links_view_alter(&$element, $items) {
     'Subqueue reference (optional)',
   );
 
-  $elview = $element['#element']['#views_contextual_links_info']['views_ui']['view'];
-  $relationship = $elview->display_handler->handlers['argument']['name']->relationship;
-  if (!empty($relationship) && $relationship == 'nodequeue_nodes_node') {
-    $node_queue = $elview->display_handler->handlers['argument']['name']->argument;
-  }
-
   // Cycle through all the relationships to find ones provided by nodequeue.
   // We'll use this as a trigger to attach the links.
   foreach ($view->relationship as $rel) {
