@@ -2393,16 +2393,28 @@ function _nodequeue_access_admin_or_manipulate() {
  * No, this isn't some odd hook_access implementation.
  *
  * @param object $node
+ *   Node being added or removed from queue.
  * @param object $queue
+ *   Queue having node removed.
  * @param object $subqueue
+ *   If subqueue, subqueue object.
+ *
  * @return bool
+ *   TRUE if access allowed, FALSE if not.
  */
 function nodequeue_node_and_queue_access($node, $queue, $subqueue = NULL) {
-  return nodequeue_nodequeue_access($node->type) && nodequeue_queue_access($queue, $subqueue);
+  if ($subqueue == NULL) {
+    $access = nodequeue_nodequeue_access($node->type);
+  }
+  else {
+    $access = nodequeue_api_subqueue_access($subqueue, NULL, $queue);
+  }
+
+  return $access && nodequeue_queue_access($queue, $subqueue);
 }
 
 /**
- * Return TRUE if $user can queue(s) for this node.
+ * Return TRUE if $user can use queue(s) for this node.
  *
  * @param $type
  *   The node type.
@@ -2412,6 +2424,7 @@ function nodequeue_node_and_queue_access($node, $queue, $subqueue = NULL) {
  *   - 'tab': Only check for queues that appear on the node tab.
  *   - 'ui': Only check for queues that appear in the UI.
  * @param object $account
+ *   Account of currently logged in user.
  *
  * @return bool
  *   if $qids is empty it will return FALSE else TRUE.
@@ -2421,6 +2434,7 @@ function nodequeue_nodequeue_access($type, $location = NULL, $account = NULL) {
     $type = $type->type;
   }
   $qids = nodequeue_get_qids($type, $account);
+  dpm($qids);
   if ($location) {
     nodequeue_filter_qids($qids, $location);
   }
